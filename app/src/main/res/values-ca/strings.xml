@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EcoFruit</string>
+    <string name="title_activity_launcher">LauncherActivity</string>
+    <string name="change_starts_now">El canvi comença ara</string>
+    <string name="google_sign_in">Continua amb Google</string>
+    <string name="email_sign_up">Registra\'t amb el correu</string>
+    <string name="already_have_account">Ja tens compte?</string>
+    <string name="log_in">Inicia la sessió</string>
+    <string name="ecofruit_logo">Logotip EcoFruit</string>
+    <string name="google_logo">Logotip Google</string>
+    <string name="email_icon">Icona correu</string>
+</resources>

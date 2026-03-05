@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">EcoFruit</string>
+    <string name="title_activity_launcher">LauncherActivity</string>
+    <string name="change_starts_now">El cambio empieza ahora</string>
+    <string name="google_sign_in">Continuar con Google</string>
+    <string name="email_sign_up">Registrarse con el correo</string>
+    <string name="already_have_account">Ya tienes cuenta?</string>
+    <string name="log_in">Inicia sesión</string>
+    <string name="ecofruit_logo">Logo EcoFruit</string>
+    <string name="google_logo">Logo Google</string>
+    <string name="email_icon">Icono correo</string>
+</resources>
