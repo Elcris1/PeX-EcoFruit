@@ -12,7 +12,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.EcoFruit">
         <activity
-            android:name=".LauncherActivity"
+            android:name=".ui.activities.RegisterActivity"
+            android:exported="false"
+            android:label="@string/title_activity_register"
+            android:theme="@style/Theme.EcoFruit" />
+        <activity
+            android:name=".ui.activities.LoginActvity"
+            android:exported="false"
+            android:label="@string/title_activity_login_actvity"
+            android:theme="@style/Theme.EcoFruit" />
+        <activity
+            android:name=".ui.activities.LauncherActivity"
             android:exported="true"
             android:label="@string/title_activity_launcher"
             android:theme="@style/Theme.EcoFruit">
