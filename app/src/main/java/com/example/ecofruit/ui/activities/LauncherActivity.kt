@@ -1,5 +1,7 @@
-package com.example.ecofruit
+package com.example.ecofruit.ui.activities
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -28,14 +29,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ecofruit.R
+import com.example.ecofruit.ui.components.AnimatedBubbleBackground
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 
 class LauncherActivity : ComponentActivity() {
@@ -45,8 +48,7 @@ class LauncherActivity : ComponentActivity() {
         setContent {
             EcoFruitTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    LauncherScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -55,31 +57,38 @@ class LauncherActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(modifier = Modifier
-            .weight(0.4f)
-            .fillMaxWidth()
-            .background(Color(0xff033624)),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(R.drawable.ecofruit_logo),
-                contentDescription = stringResource(R.string.ecofruit_logo),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+private fun navigateToPage(context: Context, dst: Class<*>) {
+    Intent(context, dst).also {
+        context.startActivity(it)
+    }
+}
 
-        Row(modifier = Modifier
-            .weight(0.6f)
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background),
-            horizontalArrangement = Arrangement.Center,
+@Composable
+fun LauncherScreen( modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    AnimatedBubbleBackground {
+        Column(
+            modifier = modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Row(modifier = Modifier
+                .weight(0.4f)
+                .fillMaxWidth()
+                .background(Color(0xff033624)),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ecofruit_logo),
+                    contentDescription = stringResource(R.string.ecofruit_logo),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Row(modifier = Modifier
+                .weight(0.6f)
+                .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
 
 
                 Column(
@@ -98,7 +107,9 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
-                        onClick = { }
+                        onClick = {
+                            //TODO: firebase google identity provider
+                        }
                     ) {
 
                         Icon(
@@ -115,7 +126,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
-                        onClick = { }
+                        onClick = { navigateToPage(context, RegisterActivity::class.java)}
                     ) {
                         Icon(
                             imageVector = Icons.Default.Email,
@@ -136,19 +147,26 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         textDecoration = TextDecoration.Underline,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable {
-
+                            navigateToPage(context, LoginActvity::class.java)
                         }
                     )
                 }
+            }
         }
     }
 
+
 }
 
-@Preview(showBackground = true)
+
+@Preview(showBackground = true, name = "LightTheme")
 @Composable
-fun GreetingPreview() {
-    EcoFruitTheme {
-        Greeting("Android")
-    }
+fun LightThemePreview() {
+    EcoFruitTheme(darkTheme = false) { LauncherScreen() }
+}
+
+@Preview(showBackground = true, name = "DarkTheme")
+@Composable
+fun DarkThemePreview() {
+    EcoFruitTheme(darkTheme = true) { LauncherScreen() }
 }
