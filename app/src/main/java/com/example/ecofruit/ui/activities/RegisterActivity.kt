@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.activities
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -101,6 +102,7 @@ import kotlinx.coroutines.launch
         var termsError     by remember { mutableStateOf(false) }
 
         val scope        = rememberCoroutineScope()
+        @SuppressLint("LocalContextGetResourceValueCall")
         fun validate(): Boolean {
             nameError = if (name.isBlank()) context.getString(R.string.name_mandatory) else null
             emailError = when {
