@@ -37,4 +37,12 @@
     <string name="log_in_to_continue">Inicia sessió per continuar</string>
     <string name="dont_have_account">"No tens compte? "</string>
     <string name="sign_up">Registra\'t</string>
+    <string name="password_recover">Recuperar contrasenya</string>
+    <string name="email_recover_link">T\'enviarem un enllaç de recuperació al teu correu</string>
+    <string name="cancel">Cancel·lar</string>
+    <string name="send">Enviar</string>
+    <string name="sending_link">Enviant enllaç</string>
+    <string name="email_sent">Correu enviat!</string>
+    <string name="check_inbox">Revisa la bustia d\'entrada a\n%s</string>
+    <string name="understood">Entès</string>
 </resources>

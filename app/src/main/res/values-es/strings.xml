@@ -36,4 +36,12 @@
     <string name="log_in_to_continue">Inicia sesión para continuar</string>
     <string name="dont_have_account">"¿No tienes cuenta? "</string>
     <string name="sign_up">Registrate</string>
+    <string name="password_recover">Recuperar contrasña</string>
+    <string name="email_recover_link">Te enviaremos un enlace de restablecimiento a tu correo</string>
+    <string name="cancel">Cancelar</string>
+    <string name="send">Enviar</string>
+    <string name="sending_link">Enviando enlace</string>
+    <string name="email_sent">¡Correo enviado!</string>
+    <string name="check_inbox">Revisa la bandeja de entrada en\n%s</string>
+    <string name="understood">Entendido</string>
 </resources>

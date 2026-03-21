@@ -284,37 +284,8 @@ fun LoadingButton(
     }
 }
 
-@Composable
-fun BubbleBackground(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-){
-    val colors = MaterialTheme.colorScheme
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(colors.background)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(280.dp)
-                .offset(x = (-80).dp, y = (-60).dp)
-                .clip(CircleShape)
-                .background(colors.primaryContainer.copy(alpha = 0.35f))
-        )
-        Box(
-            modifier = Modifier
-                .size(220.dp)
-                .align(Alignment.BottomEnd)
-                .offset(x = 70.dp, y = 70.dp)
-                .clip(CircleShape)
-                .background(colors.secondaryContainer.copy(alpha = 0.35f))
-        )
-        content()
-    }
-}
 
-
+//TODO: move this to generalComponents.kt
 @Composable
 fun AnimatedBubbleBackground(
     modifier: Modifier = Modifier,

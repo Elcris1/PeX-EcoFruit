@@ -34,6 +34,14 @@
     <string name="join_comunity">Join the EcoFriut community</string>
     <string name="forgot_password">Forgot password</string>
     <string name="log_in_to_continue">Log in to continue</string>
-    <string name="dont_have_account">Don\'t have account?</string>
+    <string name="dont_have_account">"Don't have account? "</string>
     <string name="sign_up">Sign up</string>
+    <string name="password_recover">Recover your password</string>
+    <string name="email_recover_link">We will send a recover link to your email</string>
+    <string name="cancel">Cancel</string>
+    <string name="send">Send</string>
+    <string name="sending_link">Sending link...</string>
+    <string name="email_sent">Email sent!</string>
+    <string name="check_inbox">Check your inbox at\n%s</string>
+    <string name="understood">Understood</string>
 </resources>
