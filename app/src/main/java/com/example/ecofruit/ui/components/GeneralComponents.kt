@@ -107,7 +107,7 @@ fun BubbleBackground(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ){
-    val colors = MaterialTheme.colorScheme
+    val colors = colorScheme
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -137,7 +137,7 @@ fun BubbleBackground(
 fun AnimatedCheck() {
     // Animación de aparición del check
     val checkScale = remember { Animatable(0f) }
-    val colorScheme = MaterialTheme.colorScheme
+    val colorScheme = colorScheme
 
     LaunchedEffect(Unit) {
         checkScale.animateTo(
@@ -199,7 +199,7 @@ fun ErrorToast(
     ) {
         Surface(
             shape    = MaterialTheme.shapes.medium,
-            color    = MaterialTheme.colorScheme.errorContainer,
+            color    = colorScheme.errorContainer,
             tonalElevation = 0.dp
         ) {
             Row(
@@ -212,13 +212,13 @@ fun ErrorToast(
                 Icon(
                     imageVector = Icons.Default.ErrorOutline,
                     contentDescription = null,
-                    tint  = MaterialTheme.colorScheme.onErrorContainer,
+                    tint  = colorScheme.onErrorContainer,
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text  = message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    style = typography.bodyMedium,
+                    color = colorScheme.onErrorContainer,
                     modifier = Modifier.weight(1f)
                 )
             }
