@@ -1,6 +1,7 @@
 package com.example.ecofruit.ui.viewmodels
 
 
+import androidx.lifecycle.ViewModel
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.repository.ProductRepository
@@ -13,9 +14,10 @@ data class ProductWithUser(
     val user: User
 )
 
-class ProductViewModel {
+class ProductViewModel(
+    private val userRepo: UserRepository
+): ViewModel() {
     private val productRepo = ProductRepository()
-    private val userRepo = UserRepository()
 
     private val _products = MutableStateFlow<List<ProductWithUser>>(emptyList())
     val products: StateFlow<List<ProductWithUser>> = _products
