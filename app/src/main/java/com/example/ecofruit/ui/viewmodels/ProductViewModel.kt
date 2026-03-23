@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 data class ProductWithUser(
     val product: Product,
-    val user: User?
+    val user: User
 )
 
 class ProductViewModel {
@@ -20,8 +20,6 @@ class ProductViewModel {
     private val _products = MutableStateFlow<List<ProductWithUser>>(emptyList())
     val products: StateFlow<List<ProductWithUser>> = _products
 
-    private var _user = MutableStateFlow<User?>(null)
-    val user: StateFlow<User?> = _user
 
     init {
         loadProducts()
@@ -39,17 +37,6 @@ class ProductViewModel {
         }
 
         _products.value = result
-    }
-
-    fun logUserIn(email: String, password: String): Boolean {
-        val user = userRepo.getUserByEmail(email)
-
-        user?.let {
-            _user.value = user
-            return true
-        }
-
-        return false
     }
 
 
