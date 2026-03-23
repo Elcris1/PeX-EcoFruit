@@ -29,7 +29,6 @@
         <activity
             android:name=".ui.activities.LauncherActivity"
             android:exported="true"
-            android:label="@string/title_activity_launcher"
             android:theme="@style/Theme.EcoFruit">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
