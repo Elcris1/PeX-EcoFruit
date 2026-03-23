@@ -40,6 +40,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.ui)
+    val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
+    implementation(composeBom)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

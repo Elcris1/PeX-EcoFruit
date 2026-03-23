@@ -44,4 +44,5 @@
     <string name="email_sent">Email sent!</string>
     <string name="check_inbox">Check your inbox at\n%s</string>
     <string name="understood">Understood</string>
+    <string name="title_activity_main">MainActivity</string>
 </resources>

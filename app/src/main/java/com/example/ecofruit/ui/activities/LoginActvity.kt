@@ -1,10 +1,12 @@
 package com.example.ecofruit.ui.activities
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -41,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.components.AnimatedBubbleBackground
 import com.example.ecofruit.ui.components.AnimatedCard
@@ -52,17 +55,22 @@ import com.example.ecofruit.ui.components.GeneralButton
 import com.example.ecofruit.ui.components.LoadingButton
 import com.example.ecofruit.ui.components.OutlinedGeneralButton
 import com.example.ecofruit.ui.components.PasswordTextField
+import com.example.ecofruit.ui.viewmodels.AuthUiState
+import com.example.ecofruit.ui.viewmodels.UserViewModel
+import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class LoginActvity : ComponentActivity() {
+    private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             EcoFruitTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginScreen(modifier = Modifier.padding(innerPadding))
+                    LoginScreen(modifier = Modifier.padding(innerPadding), userViewModel)
                 }
             }
         }
@@ -73,12 +81,15 @@ class LoginActvity : ComponentActivity() {
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
+    userViewModel: UserViewModel = viewModel(),
     onLoginSuccess: (email: String) -> Unit = {},
     onForgotPassword: () -> Unit = {},
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography  = MaterialTheme.typography
     val context = LocalContext.current
+    val uiState by userViewModel.uiState.collectAsState()
+
 
     var email           by remember { mutableStateOf("") }
     var password        by remember { mutableStateOf("") }
@@ -89,6 +100,19 @@ fun LoginScreen(
     var resetPasswordDialog by remember { mutableStateOf(false) }
 
     val scope        = rememberCoroutineScope()
+    when (uiState) {
+        is AuthUiState.Loading -> isLoading = true
+        is AuthUiState.Success -> {
+            isLoading = false
+            Intent(context, MainActivity::class.java).also {
+                it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                context.startActivity(it)
+            }
+        }
+        is AuthUiState.Error -> isLoading = false //todo: SHOWTOAST
+        else -> Unit
+    }
+
 
     // Animación de entrada
     val enterAnim = remember { Animatable(0f) }
@@ -177,10 +201,8 @@ fun LoginScreen(
                                 }
                                 if (valid) {
                                     scope.launch {
-                                        isLoading = true
-                                        delay(1800)
-                                        isLoading = false
-                                        onLoginSuccess(email)
+                                        userViewModel.logUserIn(email, password)
+                                        //onLoginSuccess(email)
                                     }
                                 }
                             }

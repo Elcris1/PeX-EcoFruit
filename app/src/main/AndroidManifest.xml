@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.EcoFruit">
         <activity
+            android:name=".ui.activities.MainActivity"
+            android:exported="false"
+            android:label="@string/title_activity_main"
+            android:theme="@style/Theme.EcoFruit" />
+        <activity
             android:name=".ui.activities.RegisterActivity"
             android:exported="false"
             android:label="@string/title_activity_register"
