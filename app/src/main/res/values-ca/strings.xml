@@ -46,4 +46,9 @@
     <string name="check_inbox">Revisa la bustia d\'entrada a\n%s</string>
     <string name="understood">Entès</string>
     <string name="login_error">Ha hagut un error iniciant sessió. Revisa les teves credencials i torna a intentar-ho.</string>
+    <string name="tab_home_title">Inici</string>
+    <string name="tab_inbox_title">Missatges</string>
+    <string name="tab_profile_title">Perfil</string>
+    <string name="tab_search_title">Cercar</string>
+    <string name="tab_sell_title">Vendre</string>
 </resources>

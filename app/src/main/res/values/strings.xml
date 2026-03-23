@@ -46,4 +46,9 @@
     <string name="understood">Understood</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="login_error">There was an error loggin in. Check your credentials and try again.</string>
+    <string name="tab_home_title">Home</string>
+    <string name="tab_inbox_title">Inbox</string>
+    <string name="tab_profile_title">Profile</string>
+    <string name="tab_search_title">Search</string>
+    <string name="tab_sell_title">Sell</string>
 </resources>
