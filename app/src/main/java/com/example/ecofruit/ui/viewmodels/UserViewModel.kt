@@ -5,6 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,17 +19,17 @@ class UserViewModel(
 
     val currentUser: StateFlow<User?> = userRepo.user
 
-    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
-    val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<RequestUiState<User>>(RequestUiState.Idle())
+    val uiState: StateFlow<RequestUiState<User>> = _uiState.asStateFlow()
 
 
     fun logUserIn(email: String, password: String) {
 
         viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
+            _uiState.value = RequestUiState.Loading()
             userRepo.login(email, password)
-                .onSuccess { _uiState.value = AuthUiState.Success(it) }
-                .onFailure { _uiState.value = AuthUiState.Error(it.message ?: "Error") }
+                .onSuccess { _uiState.value = RequestUiState.Success(it) }
+                .onFailure { _uiState.value = RequestUiState.Error(it.message ?: "Error") }
         }
     }
 
@@ -36,11 +37,4 @@ class UserViewModel(
         userRepo.logOut()
     }
 
-}
-
-sealed class AuthUiState {
-    object Idle : AuthUiState()
-    object Loading : AuthUiState()
-    data class Success(val user: User) : AuthUiState()
-    data class Error(val message: String) : AuthUiState()
 }

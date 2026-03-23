@@ -47,7 +47,7 @@ import com.example.ecofruit.ui.components.GeneralButton
 import com.example.ecofruit.ui.components.LoadingButton
 import com.example.ecofruit.ui.components.OutlinedGeneralButton
 import com.example.ecofruit.ui.components.PasswordTextField
-import com.example.ecofruit.ui.viewmodels.AuthUiState
+import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlinx.coroutines.delay
@@ -92,15 +92,15 @@ fun LoginScreen(
 
     val scope        = rememberCoroutineScope()
     when (uiState) {
-        is AuthUiState.Loading -> isLoading = true
-        is AuthUiState.Success -> {
+        is RequestUiState.Loading -> isLoading = true
+        is RequestUiState.Success -> {
             isLoading = false
             Intent(context, MainActivity::class.java).also {
                 it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 context.startActivity(it)
             }
         }
-        is AuthUiState.Error -> {
+        is RequestUiState.Error -> {
             isLoading = false
             loginError = true
 
