@@ -45,4 +45,5 @@
     <string name="check_inbox">Check your inbox at\n%s</string>
     <string name="understood">Understood</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="login_error">There was an error loggin in. Check your credentials and try again.</string>
 </resources>

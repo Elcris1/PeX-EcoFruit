@@ -45,4 +45,5 @@
     <string name="email_sent">Correu enviat!</string>
     <string name="check_inbox">Revisa la bustia d\'entrada a\n%s</string>
     <string name="understood">Entès</string>
+    <string name="login_error">Ha hagut un error iniciant sessió. Revisa les teves credencials i torna a intentar-ho.</string>
 </resources>

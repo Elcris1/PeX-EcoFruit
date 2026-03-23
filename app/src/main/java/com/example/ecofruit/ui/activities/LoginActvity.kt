@@ -3,11 +3,11 @@ package com.example.ecofruit.ui.activities
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -20,29 +20,20 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.components.AnimatedBubbleBackground
@@ -51,6 +42,7 @@ import com.example.ecofruit.ui.components.AnimatedCheck
 import com.example.ecofruit.ui.components.AnimatedHeader
 import com.example.ecofruit.ui.components.AnimatedRedirectionText
 import com.example.ecofruit.ui.components.CustomTextField
+import com.example.ecofruit.ui.components.ErrorToast
 import com.example.ecofruit.ui.components.GeneralButton
 import com.example.ecofruit.ui.components.LoadingButton
 import com.example.ecofruit.ui.components.OutlinedGeneralButton
@@ -82,8 +74,6 @@ class LoginActvity : ComponentActivity() {
 fun LoginScreen(
     modifier: Modifier = Modifier,
     userViewModel: UserViewModel = viewModel(),
-    onLoginSuccess: (email: String) -> Unit = {},
-    onForgotPassword: () -> Unit = {},
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography  = MaterialTheme.typography
@@ -95,6 +85,7 @@ fun LoginScreen(
     var password        by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var isLoading       by remember { mutableStateOf(false) }
+    var loginError      by remember { mutableStateOf(false) }
     var emailError      by remember { mutableStateOf<String?>(null) }
     var passwordError   by remember { mutableStateOf<String?>(null) }
     var resetPasswordDialog by remember { mutableStateOf(false) }
@@ -109,7 +100,11 @@ fun LoginScreen(
                 context.startActivity(it)
             }
         }
-        is AuthUiState.Error -> isLoading = false //todo: SHOWTOAST
+        is AuthUiState.Error -> {
+            isLoading = false
+            loginError = true
+
+        }
         else -> Unit
     }
 
@@ -188,6 +183,12 @@ fun LoginScreen(
                             )
                         }
 
+                        ErrorToast(
+                            message = stringResource(R.string.login_error),
+                            visible = loginError,
+                            onDismiss = {loginError = false },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         LoadingButton(
                             text = stringResource(R.string.log_in),
                             isLoading = isLoading,
@@ -202,7 +203,6 @@ fun LoginScreen(
                                 if (valid) {
                                     scope.launch {
                                         userViewModel.logUserIn(email, password)
-                                        //onLoginSuccess(email)
                                     }
                                 }
                             }
@@ -274,7 +274,7 @@ fun ForgotPasswordModal(onDismiss: () -> Unit) {
                 .graphicsLayer {
                     scaleX = scaleAnim.value
                     scaleY = scaleAnim.value
-                    alpha  = alphaAnim.value
+                    alpha = alphaAnim.value
                 }
                 .clip(RoundedCornerShape(28.dp))
                 .background(colorScheme.surface)

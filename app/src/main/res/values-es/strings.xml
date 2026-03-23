@@ -44,4 +44,5 @@
     <string name="email_sent">¡Correo enviado!</string>
     <string name="check_inbox">Revisa la bandeja de entrada en\n%s</string>
     <string name="understood">Entendido</string>
+    <string name="login_error">Ha habido un error iniciando sesión. Revisa tus credenciales y vuelve a intentarlo.</string>
 </resources>
