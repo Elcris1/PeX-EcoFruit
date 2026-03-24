@@ -51,4 +51,19 @@
     <string name="tab_profile_title">Perfil</string>
     <string name="tab_search_title">Cercar</string>
     <string name="tab_sell_title">Vendre</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="followers">Seguidors</string>
+    <string name="following">Seguint</string>
+    <string name="from">Des de</string>
+    <string name="profile_edit_profile_title">Editar perfil</string>
+    <string name="profile_edit_profile_desc">Modifica la teva imatge de perfil, nom, descripció...</string>
+    <string name="profile_go_pro_title">Converteix-te en productor</string>
+    <string name="profile_go_pro_desc">Comença a vendre els teus productes agrícoles</string>
+    <string name="profile_settings_title">Configuració</string>
+    <string name="profile_settings_desc">Preferencies, notificacions i més</string>
+    <string name="log_out">Tancar sessió</string>
+    <string name="profile_log_out_desc">Fins ara!</string>
+    <string name="profile_ratings_count">%d valoracions</string>
+    <string name="my_account">El meu compte</string>
+    <string name="profile_go_pro_badge">Go Pro!</string>
 </resources>

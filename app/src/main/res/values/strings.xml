@@ -44,11 +44,25 @@
     <string name="email_sent">Email sent!</string>
     <string name="check_inbox">Check your inbox at\n%s</string>
     <string name="understood">Understood</string>
-    <string name="title_activity_main">MainActivity</string>
     <string name="login_error">There was an error loggin in. Check your credentials and try again.</string>
     <string name="tab_home_title">Home</string>
     <string name="tab_inbox_title">Inbox</string>
     <string name="tab_profile_title">Profile</string>
     <string name="tab_search_title">Search</string>
     <string name="tab_sell_title">Sell</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="followers">Followers</string>
+    <string name="following">Following</string>
+    <string name="from">From</string>
+    <string name="profile_edit_profile_title">Edit profile</string>
+    <string name="profile_edit_profile_desc">Modify your profile picture, name, bio..</string>
+    <string name="profile_go_pro_title">Become a producer</string>
+    <string name="profile_go_pro_desc">Start selling your farming products</string>
+    <string name="profile_settings_title">Settings</string>
+    <string name="profile_settings_desc">Preferences, notifications and more</string>
+    <string name="log_out">Log out</string>
+    <string name="profile_log_out_desc">See you soon!</string>
+    <string name="profile_ratings_count">%d ratings</string>
+    <string name="my_account">My account</string>
+    <string name="profile_go_pro_badge">Go Pro!</string>
 </resources>

@@ -1,7 +1,8 @@
 package com.example.ecofruit.ui.activities
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,10 +14,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.navigation.Screen
 import com.example.ecofruit.ui.navigation.bottomNavItems
 import com.example.ecofruit.ui.screens.HomeScreen
@@ -65,11 +67,12 @@ fun MainScreen(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val context = LocalContext.current
 
     val user by userViewModel.currentUser.collectAsState()
 
     val visibleTabs = bottomNavItems.filter { screen ->
-        !screen.isSeller || user!!.isProductor
+        !screen.isSeller || user?.isProducer == true
     }
 
 
@@ -113,7 +116,21 @@ fun MainScreen(
             composable(Screen.Search.route)   { SearchScreen() }
             composable(Screen.Sell.route)     { SellScreen() }
             composable(Screen.Inbox.route)    { InboxScreen() }
-            composable(Screen.Profile.route)  { ProfileScreen() }
+            composable(Screen.Profile.route)  { ProfileScreen(
+                user = user,
+                onEditProfile = {},
+                onConvertToProducer = {},
+                onSettings = {},
+                onLogout = {
+                    userViewModel.logOut()
+                    Intent(context, LoginActvity::class.java).also {
+                        it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        context.startActivity(it)
+                        (context as Activity).finish()
+                    }
+
+                },
+            )}
         }
     }
 }
