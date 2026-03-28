@@ -120,7 +120,11 @@ fun MainScreen(
                 user = user,
                 onEditProfile = {},
                 onConvertToProducer = {},
-                onSettings = {},
+                onSettings = {
+                    Intent(context, SettingsActivity::class.java).also {
+                        context.startActivity(it)
+                    }
+                },
                 onLogout = {
                     userViewModel.logOut()
                     Intent(context, LoginActvity::class.java).also {

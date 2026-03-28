@@ -65,4 +65,5 @@
     <string name="profile_ratings_count">%d ratings</string>
     <string name="my_account">My account</string>
     <string name="profile_go_pro_badge">Go Pro!</string>
+    <string name="title_activity_settings">SettingsActivity</string>
 </resources>
