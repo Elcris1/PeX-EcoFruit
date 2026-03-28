@@ -39,20 +39,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecofruit.ui.data.model.Settings
 
 class SettingsActivity : ComponentActivity() {
-    private val viewModel: SettingsViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val settings by viewModel.settings.collectAsStateWithLifecycle()
-            if (!settings.modifiedByUser) {
-                viewModel.setDarkTheme(isSystemInDarkTheme(), false)
-            }
+            val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+
             EcoFruitTheme (darkTheme = settings.darkTheme) {
                 SettingsScreen(
                     settings  = settings,
-                    viewModel = viewModel,
+                    viewModel = settingsViewModel,
                     onBack    = { finish() }
                 )
 

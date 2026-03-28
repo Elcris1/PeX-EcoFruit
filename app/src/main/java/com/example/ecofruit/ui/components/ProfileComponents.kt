@@ -39,7 +39,8 @@ fun UserImage(imageUrl: String, name: String) {
             model = imageUrl,
             contentDescription = "Imagen de usuario",
             modifier = Modifier.size(120.dp),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+           //TODO: poner imagen para cuando haya error.
         )
     } else {
         Text(

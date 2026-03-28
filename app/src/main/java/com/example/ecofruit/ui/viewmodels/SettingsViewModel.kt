@@ -1,6 +1,7 @@
 package com.example.ecofruit.ui.viewmodels
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ecofruit.ui.data.model.Settings
@@ -33,7 +34,7 @@ class SettingsViewModel(
     fun setPreloadImages(v: Boolean)     = viewModelScope.launch { repo.setPreloadImages(v) }
 
     // ── General ───────────────────────────────────────────────────────────────
-    fun setDarkTheme(v: Boolean, mv: Boolean = true) = viewModelScope.launch { repo.setDarkTheme(v, mv) }
+    fun setDarkTheme(v: Boolean)         = viewModelScope.launch { repo.setDarkTheme(v) }
     fun setNotifications(v: Boolean)     = viewModelScope.launch { repo.setNotifications(v) }
     fun setLanguage(v: String)           = viewModelScope.launch { repo.setLanguage(v) }
 

@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOutCubic
@@ -55,6 +56,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.components.AnimatedBubbleBackground
 import com.example.ecofruit.ui.components.AnimatedCard
@@ -64,15 +66,21 @@ import com.example.ecofruit.ui.components.CustomTextField
 import com.example.ecofruit.ui.components.LoadingButton
 import com.example.ecofruit.ui.components.PasswordTextField
 import com.example.ecofruit.ui.theme.EcoFruitTheme
+import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.getValue
 
-    class RegisterActivity : ComponentActivity() {
+class RegisterActivity : ComponentActivity() {
+
+    private val settingsViewModel: SettingsViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            EcoFruitTheme {
+            val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+            EcoFruitTheme (darkTheme = settings.darkTheme) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize()) { innerPadding ->
                     RegisterScreen(modifier = Modifier.padding(innerPadding))

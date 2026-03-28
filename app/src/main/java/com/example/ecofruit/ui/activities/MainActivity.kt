@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -37,6 +38,7 @@ import com.example.ecofruit.ui.screens.SearchScreen
 import com.example.ecofruit.ui.screens.SellScreen
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.viewmodels.ProductViewModel
+import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlin.getValue
@@ -44,12 +46,15 @@ import kotlin.getValue
 class MainActivity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
     private val productsViewModel: ProductViewModel by viewModels { ViewModelFactory() }
+    private val settingsViewModel: SettingsViewModel by viewModels()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            EcoFruitTheme {
+            val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+            EcoFruitTheme (darkTheme = settings.darkTheme) {
                 MainScreen(
                     productsViewModel = productsViewModel,
                     userViewModel = userViewModel

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.components.AnimatedBubbleBackground
@@ -48,6 +50,7 @@ import com.example.ecofruit.ui.components.LoadingButton
 import com.example.ecofruit.ui.components.OutlinedGeneralButton
 import com.example.ecofruit.ui.components.PasswordTextField
 import com.example.ecofruit.ui.data.model.RequestUiState
+import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlinx.coroutines.delay
@@ -55,12 +58,14 @@ import kotlinx.coroutines.launch
 
 class LoginActvity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            EcoFruitTheme {
+            val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+            EcoFruitTheme (darkTheme = settings.darkTheme) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     LoginScreen(modifier = Modifier.padding(innerPadding), userViewModel)
                 }

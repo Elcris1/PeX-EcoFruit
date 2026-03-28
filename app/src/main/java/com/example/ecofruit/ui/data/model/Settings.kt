@@ -13,7 +13,6 @@ data class Settings(
 
     // General
     val darkTheme:          Boolean = false,
-    val modifiedByUser:     Boolean = false,
     val notifications:      Boolean = true,
     val language:           String  = "es",
 )

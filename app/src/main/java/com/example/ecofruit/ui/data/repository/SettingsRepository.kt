@@ -1,6 +1,7 @@
 package com.example.ecofruit.ui.data.repository
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
@@ -30,7 +31,6 @@ object SettingsKeys {
 
     // General
     val DARK_THEME          = booleanPreferencesKey("dark_theme")
-    val MODIFIED_BY_USER    = booleanPreferencesKey("modified_by_user")
     val NOTIFICATIONS       = booleanPreferencesKey("notifications")
     val LANGUAGE            = stringPreferencesKey("language")         // "es" | "en" | "ca"
 }
@@ -55,7 +55,6 @@ class SettingsRepository(private val context: Context) {
                 offlineMode = prefs[SettingsKeys.OFFLINE_MODE] ?: false,
                 preloadImages = prefs[SettingsKeys.PRELOAD_IMAGES] ?: true,
                 darkTheme = prefs[SettingsKeys.DARK_THEME]?: false,
-                modifiedByUser = prefs[SettingsKeys.MODIFIED_BY_USER]?: false,
                 notifications = prefs[SettingsKeys.NOTIFICATIONS] ?: true,
                 language = prefs[SettingsKeys.LANGUAGE] ?: "es",
             )
@@ -95,9 +94,8 @@ class SettingsRepository(private val context: Context) {
         it[SettingsKeys.PRELOAD_IMAGES] = value
     }
 
-    suspend fun setDarkTheme(value: Boolean, modified_by_user: Boolean = true) = context.settingsDataStore.edit {
+    suspend fun setDarkTheme(value: Boolean) = context.settingsDataStore.edit {
         it[SettingsKeys.DARK_THEME] = value
-        it[SettingsKeys.MODIFIED_BY_USER] = modified_by_user
     }
 
     suspend fun setNotifications(value: Boolean) = context.settingsDataStore.edit {
