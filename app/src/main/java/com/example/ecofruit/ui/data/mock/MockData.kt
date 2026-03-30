@@ -79,7 +79,8 @@ object MockData {
             price = 10.0,
             userId = "u2",
             userName = "Eloi Productor",
-            userAvatar =  ""
+            userAvatar =  "",
+            favouritesList = emptyList()
         ),
         Product(
             id = "p2",
@@ -89,7 +90,9 @@ object MockData {
             price = 10.0,
             userId = "",
             userName = "",
-            userAvatar = ""
+            userAvatar = "",
+            favouritesList = emptyList()
+
         ),
         Product(
             id = "p3",
@@ -99,7 +102,8 @@ object MockData {
             price = 10.0,
             userId = "u4",
             userName = "Productor with Image",
-            userAvatar = "https://img.freepik.com/vector-premium/granjero-dibujos-animados-pie-hierba-verde_1305385-8640.jpg?semt=ais_hybrid&w=740&q=80"
+            userAvatar = "https://img.freepik.com/vector-premium/granjero-dibujos-animados-pie-hierba-verde_1305385-8640.jpg?semt=ais_hybrid&w=740&q=80",
+            favouritesList = emptyList()
         ),
 
     )

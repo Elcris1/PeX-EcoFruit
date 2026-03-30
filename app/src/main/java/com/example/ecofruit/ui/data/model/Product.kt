@@ -8,5 +8,6 @@ data class Product (
     val price: Double,
     val userId: String,
     val userName: String,
-    val userAvatar: String
+    val userAvatar: String,
+    var favouritesList: List<String>
 )

@@ -4,9 +4,16 @@ import com.example.ecofruit.ui.data.mock.MockData
 import com.example.ecofruit.ui.data.model.Product
 
 class ProductRepository {
-    fun getProducts(): List<Product> = MockData.products
+
+    private var products: List<Product> = emptyList()
+    init {
+        products = MockData.products
+    }
+    fun getProducts(): List<Product> = products
+
+    fun getProductsFromUserId(userId: String) = getProducts().filter { it.userId == userId }
 
     fun addProduct(product: Product) {
-
+        products += product
     }
 }
