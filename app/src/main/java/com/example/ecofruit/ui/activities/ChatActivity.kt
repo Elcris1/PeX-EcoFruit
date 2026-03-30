@@ -37,33 +37,60 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.data.model.ChatMessage
-import com.example.ecofruit.ui.model.ChatMockData
 import com.example.ecofruit.ui.model.Conversation
 import com.example.ecofruit.ui.data.constants.MessageStatus
+import com.example.ecofruit.ui.data.mock.ChatMockData
+import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.model.isFromCurrentUser
 import com.example.ecofruit.ui.screens.UserAvatar
+import com.example.ecofruit.ui.viewmodels.ChatViewModel
+import com.example.ecofruit.ui.viewmodels.ConversationUI
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
+import com.example.ecofruit.ui.viewmodels.UserViewModel
+import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.collections.emptyList
 
 class ChatActivity : ComponentActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
+    private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val conversationId = intent.getStringExtra("conversation_id") ?: ""
+
+
+
         enableEdgeToEdge()
         setContent {
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+            val user by userViewModel.currentUser.collectAsState()
+            val conversationUI by chatViewModel.conversation.collectAsState()
+            val chatState by chatViewModel.chatState.collectAsState()
+            val messages by chatViewModel.messages.collectAsState()
 
-            val conversation_id = intent.getStringExtra("conversation_id")
-            val conversation = ChatMockData.conversations.find { it.id == conversation_id }
+            LaunchedEffect(Unit) {
+                chatViewModel.getConversationUIFromId(conversationId, user!!.id)
+                chatViewModel.markConversationAsRead(conversationId)
+                chatViewModel.getMessagesFromConversation(conversationId)
+            }
 
             EcoFruitTheme (darkTheme = settings.darkTheme) {
                     ChatScreen (
-                        conversation = conversation!!,
+                        currentUser = user!!,
+                        conversation = conversationUI,
+                        messages = messages,
+                        chatState = chatState,
+                        onSend = { message ->
+                            chatViewModel.addMessage(message)
+                        },
                         onBackClick = { finish() }
                     )
 
@@ -76,98 +103,116 @@ class ChatActivity : ComponentActivity() {
 
 //TODO: onuser click in top bar -> viewprofile
 //TODO: fix stringsreources
-//TODO: fix conversations source
-//TODO: update messages -> viewmodel
 @Composable
 fun ChatScreen(
     currentUser: User = ChatMockData.currentUser,
-    conversation: Conversation = ChatMockData.conversations.first(),
+    conversation: ConversationUI? = ConversationUI(base = ChatMockData.conversations.first(), otherUser = ChatMockData.marta),
+    messages: List<ChatMessage> = ChatMockData.firstMessages,
+    chatState: RequestUiState<Boolean>,
+    onSend: (ChatMessage) -> Unit = {},
     onBackClick: () -> Unit = {},
 ) {
     var messageText by remember { mutableStateOf("") }
-    var messages by remember { mutableStateOf(conversation.messages) }
 
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    val usersById: Map<String, User> = remember(conversation.participants) {
-        conversation.participants.associateBy { it.id }
-    }
+    var isLoading by remember { mutableStateOf(false) }
 
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
-    }
 
-    Scaffold(
-        topBar = {
-            ChatTopBar(
-                conversation = conversation,
-                currentUserId = currentUser.id,
-                onBackClick = onBackClick,
+    when(chatState) {
+        is RequestUiState.Loading -> isLoading = true
+        is RequestUiState.Success -> {
+            isLoading = false
+        }
+        is RequestUiState.Error -> {
+            isLoading = false
+        }
+        else -> Unit
+    }
+    if (conversation != null) {
+        val usersById: Map<String, User> = remember {
+            mapOf(
+                currentUser.id to currentUser,
+                conversation.otherUser.id to conversation.otherUser
             )
-        },
-        bottomBar = {
-            ChatInputBar(
-                value = messageText,
-                onValueChange = { messageText = it },
-                onSend = {
-                    if (messageText.isNotBlank()) {
-                        messages = messages + ChatMessage(
-                            id = "local_${System.currentTimeMillis()}",
-                            conversationId = conversation.id,
-                            senderId = currentUser.id,
-                            text = messageText.trim(),
-                            timestamp = LocalDateTime.now(),
-                            status = MessageStatus.SENDING,
+        }
+
+        LaunchedEffect(messages.size) {
+            if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+        }
+
+        Scaffold(
+            topBar = {
+                ChatTopBar(
+                    conversation = conversation,
+                    onBackClick = onBackClick,
+                )
+            },
+            bottomBar = {
+                ChatInputBar(
+                    value = messageText,
+                    onValueChange = { messageText = it },
+                    onSend = {
+                        if (messageText.isNotBlank()) {
+                            val message = ChatMessage(
+                                id = "local_${System.currentTimeMillis()}",
+                                conversationId = conversation.base.id,
+                                senderId = currentUser.id,
+                                text = messageText.trim(),
+                                timestamp = LocalDateTime.now(),
+                                status = MessageStatus.SENDING,
+                            )
+                            onSend(message)
+                            messageText = ""
+                            scope.launch { listState.animateScrollToItem(messages.lastIndex) }
+                        }
+                    },
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.background,
+        ) { paddingValues ->
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                item { DateDivider(label = "Hoy") }
+
+                items(messages, key = { it.id }) { message ->
+                    val isMe = message.isFromCurrentUser(currentUser.id)
+                    val sender = usersById[message.senderId]
+
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 2 },
+                    ) {
+                        MessageBubble(
+                            message = message,
+                            isFromCurrentUser = isMe,
+                            sender = sender,
                         )
-                        messageText = ""
-                        scope.launch { listState.animateScrollToItem(messages.lastIndex) }
                     }
-                },
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-    ) { paddingValues ->
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            item { DateDivider(label = "Hoy") }
-
-            items(messages, key = { it.id }) { message ->
-                val isMe = message.isFromCurrentUser(currentUser.id)
-                val sender = usersById[message.senderId]
-
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 2 },
-                ) {
-                    MessageBubble(
-                        message = message,
-                        isFromCurrentUser = isMe,
-                        sender = sender,
-                    )
                 }
             }
         }
     }
+
 }
 
 // ── Top bar ────────────────────────────────────────────────────────────────
 
 @Composable
 private fun ChatTopBar(
-    conversation: Conversation,
-    currentUserId: String,
+    conversation: ConversationUI,
     onBackClick: () -> Unit,
 ) {
-    val other = conversation.primaryOtherUser(currentUserId)
 
+    val other = conversation.otherUser
     Surface(
         shadowElevation = 2.dp,
         color = MaterialTheme.colorScheme.surface,
@@ -189,11 +234,11 @@ private fun ChatTopBar(
             }
 
             // Reutilizamos UserAvatar de ConversationsScreen
-            UserAvatar(user = other, size = 40)
+            UserAvatar(user = conversation.otherUser, size = 40)
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = conversation.displayName(currentUserId),
+                    text = other.name,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -201,7 +246,7 @@ private fun ChatTopBar(
                     overflow = TextOverflow.Ellipsis,
                 )
                 // Rating del interlocutor si tiene reseñas
-                if (other != null && other.reviewCount > 0) {
+                if (other.reviewCount > 0) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -223,7 +268,7 @@ private fun ChatTopBar(
                     color = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Text(
-                        text = conversation.tag.name.lowercase().replaceFirstChar { it.uppercase() },
+                        text = conversation.base.tag.name.lowercase().replaceFirstChar { it.uppercase() },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -232,7 +277,7 @@ private fun ChatTopBar(
                 }
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "${conversation.productEmoji} ${conversation.productName}",
+                    text = "${conversation.base.productEmoji} ${conversation.base.productName}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
@@ -420,8 +465,22 @@ private fun ChatInputBar(
 
 // ── Preview ────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(showBackground = true, name= "Light")
 @Composable
-private fun ChatScreenPreview() {
-    EcoFruitTheme { ChatScreen() }
+private fun LightPreview() {
+    EcoFruitTheme (darkTheme = false) {
+        ChatScreen(
+            chatState = RequestUiState.Idle()
+        )
+    }
+}
+
+@Preview(showBackground = true, name= "Dark")
+@Composable
+private fun DarkPreview() {
+    EcoFruitTheme (darkTheme = true) {
+        ChatScreen(
+            chatState = RequestUiState.Idle()
+        )
+    }
 }

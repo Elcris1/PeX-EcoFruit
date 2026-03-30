@@ -3,6 +3,7 @@ package com.example.ecofruit.ui.activities
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,6 +15,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -37,6 +39,7 @@ import com.example.ecofruit.ui.screens.ProfileScreen
 import com.example.ecofruit.ui.screens.SearchScreen
 import com.example.ecofruit.ui.screens.SellScreen
 import com.example.ecofruit.ui.theme.EcoFruitTheme
+import com.example.ecofruit.ui.viewmodels.ChatViewModel
 import com.example.ecofruit.ui.viewmodels.ProductViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
@@ -47,6 +50,8 @@ class MainActivity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
     private val productsViewModel: ProductViewModel by viewModels { ViewModelFactory() }
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,30 +62,56 @@ class MainActivity : ComponentActivity() {
             EcoFruitTheme (darkTheme = settings.darkTheme) {
                 MainScreen(
                     productsViewModel = productsViewModel,
-                    userViewModel = userViewModel
+                    userViewModel = userViewModel,
+                    chatViewModel = chatViewModel
                 )
             }
         }
     }
-}
 
+    override fun onResume() {
+        super.onResume()
+        chatViewModel.getConversationsFromUser(userViewModel.currentUser.value?.id ?: "")
+    }
+}
+private val TAG = "MainActivity"
 
 //TODO: manage rights for location and wifi
 @Composable
 fun MainScreen(
     productsViewModel: ProductViewModel = viewModel(),
-    userViewModel: UserViewModel = viewModel()
+    userViewModel: UserViewModel = viewModel(),
+    chatViewModel: ChatViewModel = viewModel()
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val context = LocalContext.current
-
     val user by userViewModel.currentUser.collectAsState()
+    val conversations by chatViewModel.conversations.collectAsState()
+
+    val conversationsUpdate by chatViewModel.conversationUpdate.collectAsState()
+
 
     val visibleTabs = bottomNavItems.filter { screen ->
         !screen.isSeller || user?.isProducer == true
     }
+
+    LaunchedEffect(Unit) {
+        user?.id?.let { it->
+            chatViewModel.getConversationsFromUser(it)
+
+        }
+    }
+
+    LaunchedEffect(conversationsUpdate, user?.id) {
+        user?.id?.let { it->
+            Log.d(TAG, "UPDATING CONVERSATIONS")
+            chatViewModel.getConversationsFromUser(user?.id?: "")
+
+        }
+    }
+
 
 
 
@@ -123,6 +154,9 @@ fun MainScreen(
             composable(Screen.Search.route)   { SearchScreen() }
             composable(Screen.Sell.route)     { SellScreen() }
             composable(Screen.Inbox.route)    { InboxScreen(
+                currentUser = user,
+                chatViewModel = chatViewModel,
+                conversations = conversations,
                 onConversationClick = { conversation ->
                     Intent(context, ChatActivity::class.java).also {
                         it.putExtra("conversation_id", conversation.id)

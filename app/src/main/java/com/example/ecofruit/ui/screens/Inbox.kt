@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.screens
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,16 +33,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.ecofruit.ui.data.constants.ConversationTag
+import com.example.ecofruit.ui.data.mock.ChatMockData
+import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.data.model.isFromCurrentUser
-import com.example.ecofruit.ui.model.ChatMockData
 import com.example.ecofruit.ui.model.Conversation
-import com.example.ecofruit.ui.model.avatarColor
-import com.example.ecofruit.ui.model.avatarInitials
-import com.example.ecofruit.ui.model.hasAvatar
 import com.example.ecofruit.ui.theme.EcoFruitTheme
+import com.example.ecofruit.ui.viewmodels.ChatViewModel
+import com.example.ecofruit.ui.viewmodels.ConversationUI
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -49,22 +54,43 @@ import java.time.temporal.ChronoUnit
 
 
 // ── Screen ─────────────────────────────────────────────────────────────────
-
+private val TAG = "InboxScreen"
 @Composable
 fun InboxScreen(
-    currentUser: User = ChatMockData.currentUser,
-    conversations: List<Conversation> = ChatMockData.conversations,
+    currentUser: User? = ChatMockData.currentUser,
+    conversations: List<ConversationUI> = listOf(ConversationUI(base = ChatMockData.conversations.first(), otherUser = ChatMockData.marta)),
+    chatViewModel: ChatViewModel = viewModel(),
     onConversationClick: (Conversation) -> Unit = {},
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf<ConversationTag?>(null) }
+    var conversations by remember { mutableStateOf(conversations)}
+    var isLoading       by remember { mutableStateOf(false) }
 
+
+
+
+
+    val conversationState by chatViewModel.conversationsState.collectAsState()
+    when (conversationState) {
+        is RequestUiState.Success -> {
+            isLoading = false
+            conversations = (conversationState as RequestUiState.Success).data
+            Log.d(TAG, "${conversations}")
+
+        }
+        is RequestUiState.Loading -> isLoading = true
+        is RequestUiState.Error -> {
+            isLoading = false
+        }
+        else -> Unit
+    }
     val filtered = conversations.filter { conv ->
         val matchesSearch = searchQuery.isBlank() ||
-                conv.displayName(currentUser.id).contains(searchQuery, ignoreCase = true) ||
-                conv.productName.contains(searchQuery, ignoreCase = true) ||
-                conv.lastMessage?.text?.contains(searchQuery, ignoreCase = true) == true
-        val matchesTag = selectedFilter == null || conv.tag == selectedFilter
+                conv.otherUser.name.contains(searchQuery, ignoreCase = true) ||
+                conv.base.productName.contains(searchQuery, ignoreCase = true) ||
+                conv.base.lastMessage?.text?.contains(searchQuery, ignoreCase = true) == true
+        val matchesTag = selectedFilter == null || conv.base.tag == selectedFilter
         matchesSearch && matchesTag
     }
 
@@ -88,7 +114,7 @@ fun InboxScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
-                    val totalUnread = conversations.sumOf { it.unreadCount }
+                    val totalUnread = conversations.sumOf { it.base.unreadCount }
                     if (totalUnread > 0) {
                         Badge(containerColor = MaterialTheme.colorScheme.primary) {
                             Text(
@@ -179,15 +205,15 @@ fun InboxScreen(
                     .padding(paddingValues),
                 contentPadding = PaddingValues(vertical = 8.dp),
             ) {
-                itemsIndexed(filtered, key = { _, c -> c.id }) { index, conversation ->
+                itemsIndexed(filtered, key = { _, c -> c.base.id }) { index, conversation ->
                     AnimatedVisibility(
                         visible = true,
                         enter = fadeIn() + slideInVertically(initialOffsetY = { it / 3 }),
                     ) {
                         ConversationItem(
                             conversation = conversation,
-                            currentUserId = currentUser.id,
-                            onClick = { onConversationClick(conversation) },
+                            currentUserId = currentUser?.id ?: "",
+                            onClick = { onConversationClick(conversation.base) },
                         )
                     }
                     if (index < filtered.lastIndex) {
@@ -207,12 +233,12 @@ fun InboxScreen(
 
 @Composable
 private fun ConversationItem(
-    conversation: Conversation,
     currentUserId: String,
+    conversation: ConversationUI,
     onClick: () -> Unit,
 ) {
-    val other = conversation.primaryOtherUser(currentUserId)
-    val lastMsg = conversation.lastMessage
+    val other = conversation.otherUser
+    val lastMsg = conversation.base.lastMessage
     val isMine = lastMsg?.isFromCurrentUser(currentUserId) == true
 
     Row(
@@ -232,9 +258,9 @@ private fun ConversationItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = conversation.displayName(currentUserId),
+                    text = other.name,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = if (conversation.unreadCount > 0) FontWeight.Bold else FontWeight.Medium,
+                    fontWeight = if (conversation.base.unreadCount > 0) FontWeight.Bold else FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -243,7 +269,7 @@ private fun ConversationItem(
                 Text(
                     text = lastMsg?.timestamp?.toRelativeLabel() ?: "",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (conversation.unreadCount > 0)
+                    color = if (conversation.base.unreadCount > 0)
                         MaterialTheme.colorScheme.primary
                     else
                         MaterialTheme.colorScheme.onSurfaceVariant,
@@ -262,9 +288,9 @@ private fun ConversationItem(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        Text(conversation.productEmoji, fontSize = 11.sp)
+                        Text(conversation.base.productEmoji, fontSize = 11.sp)
                         Text(
-                            text = conversation.productName,
+                            text = conversation.base.productName,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             maxLines = 1,
@@ -278,17 +304,17 @@ private fun ConversationItem(
                             append(lastMsg?.text ?: "")
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (conversation.unreadCount > 0)
+                        color = if (conversation.base.unreadCount > 0)
                             MaterialTheme.colorScheme.onSurface
                         else
                             MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        fontWeight = if (conversation.unreadCount > 0) FontWeight.Medium else FontWeight.Normal,
+                        fontWeight = if (conversation.base.unreadCount > 0) FontWeight.Medium else FontWeight.Normal,
                     )
                 }
 
-                if (conversation.unreadCount > 0) {
+                if (conversation.base.unreadCount > 0) {
                     Spacer(Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
@@ -298,7 +324,7 @@ private fun ConversationItem(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = conversation.unreadCount.toString(),
+                            text = conversation.base.unreadCount.toString(),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontSize = 10.sp,

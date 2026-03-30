@@ -15,9 +15,9 @@ class ViewModelFactory : ViewModelProvider.Factory{
             @Suppress
             return ProductViewModel(UserRepository.getInstance()) as T
         }
-        if (modelClass.isAssignableFrom(ChatRepository::class.java)) {
+        if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
             @Suppress
-            return ChatViewModel(ChatRepository.getInstance()) as T
+            return ChatViewModel(ChatRepository.getInstance(), UserRepository.getInstance()) as T
         }
         throw IllegalArgumentException("Unknown viewmodel class")
     }

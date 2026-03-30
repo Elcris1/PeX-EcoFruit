@@ -63,6 +63,11 @@ object MockData {
             reviewCount = 1,
             rating = 5.0
         ),
+        ChatMockData.currentUser,
+        ChatMockData.marta,
+        ChatMockData.laia,
+        ChatMockData.pau,
+        ChatMockData.jordi
     )
 
     val products = listOf(
