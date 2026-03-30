@@ -16,4 +16,18 @@ class ProductRepository {
     fun addProduct(product: Product) {
         products += product
     }
+
+    companion object {
+        @Volatile
+        private var INSTANCE: ProductRepository? = null
+
+        fun getInstance(): ProductRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: ProductRepository().also {
+                    INSTANCE = it
+                }
+            }
+
+        }
+    }
 }

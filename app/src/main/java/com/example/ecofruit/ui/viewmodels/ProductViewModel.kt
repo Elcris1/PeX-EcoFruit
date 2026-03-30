@@ -15,9 +15,9 @@ data class ProductWithUser(
 )
 
 class ProductViewModel(
-    private val userRepo: UserRepository
+    private val userRepo: UserRepository,
+    private val productRepository: ProductRepository
 ): ViewModel() {
-    private val productRepo = ProductRepository()
 
     private val _products = MutableStateFlow<List<ProductWithUser>>(emptyList())
     val products: StateFlow<List<ProductWithUser>> = _products
@@ -28,7 +28,7 @@ class ProductViewModel(
     }
 
     private fun loadProducts() {
-        val products = productRepo.getProducts()
+        val products = productRepository.getProducts()
 
         val result = products.mapNotNull { product ->
             val user = userRepo.getUserById(product.userId)

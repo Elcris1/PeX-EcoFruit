@@ -40,3 +40,9 @@ data class User (
         return palette[index]
     }
 }
+
+data class FullUserInfo(
+    val user: User,
+    val products: List<Product>,
+    val reviews: List<Review>
+)
