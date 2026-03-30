@@ -66,4 +66,6 @@
     <string name="my_account">My account</string>
     <string name="profile_go_pro_badge">Go Pro!</string>
     <string name="title_activity_settings">SettingsActivity</string>
+    <string name="title_activity_chat">ChatActivity</string>
+    <string name="register_error">There was an error creating your account. Email already in use.</string>
 </resources>

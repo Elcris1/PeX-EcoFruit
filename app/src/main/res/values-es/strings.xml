@@ -65,4 +65,5 @@
     <string name="profile_ratings_count">%d valoraciones</string>
     <string name="my_account">Mi cuenta</string>
     <string name="profile_go_pro_badge">Go Pro!</string>
+    <string name="register_error">Error creando tu cuenta. Email ya en uso.</string>
 </resources>

@@ -22,6 +22,9 @@ class UserViewModel(
     private val _uiState = MutableStateFlow<RequestUiState<User>>(RequestUiState.Idle())
     val uiState: StateFlow<RequestUiState<User>> = _uiState.asStateFlow()
 
+    private val _registerUiState = MutableStateFlow<RequestUiState<User>>(RequestUiState.Idle())
+    val registerUiState:  StateFlow<RequestUiState<User>> = _registerUiState.asStateFlow()
+
 
     fun logUserIn(email: String, password: String) {
 
@@ -35,6 +38,15 @@ class UserViewModel(
 
     fun logOut() {
         userRepo.logOut()
+    }
+
+    fun registerUser(name: String, email: String, password: String) {
+        viewModelScope.launch {
+            _registerUiState.value = RequestUiState.Loading()
+            userRepo.registerUser(name, email, password)
+                .onSuccess { _registerUiState.value = RequestUiState.Success(it) }
+                .onFailure { _registerUiState.value = RequestUiState.Error(it.message ?: "Error") }
+        }
     }
 
 }

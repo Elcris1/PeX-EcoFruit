@@ -1,6 +1,7 @@
 package com.example.ecofruit.ui.activities
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,16 +59,22 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.components.AnimatedBubbleBackground
 import com.example.ecofruit.ui.components.AnimatedCard
 import com.example.ecofruit.ui.components.AnimatedHeader
 import com.example.ecofruit.ui.components.AnimatedRedirectionText
 import com.example.ecofruit.ui.components.CustomTextField
+import com.example.ecofruit.ui.components.ErrorToast
 import com.example.ecofruit.ui.components.LoadingButton
 import com.example.ecofruit.ui.components.PasswordTextField
+import com.example.ecofruit.ui.data.model.RequestUiState
+import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
+import com.example.ecofruit.ui.viewmodels.UserViewModel
+import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.getValue
@@ -74,6 +82,7 @@ import kotlin.getValue
 class RegisterActivity : ComponentActivity() {
 
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,7 +92,10 @@ class RegisterActivity : ComponentActivity() {
             EcoFruitTheme (darkTheme = settings.darkTheme) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    RegisterScreen(modifier = Modifier.padding(innerPadding))
+                    RegisterScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        userViewModel = userViewModel
+                    )
                 }
             }
         }
@@ -95,8 +107,11 @@ class RegisterActivity : ComponentActivity() {
     fun RegisterScreen(
         modifier: Modifier = Modifier,
         onRegisterClick: (name: String, email: String, password: String) -> Unit = { _, _, _ -> },
+        userViewModel: UserViewModel = viewModel()
     ) {
         val context = LocalContext.current
+        val uiState by userViewModel.registerUiState.collectAsState()
+
         var isLoading       by remember { mutableStateOf(false) }
         var name          by remember { mutableStateOf("") }
         var email           by remember { mutableStateOf("") }
@@ -108,6 +123,24 @@ class RegisterActivity : ComponentActivity() {
         var emailError     by remember { mutableStateOf<String?>(null) }
         var passwordError  by remember { mutableStateOf<String?>(null) }
         var termsError     by remember { mutableStateOf(false) }
+
+        var registerError by remember { mutableStateOf(false) }
+        when (uiState) {
+            is RequestUiState.Loading -> isLoading = true
+            is RequestUiState.Success -> {
+                isLoading = false
+                Intent(context, MainActivity::class.java).also {
+                    it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    context.startActivity(it)
+                }
+            }
+            is RequestUiState.Error -> {
+                isLoading = false
+                registerError = true
+
+            }
+            else -> Unit
+        }
 
         val scope        = rememberCoroutineScope()
         @SuppressLint("LocalContextGetResourceValueCall")
@@ -195,16 +228,19 @@ class RegisterActivity : ComponentActivity() {
                             onToggle  = { termsAccepted = !termsAccepted; termsError = false },
                             showError = termsError
                         )
+                        ErrorToast(
+                            message = stringResource(R.string.register_error),
+                            visible = registerError,
+                            onDismiss = {registerError = false },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         LoadingButton(
                             text = stringResource(R.string.create_account),
                             isLoading = isLoading
                         ) {
                             if (validate()) {
                                 scope.launch {
-                                    isLoading = true
-                                    delay(1800)
-                                    isLoading = false
-                                    onRegisterClick(name,  email, password)
+                                    userViewModel.registerUser(name, email, password)
                                 }
                             }
                         }
