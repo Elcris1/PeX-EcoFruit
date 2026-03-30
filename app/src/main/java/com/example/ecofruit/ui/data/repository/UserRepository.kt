@@ -1,9 +1,6 @@
 package com.example.ecofruit.ui.data.repository
 
-import android.nfc.Tag
 import android.util.Log
-import androidx.compose.animation.core.rememberTransition
-import com.example.ecofruit.ui.activities.LoginScreen
 import com.example.ecofruit.ui.data.mock.MockData
 import com.example.ecofruit.ui.data.model.User
 import kotlinx.coroutines.delay
@@ -12,7 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.UUID
-import kotlin.math.log
 
 
 class UserRepository private constructor() {
@@ -73,10 +69,8 @@ class UserRepository private constructor() {
             _users.update { currentUsers ->
                 currentUsers + user
             }
-            Log.d(TAG, "Users list: ${_users.value}")
         }
         if (user!= null){
-            Log.d(TAG, "Success creating user")
             _user.value = user
             return Result.success(user)
         } else {
