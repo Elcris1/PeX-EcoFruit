@@ -2,6 +2,7 @@ package com.example.ecofruit.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.ecofruit.ui.data.repository.ChatRepository
 import com.example.ecofruit.ui.data.repository.UserRepository
 
 class ViewModelFactory : ViewModelProvider.Factory{
@@ -13,6 +14,10 @@ class ViewModelFactory : ViewModelProvider.Factory{
         if (modelClass.isAssignableFrom(ProductViewModel::class.java)) {
             @Suppress
             return ProductViewModel(UserRepository.getInstance()) as T
+        }
+        if (modelClass.isAssignableFrom(ChatRepository::class.java)) {
+            @Suppress
+            return ChatViewModel(ChatRepository.getInstance()) as T
         }
         throw IllegalArgumentException("Unknown viewmodel class")
     }

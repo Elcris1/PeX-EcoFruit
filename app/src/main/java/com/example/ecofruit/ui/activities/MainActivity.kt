@@ -64,6 +64,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+//TODO: manage rights for location and wifi
 @Composable
 fun MainScreen(
     productsViewModel: ProductViewModel = viewModel(),
@@ -120,7 +122,14 @@ fun MainScreen(
             composable(Screen.Home.route)     { HomeScreen() }
             composable(Screen.Search.route)   { SearchScreen() }
             composable(Screen.Sell.route)     { SellScreen() }
-            composable(Screen.Inbox.route)    { InboxScreen() }
+            composable(Screen.Inbox.route)    { InboxScreen(
+                onConversationClick = { conversation ->
+                    Intent(context, ChatActivity::class.java).also {
+                        it.putExtra("conversation_id", conversation.id)
+                        context.startActivity(it)
+                    }
+                }
+            ) }
             composable(Screen.Profile.route)  { ProfileScreen(
                 user = user,
                 onEditProfile = {},
