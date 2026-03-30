@@ -56,6 +56,7 @@ class LauncherActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            //TODO: detect language preferences
 
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
 

@@ -59,6 +59,9 @@ class SettingsActivity : ComponentActivity() {
     }
 }
 
+//TODO: fix stringresources
+//TODO: remove useless configurations
+
 // ── Root screen ────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
