@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.activities
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,6 +18,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,6 +34,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -76,6 +79,8 @@ class ChatActivity : ComponentActivity() {
             val chatState by chatViewModel.chatState.collectAsState()
             val messages by chatViewModel.messages.collectAsState()
 
+            val context = LocalContext.current
+
             LaunchedEffect(Unit) {
                 chatViewModel.getConversationUIFromId(conversationId, user!!.id)
                 chatViewModel.markConversationAsRead(conversationId)
@@ -88,6 +93,12 @@ class ChatActivity : ComponentActivity() {
                         conversation = conversationUI,
                         messages = messages,
                         chatState = chatState,
+                        onProfileClick = {userId ->
+                            Intent(context, ViewProfileActivity::class.java).also {
+                                it.putExtra("user_id", userId)
+                                context.startActivity(it)
+                            }
+                        },
                         onSend = { message ->
                             chatViewModel.addMessage(message)
                         },
@@ -109,6 +120,7 @@ fun ChatScreen(
     conversation: ConversationUI? = ConversationUI(base = ChatMockData.conversations.first(), otherUser = ChatMockData.marta),
     messages: List<ChatMessage> = ChatMockData.firstMessages,
     chatState: RequestUiState<Boolean>,
+    onProfileClick: (String) -> Unit = {},
     onSend: (ChatMessage) -> Unit = {},
     onBackClick: () -> Unit = {},
 ) {
@@ -146,6 +158,7 @@ fun ChatScreen(
             topBar = {
                 ChatTopBar(
                     conversation = conversation,
+                    onProfileClick = onProfileClick,
                     onBackClick = onBackClick,
                 )
             },
@@ -209,6 +222,7 @@ fun ChatScreen(
 @Composable
 private fun ChatTopBar(
     conversation: ConversationUI,
+    onProfileClick: (String) -> Unit,
     onBackClick: () -> Unit,
 ) {
 
@@ -236,7 +250,11 @@ private fun ChatTopBar(
             // Reutilizamos UserAvatar de ConversationsScreen
             UserAvatar(user = conversation.otherUser, size = 40)
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f).clickable {
+                    onProfileClick(conversation.otherUser.id)
+                }
+            ) {
                 Text(
                     text = other.name,
                     style = MaterialTheme.typography.titleSmall,

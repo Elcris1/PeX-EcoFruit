@@ -11,8 +11,8 @@ data class User (
     val bio: String,
     val location: Location?,
     val isProducer: Boolean,
-    val following: List<String>,
-    val followers: Int,
+    var following: List<String>,
+    var followers: Int,
     val reviewCount: Int,
     val rating: Double
 ) {

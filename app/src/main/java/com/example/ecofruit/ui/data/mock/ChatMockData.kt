@@ -30,7 +30,7 @@ object ChatMockData {
         name = "Marta Oliveira",
         email = "marta@ecofruit.com",
         createdAt = 1_690_000_000L,
-        profileImageUrl = "",
+        profileImageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHRh730XAA9_DpBhSC9yF-DlqiKXC_xtzU3A&s",
         bio = "Amante de los productos locales",
         location = null,
         isProducer = false,
@@ -112,12 +112,16 @@ object ChatMockData {
         ChatMessage("m2_004", "conv_004", pau.id, "Genial! Paso esta tarde.", LocalDateTime.now().minusDays(3).minusHours(6), MessageStatus.READ),
         ChatMessage("m3_004", "conv_004", pau.id, "Muchas gracias, fue todo perfecto 🌿", LocalDateTime.now().minusDays(3), MessageStatus.READ),
     )
+    val fifthMessages = listOf(
+        ChatMessage(id = "m1_001", conversationId = "conv_005", senderId = currentUser.id, text = "Hola!!", timestamp = LocalDateTime.now(), MessageStatus.SENT )
+    )
 
-    val messages = firstMessages + secondMessages + thirdMessages + fourthMessages
+    val messages = firstMessages + secondMessages + thirdMessages + fourthMessages + fifthMessages
     val conversations: List<Conversation> = listOf(
         Conversation(id = "conv_001", participantsId = listOf(currentUser.id, marta.id), lastMessage = firstMessages.last(), unreadCount = 2, tag = ConversationTag.COMPRA, productId = "prod_001", productName = "Limones ecológicos", productEmoji = "🍋"),
         Conversation(id = "conv_002", participantsId = listOf(currentUser.id, jordi.id), lastMessage = secondMessages.last(), unreadCount = 0, tag = ConversationTag.VENTA, productId = "prod_002", productName = "Tomates cherry", productEmoji = "🍅"),
         Conversation(id = "conv_003", participantsId = listOf(currentUser.id, laia.id), lastMessage = thirdMessages.last(), unreadCount = 1, tag = ConversationTag.CONSULTA, productId = "prod_003", productName = "Granola artesanal", productEmoji = "🌾"),
-        Conversation(id = "conv_004", participantsId = listOf(currentUser.id, pau.id), lastMessage = fourthMessages.last(), unreadCount = 0, tag = ConversationTag.COMPRA, productId = "prod_004", productName = "Aceite de oliva", productEmoji = "🫒")
+        Conversation(id = "conv_004", participantsId = listOf(currentUser.id, pau.id), lastMessage = fourthMessages.last(), unreadCount = 0, tag = ConversationTag.COMPRA, productId = "prod_004", productName = "Aceite de oliva", productEmoji = "🫒"),
+        Conversation(id = "conv_005", participantsId = listOf(currentUser.id, "u4"), lastMessage = fifthMessages.last(), unreadCount = 1, tag = ConversationTag.CONSULTA, productId = "p3", productName = "Product 2", productEmoji = "ND")
     )
 }

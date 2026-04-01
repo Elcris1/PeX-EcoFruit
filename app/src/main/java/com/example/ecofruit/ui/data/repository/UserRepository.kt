@@ -79,6 +79,26 @@ class UserRepository private constructor() {
 
     }
 
+    fun followUser(userId: String) {
+        if (_user.value?.following == null) {
+            _user.value?.following = listOf(userId)
+        } else {
+            _user.value?.following += userId
+        }
+
+        getUserById(userId)?.let {
+            it.followers += 1
+        }
+    }
+
+    fun unfollowUser(userId: String){
+        _user.value?.following -= userId
+
+        getUserById(userId)?.let {
+            it.followers -= 1
+        }
+    }
+
 
     //Patron singleton
     companion object {

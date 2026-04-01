@@ -49,4 +49,12 @@ class UserViewModel(
         }
     }
 
+    fun followUser(userId: String) {
+        userRepo.followUser(userId)
+    }
+
+    fun unfollowUser(userId: String) {
+        userRepo.unfollowUser(userId)
+    }
+
 }

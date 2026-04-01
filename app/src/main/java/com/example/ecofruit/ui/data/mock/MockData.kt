@@ -105,6 +105,17 @@ object MockData {
             userAvatar = "https://img.freepik.com/vector-premium/granjero-dibujos-animados-pie-hierba-verde_1305385-8640.jpg?semt=ais_hybrid&w=740&q=80",
             favouritesList = emptyList()
         ),
+        Product(
+            id = "p4",
+            name = "Product Test for Profile",
+            description = "Product with image and profile image",
+            imagesUrl = listOf("https://www.bupasalud.com/sites/default/files/inline-images/fuji-red.jpg"),
+            price = 10.0,
+            userId = ChatMockData.marta.id,
+            userName = ChatMockData.marta.name,
+            userAvatar = "https://img.freepik.com/vector-premium/granjero-dibujos-animados-pie-hierba-verde_1305385-8640.jpg?semt=ais_hybrid&w=740&q=80",
+            favouritesList = listOf(ChatMockData.currentUser.id)
+        ),
 
     )
     val reviews = listOf(
@@ -133,7 +144,7 @@ object MockData {
             createdAt = 0
         ),
         Review(
-            id = "r2",
+            id = "r3",
             userId = "u1",
             dstId = "u4",
             reviewType = ReviewType.USER,
@@ -144,5 +155,17 @@ object MockData {
             description = "One of the best productors ive ever talked to",
             createdAt = 0
         ),
+        Review(
+            id = "r4",
+            userId = ChatMockData.currentUser.id,
+            dstId = ChatMockData.marta.id,
+            reviewType = ReviewType.USER,
+            authorName = ChatMockData.currentUser.name,
+            authorAvatar = ChatMockData.currentUser.profileImageUrl,
+            rating = 5.0,
+            title = "Really kind",
+            description = "Marta always performing",
+            createdAt = ChatMockData.currentUser.createdAt + 900000,
+        )
     )
 }

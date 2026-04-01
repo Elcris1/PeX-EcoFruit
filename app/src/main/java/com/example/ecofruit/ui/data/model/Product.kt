@@ -9,5 +9,5 @@ data class Product (
     val userId: String,
     val userName: String,
     val userAvatar: String,
-    var favouritesList: List<String>
+    var favouritesList: List<String> //list of user ids that liked the item
 )
