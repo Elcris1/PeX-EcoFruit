@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.data.mock
 
+import com.example.ecofruit.ui.data.constants.ProductUnit
 import com.example.ecofruit.ui.data.constants.ReviewType
 import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.model.Review
@@ -80,7 +81,11 @@ object MockData {
             userId = "u2",
             userName = "Eloi Productor",
             userAvatar =  "",
-            favouritesList = emptyList()
+            favouritesList = emptyList(),
+            reviewCount = 0,
+            rating = 0.0,
+            createdAt = 0,
+            unit = ProductUnit.KG
         ),
         Product(
             id = "p2",
@@ -91,8 +96,11 @@ object MockData {
             userId = "",
             userName = "",
             userAvatar = "",
-            favouritesList = emptyList()
-
+            favouritesList = emptyList(),
+            reviewCount = 0,
+            rating = 0.0,
+            createdAt = 0,
+            unit = ProductUnit.KG
         ),
         Product(
             id = "p3",
@@ -103,7 +111,11 @@ object MockData {
             userId = "u4",
             userName = "Productor with Image",
             userAvatar = "https://img.freepik.com/vector-premium/granjero-dibujos-animados-pie-hierba-verde_1305385-8640.jpg?semt=ais_hybrid&w=740&q=80",
-            favouritesList = emptyList()
+            favouritesList = emptyList(),
+            reviewCount = 0,
+            rating = 0.0,
+            createdAt = 0,
+            unit = ProductUnit.KG
         ),
         Product(
             id = "p4",
@@ -114,7 +126,11 @@ object MockData {
             userId = ChatMockData.marta.id,
             userName = ChatMockData.marta.name,
             userAvatar = "https://img.freepik.com/vector-premium/granjero-dibujos-animados-pie-hierba-verde_1305385-8640.jpg?semt=ais_hybrid&w=740&q=80",
-            favouritesList = listOf(ChatMockData.currentUser.id)
+            favouritesList = listOf(ChatMockData.currentUser.id),
+            reviewCount = 0,
+            rating = 0.0,
+            createdAt = 0,
+            unit = ProductUnit.KG
         ),
 
     )

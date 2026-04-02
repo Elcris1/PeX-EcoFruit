@@ -36,6 +36,7 @@ import com.example.ecofruit.ui.components.RatingRow
 import com.example.ecofruit.ui.components.UserImage
 import com.example.ecofruit.ui.components.getReadableData
 import com.example.ecofruit.ui.components.getYear
+import com.example.ecofruit.ui.data.constants.ProductUnit
 import com.example.ecofruit.ui.data.constants.ReviewType
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.data.model.FullUserInfo
@@ -801,13 +802,12 @@ fun UserProfileScreenPreview() {
                 bio = "Apasionada del slow fashion y el consumo responsable 🌿 Vendo ropa de calidad que ya no uso.",
             ),
             products = listOf(
-                Product(id= "1", name= "Chaqueta de lana vintage", description="Chaqueta", imagesUrl = listOf(""), price = 35.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf("u3") ),
-                Product(id= "2", name= "Vestido boho floral", description="Chaqueta", imagesUrl = listOf(""), price = 22.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf() ),
-                Product(id= "3", name= "Botines de cuero", description="Chaqueta", imagesUrl = listOf(""), price = 45.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf() ),
-                Product(id= "4", name= "Bolso", description="Chaqueta", imagesUrl = listOf(""), price = 18.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf("u3") ),
-                Product(id= "5", name= "Gorro", description="Chaqueta", imagesUrl = listOf(""), price = 12.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf() ),
-                Product(id= "6", name= "Pañuelo", description="Chaqueta", imagesUrl = listOf(""), price = 22.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf() ),
-
+                Product(id= "1", name= "Chaqueta de lana vintage", description="Chaqueta", imagesUrl = listOf(""), price = 35.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf("u3"), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG),
+                Product(id= "2", name= "Vestido boho floral", description="Chaqueta", imagesUrl = listOf(""), price = 22.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG),
+                Product(id= "3", name= "Botines de cuero", description="Chaqueta", imagesUrl = listOf(""), price = 45.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG),
+                Product(id= "4", name= "Bolso", description="Chaqueta", imagesUrl = listOf(""), price = 18.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf("u3"), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG),
+                Product(id= "5", name= "Gorro", description="Chaqueta", imagesUrl = listOf(""), price = 12.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG),
+                Product(id= "6", name= "Pañuelo", description="Chaqueta", imagesUrl = listOf(""), price = 22.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG),
                 ),
             reviews = listOf(
                 Review(id = "r1", authorName = "Marta L.", userId = "u5", dstId = "u1", title="Todo perfecto, muy rápida enviando y el artículo tal como se describía. ¡Repetiría!", authorAvatar = "", createdAt = 0, reviewType = ReviewType.USER, rating = 5.0, description = "Repetiria"),
