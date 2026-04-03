@@ -46,7 +46,7 @@ fun getReadableData(timestamp: Long): String {
 
 
 @Composable
-fun UserImage(imageUrl: String, name: String) {
+fun UserImage(imageUrl: String, name: String, modifier: Modifier = Modifier.size(120.dp)) {
     if (imageUrl != "") {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -62,7 +62,7 @@ fun UserImage(imageUrl: String, name: String) {
                 .crossfade(true)
                 .build(),
             contentDescription = "Imagen de usuario",
-            modifier = Modifier.size(120.dp),
+            modifier = modifier,
             contentScale = ContentScale.Crop,
            //TODO: poner imagen para cuando haya error.
         )

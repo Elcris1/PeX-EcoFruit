@@ -14,15 +14,15 @@ class ProductRepository {
 
     fun getProductsFromUserId(userId: String) = getProducts().filter { it.userId == userId }
 
-    fun getFavouriteProducts(userId: String) {
-        getProducts().filter { userId in it.favouritesList }.sortedByDescending { it.rating }
+    fun getFavouriteProducts(userId: String): List<Product> {
+        return getProducts().filter { userId in it.favouritesList }.sortedByDescending { it.rating }
     }
 
-    fun getProductsFromFollowingUsers(user: User){
-        getProducts().filter { it.userId in user.following }.sortedByDescending { it.createdAt }
+    fun getProductsFromFollowingUsers(user: User): List<Product> {
+        return getProducts().filter { it.userId in user.following }.sortedByDescending { it.createdAt }
     }
-    fun getRecommendedProducts(userId: String) {
-        getProducts().sortedByDescending { it.recommendationScore() }
+    fun getRecommendedProducts(userId: String) : List<Product> {
+        return getProducts().sortedByDescending { it.recommendationScore() }
     }
 
     fun addProduct(product: Product) {

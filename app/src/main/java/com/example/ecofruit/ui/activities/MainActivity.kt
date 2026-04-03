@@ -30,6 +30,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.ecofruit.ui.data.mock.MockData
+import com.example.ecofruit.ui.data.mock.ProductsMockData.allProducts
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.navigation.Screen
 import com.example.ecofruit.ui.navigation.bottomNavItems
@@ -97,10 +99,16 @@ fun MainScreen(
         !screen.isSeller || user?.isProducer == true
     }
 
-    LaunchedEffect(Unit) {
-        user?.id?.let { it->
-            chatViewModel.getConversationsFromUser(it)
+    //Home page
+    val currentUser = user
+    val recommendedProducts by productsViewModel.recommendedProducts.collectAsState(emptyList())
+    val followedProducerProducts by productsViewModel.followingProducts.collectAsState(emptyList())
+    val favouriteProducts by productsViewModel.favouriteProducts.collectAsState(emptyList())
 
+    LaunchedEffect(Unit) {
+        user?.let { it ->
+            chatViewModel.getConversationsFromUser(it.id)
+            productsViewModel.loadHomePage(it)
         }
     }
 
@@ -111,6 +119,7 @@ fun MainScreen(
 
         }
     }
+
 
 
 
@@ -150,7 +159,30 @@ fun MainScreen(
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Home.route)     { HomeScreen() }
+            /*
+            val currentUser = MockData.users[0]
+            val recommendedProducts = listOf(
+                allProducts[0], // Manzanas
+                allProducts[5], // Pan
+                allProducts[6], // Queso
+                allProducts[1]  // Tomates
+            )
+            val followedProducerProducts = allProducts.filter {
+                it.userId == "u1" || it.userId == "u3"
+            }
+            val favouriteProducts = allProducts.filter {
+                it.favouritesList.contains(currentUser.id)
+            }
+
+             */
+
+
+            composable(Screen.Home.route)     { HomeScreen(
+                currentUser = currentUser,
+                recommendedProducts,
+                followedProducerProducts,
+                favouriteProducts
+            ) }
             composable(Screen.Search.route)   { SearchScreen() }
             composable(Screen.Sell.route)     { SellScreen() }
             composable(Screen.Inbox.route)    { InboxScreen(
