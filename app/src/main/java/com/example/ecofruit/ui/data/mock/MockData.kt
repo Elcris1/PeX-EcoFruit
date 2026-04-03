@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.data.mock
 
+import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
 import com.example.ecofruit.ui.data.constants.ReviewType
 import com.example.ecofruit.ui.data.model.Product
@@ -85,7 +86,9 @@ object MockData {
             reviewCount = 0,
             rating = 0.0,
             createdAt = 0,
-            unit = ProductUnit.KG
+            unit = ProductUnit.KG,
+            isOrganic = true,
+            type = ProductType.VEGETABLES
         ),
         Product(
             id = "p2",
@@ -100,7 +103,9 @@ object MockData {
             reviewCount = 0,
             rating = 0.0,
             createdAt = 0,
-            unit = ProductUnit.KG
+            unit = ProductUnit.KG,
+            isOrganic = false,
+            type = ProductType.FROM_ANIMAL
         ),
         Product(
             id = "p3",
@@ -115,7 +120,9 @@ object MockData {
             reviewCount = 0,
             rating = 0.0,
             createdAt = 0,
-            unit = ProductUnit.KG
+            unit = ProductUnit.KG,
+            isOrganic = true,
+            type = ProductType.TRADITIONAL
         ),
         Product(
             id = "p4",
@@ -130,7 +137,9 @@ object MockData {
             reviewCount = 0,
             rating = 0.0,
             createdAt = 0,
-            unit = ProductUnit.KG
+            unit = ProductUnit.KG,
+            isOrganic = true,
+            type = ProductType.FRUITS
         ),
 
     )

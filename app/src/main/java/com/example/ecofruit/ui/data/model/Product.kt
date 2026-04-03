@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.data.model
 
+import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
 
 data class Product (
@@ -11,6 +12,8 @@ data class Product (
     val imagesUrl: List<String>,
     val price: Double,
     val unit: ProductUnit,
+    val isOrganic: Boolean,
+    val type: ProductType,
     val userId: String,
     val userName: String,
     val userAvatar: String,

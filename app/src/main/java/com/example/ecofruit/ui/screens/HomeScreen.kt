@@ -561,8 +561,8 @@ fun ProductCard(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Organic badge
-                /*
+                // Organic badgeproduct.isOrganic
+
                 if (product.isOrganic) {
                     Surface(
                         modifier = Modifier
@@ -581,7 +581,7 @@ fun ProductCard(
                     }
                 }
 
-                 */
+
 
                 // Favorite button
                 IconButton(
@@ -600,7 +600,6 @@ fun ProductCard(
                     )
                 }
 
-                //TODO: maybe add number of images?
 
                 // Producer avatar (for "followed" section)
                 /*

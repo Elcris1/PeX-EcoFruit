@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.data.mock
 
+import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
 import com.example.ecofruit.ui.data.model.Product
 
@@ -21,7 +22,9 @@ object ProductsMockData {
             userAvatar = "https://i.pravatar.cc/150?img=1",
             favouritesList = listOf("u2", "u3"),
             rating = 4.8,
-            reviewCount = 21
+            reviewCount = 21,
+            isOrganic = true,
+            type = ProductType.FRUITS
         ),
         Product(
             id = "p2",
@@ -38,7 +41,9 @@ object ProductsMockData {
             userAvatar = "https://i.pravatar.cc/150?img=8",
             favouritesList = listOf("u1"),
             rating = 4.5,
-            reviewCount = 10
+            reviewCount = 10,
+            isOrganic = false,
+            type = ProductType.FRUITS
         ),
         Product(
             id = "p3",
@@ -55,7 +60,9 @@ object ProductsMockData {
             userAvatar = "https://i.pravatar.cc/150?img=1",
             favouritesList = emptyList(),
             rating = 4.2,
-            reviewCount = 5
+            reviewCount = 5,
+            isOrganic = false,
+            type = ProductType.FROM_ANIMAL
         ),
         Product(
             id = "p4",
@@ -72,7 +79,9 @@ object ProductsMockData {
             userAvatar = "https://i.pravatar.cc/150?img=8",
             favouritesList = listOf("u2"),
             rating = 4.6,
-            reviewCount = 14
+            reviewCount = 14,
+            isOrganic = false,
+            type = ProductType.FROM_ANIMAL
         )
     )
     val extraProducts = listOf(
@@ -89,7 +98,9 @@ object ProductsMockData {
             userAvatar = "https://i.pravatar.cc/150?img=8",
             favouritesList = listOf("u1", "u2"),
             rating = 4.4,
-            reviewCount = 9
+            reviewCount = 9,
+            isOrganic = true,
+            type = ProductType.VEGETABLES
         ),
         Product(
             id = "p6",
@@ -104,7 +115,9 @@ object ProductsMockData {
             userAvatar = "https://i.pravatar.cc/150?img=5",
             favouritesList = listOf("u1"),
             rating = 4.9,
-            reviewCount = 40
+            reviewCount = 40,
+            isOrganic = false,
+            type = ProductType.CEREAL
         ),
         Product(
             id = "p7",
@@ -119,7 +132,9 @@ object ProductsMockData {
             userAvatar = "https://i.pravatar.cc/150?img=1",
             favouritesList = listOf("u2", "u3"),
             rating = 4.7,
-            reviewCount = 18
+            reviewCount = 18,
+            isOrganic = false,
+            type = ProductType.FROM_ANIMAL
         )
     )
     val allProducts = mockProducts + extraProducts
