@@ -69,4 +69,17 @@
     <string name="title_activity_chat">ChatActivity</string>
     <string name="register_error">There was an error creating your account. Email already in use.</string>
     <string name="title_activity_view_profile">ViewProfileActivity</string>
+    <string name="product_type_fruits">Fruits</string>
+    <string name="product_type_vegetables">Vegetables</string>
+    <string name="product_type_animal">From animal</string>
+    <string name="product_type_cereal">Cereal</string>
+    <string name="product_type_traditional">Traditional</string>
+    <string name="product_type_plants">Plants</string>
+    <string name="product_type_other">Other</string>
+    <string name="label_price">Price</string>
+    <string name="placeholder_price">Ex: 2.50</string>
+    <string name="product_unit_kg">Kg</string>
+    <string name="product_unit_lb">Lb</string>
+    <string name="product_unit_liter">L</string>
+    <string name="product_unit_unit">Unit</string>
 </resources>

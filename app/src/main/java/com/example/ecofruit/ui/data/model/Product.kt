@@ -4,7 +4,6 @@ import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
 
 data class Product (
-    //TODO: add product categories: fruit, vegetable, meat..
     val id: String,
     val name: String,
     val description: String,
