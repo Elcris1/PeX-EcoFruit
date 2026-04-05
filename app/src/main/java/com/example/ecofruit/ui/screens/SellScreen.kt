@@ -32,6 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
@@ -116,6 +117,7 @@ fun SellScreen(
     onPublish: (Product) -> Unit = {}
 ) {
 
+    val context = LocalContext.current
     //TAB BAR VARIABLES
     var page by mutableIntStateOf(0)
 
@@ -133,18 +135,19 @@ fun SellScreen(
     var descriptionError by remember { mutableStateOf<String?>(null)}
     var priceError by remember { mutableStateOf<String?>(null) }
 
+    @SuppressLint("LocalContextGetResourceValueCall")
     fun validateGeneral(): Boolean {
         var valid = true
         if (name.isBlank()) {
-            nameError = "El nombre no puede estar vació"
+            nameError = context.getString(R.string.name_mandatory)
             valid = false
         };
         if (description.isBlank()) {
-            descriptionError = "La descripcion no puede estar vació"
+            descriptionError = context.getString(R.string.sell_description_mandatory)
             valid = false
         };
         if (price.isBlank()) {
-            priceError = "El precio no puede estar vacío"
+            priceError = context.getString(R.string.sell_price_mandatory)
             valid = false
         };
 
@@ -291,7 +294,7 @@ private fun SellTopBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                 Text(
-                    text = "Vender producto",
+                    text = stringResource(R.string.publish_product),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -304,7 +307,7 @@ private fun SellTopBar(
         navigationIcon = {
             if(page > 0){
                 OutlinedGeneralButton(
-                    text = "Atras",
+                    text = stringResource(R.string.back),
                     onClick = onBackClick,
                     modifier = Modifier.padding(end = 10.dp)
                 )
@@ -313,11 +316,11 @@ private fun SellTopBar(
         actions = {
             if (page < 2) {
                 OutlinedGeneralButton(
-                    text = "Siguiente",
+                    text = stringResource(R.string.next),
                     onClick = onNextClick
                 )
             } else {
-                OutlinedGeneralButton(text = "Publicar", onClick = onPublish)
+                OutlinedGeneralButton(text = stringResource(R.string.publish), onClick = onPublish)
 
             }
 
@@ -372,7 +375,7 @@ private fun InitialSellingScreen(
         ) {
 
             Text(
-                text = "Información general",
+                text = stringResource(R.string.sell_general_information),
                 style = MaterialTheme.typography.titleLarge,
                 color = colorScheme.primary
             )
@@ -381,17 +384,17 @@ private fun InitialSellingScreen(
             CustomTextField(
                 value = name,
                 onValueChange = { onNameChange(it) },
-                label = "Nombre",
-                placeholder = "Introduce el nombre",
-                icon = Icons.Default.Person,
+                label = stringResource(R.string.sell_product_name_label),
+                placeholder = stringResource(R.string.sell_product_name_placeholder),
+                icon = Icons.Default.AssignmentInd,
                 errorMessage = nameError
             )
 
             CustomTextField(
                 value = description,
                 onValueChange = {onDescriptionChange(it) },
-                label = "Descripción",
-                placeholder = "Introduce la descripción",
+                label = stringResource(R.string.sell_product_description_label),
+                placeholder =  stringResource(R.string.sell_product_description_placeholder),
                 icon = Icons.Default.Info,
                 errorMessage = descriptionError
             )
@@ -405,7 +408,7 @@ private fun InitialSellingScreen(
                     value = stringResource(selectedCategory.toDisplayNameRes()),
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Categoría") },
+                    label = { Text(stringResource(R.string.sell_product_category_label)) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = colorScheme.surface,
                         unfocusedContainerColor = colorScheme.surface
@@ -439,7 +442,7 @@ private fun InitialSellingScreen(
                     checked = isOrganic,
                     onCheckedChange = { onOrganicChange(it) }
                 )
-                Text(text = "Producto orgánico")
+                Text(text = stringResource(R.string.sell_product_organic_label))
             }
 
             CustomTextField(
@@ -461,7 +464,7 @@ private fun InitialSellingScreen(
                     value = stringResource(selectedUnit.toDisplayNameRes()),
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Unidad") },
+                    label = { Text(stringResource(R.string.unit)) },
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(unitExpanded)
                     },
@@ -529,7 +532,7 @@ private fun SelectImagesScreen(
 
             item {
                 Text(
-                    text = "Imagenes para el producto",
+                    text = stringResource(R.string.sell_product_images),
                     style = MaterialTheme.typography.titleLarge,
                     color = colorScheme.primary,
                 )
@@ -537,7 +540,7 @@ private fun SelectImagesScreen(
 
             item {
                 GeneralButton (
-                    text = "Seleccionar imagenes",
+                    text = stringResource(R.string.sell_product_select_images),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     launcher.launch(
@@ -551,7 +554,6 @@ private fun SelectImagesScreen(
 
             }
 
-            // ✅ Grid manual en filas de 3 — sin LazyVerticalGrid anidado
             items(images.chunked(3)) { rowImages ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -574,7 +576,7 @@ private fun SelectImagesScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Eliminar",
+                                    contentDescription = "Delete",
                                     tint = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier
                                         .background(
@@ -608,7 +610,7 @@ private fun PublishSellingScreen(
 
 
     Column  {
-        Text(text = "Ubicación del producto")
+        Text(text = stringResource(R.string.sell_product_location))
 
         var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
 
@@ -646,7 +648,7 @@ private fun SuccessScreen(
             AnimatedCheck()
 
             Text(
-                "Producto publicado",
+                stringResource(R.string.sell_prodcut_posted),
                 style = typography.titleLarge.copy(
                     fontWeight = FontWeight.Black,
                     color = colorScheme.onSurface
@@ -654,7 +656,7 @@ private fun SuccessScreen(
                 textAlign = TextAlign.Center
             )
             GeneralButton(
-                text = "Publicar otro producto",
+                text = stringResource(R.string.sell_product_post_again),
                 onClick = onNewProduct,
                 modifier = Modifier.fillMaxWidth(0.8f)
             )

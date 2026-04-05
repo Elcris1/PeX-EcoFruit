@@ -95,4 +95,23 @@
     <string name="home_show_less">Show less</string>
     <string name="home_eco_tag">ECO</string>
     <string name="home_favourite_content_description">Favourite icon</string>
+    <string name="sell_description_mandatory">The description must not be empty</string>
+    <string name="sell_price_mandatory">The price must not be empty</string>
+    <string name="publish_product">Post product</string>
+    <string name="back">Back</string>
+    <string name="next">Next</string>
+    <string name="publish">Post</string>
+    <string name="sell_general_information">General information</string>
+    <string name="sell_product_name_label">Name of the product</string>
+    <string name="sell_product_name_placeholder">Insert the name of the product</string>
+    <string name="sell_product_description_label">Description of the product</string>
+    <string name="sell_product_description_placeholder">Insert the description</string>
+    <string name="sell_product_category_label">Category</string>
+    <string name="sell_product_organic_label">Organic product</string>
+    <string name="unit">Unit</string>
+    <string name="sell_product_images">Images for the product</string>
+    <string name="sell_product_select_images">Select images</string>
+    <string name="sell_product_location">Location source of the product</string>
+    <string name="sell_prodcut_posted">Product posted!</string>
+    <string name="sell_product_post_again">Create a new post</string>
 </resources>

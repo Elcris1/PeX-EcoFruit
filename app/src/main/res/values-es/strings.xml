@@ -92,4 +92,23 @@
     <string name="home_show_less">Mostrar menos</string>
     <string name="home_eco_tag">ECO</string>
     <string name="home_favourite_content_description">Icono favoritos</string>
+    <string name="sell_description_mandatory">La descripción no puede estar vacía</string>
+    <string name="sell_price_mandatory">El precio no puede estar vacío</string>
+    <string name="publish_product">Publicar producto</string>
+    <string name="back">Atras</string>
+    <string name="next">Siguiente</string>
+    <string name="publish">Publicar</string>
+    <string name="sell_general_information">Información general</string>
+    <string name="sell_product_name_label">Nombre del producto</string>
+    <string name="sell_product_name_placeholder">Introduce el nombre del producto</string>
+    <string name="sell_product_description_label">Descripción del producto</string>
+    <string name="sell_product_description_placeholder">Introduce la descripción</string>
+    <string name="sell_product_category_label">Categoria</string>
+    <string name="sell_product_organic_label">Producto orgánico</string>
+    <string name="unit">Unidad</string>
+    <string name="sell_product_images">Imagenes para el producto</string>
+    <string name="sell_product_select_images">Seleciona las imagenes</string>
+    <string name="sell_product_location">Ubicación de origen del producto</string>
+    <string name="sell_prodcut_posted">¡Producto publicado!</string>
+    <string name="sell_product_post_again">Crear nueva publicación</string>
 </resources>

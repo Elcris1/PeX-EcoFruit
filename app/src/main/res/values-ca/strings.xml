@@ -93,4 +93,23 @@
     <string name="home_show_less">Mostrar menys</string>
     <string name="home_eco_tag">ECO</string>
     <string name="home_favourite_content_description">Icona favorits</string>
+    <string name="sell_description_mandatory">La descrició no pot estar buida</string>
+    <string name="sell_price_mandatory">El preu no pot estar buït</string>
+    <string name="publish_product">Publicar producte</string>
+    <string name="back">Enradere</string>
+    <string name="next">Següent</string>
+    <string name="publish">Publicar</string>
+    <string name="sell_general_information">Informació general</string>
+    <string name="sell_product_name_label">Nom del producte</string>
+    <string name="sell_product_name_placeholder">Introdueix el nom del producte</string>
+    <string name="sell_product_description_label">Descripció del producte</string>
+    <string name="sell_product_description_placeholder">Introdueix la descripció</string>
+    <string name="sell_product_category_label">Categoria</string>
+    <string name="sell_product_organic_label">Producte orgànic</string>
+    <string name="unit">Unitat</string>
+    <string name="sell_product_images">Imatges per al producte</string>
+    <string name="sell_product_select_images">Selecciona les imatges</string>
+    <string name="sell_product_location">Ubació d\'origen del producte</string>
+    <string name="sell_prodcut_posted">Producte publicat!</string>
+    <string name="sell_product_post_again">Crear nova publicació</string>
 </resources>
