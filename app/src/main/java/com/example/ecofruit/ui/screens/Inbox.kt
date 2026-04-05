@@ -401,7 +401,7 @@ private fun FilterChipItem(label: String, selected: Boolean, onClick: () -> Unit
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 @Composable
-private fun ConversationTag.displayName() = when (this) {
+fun ConversationTag.displayName() = when (this) {
     ConversationTag.COMPRA   -> stringResource(R.string.inbox_buy)
     ConversationTag.VENTA    -> stringResource(R.string.inbox_sell)
     ConversationTag.CONSULTA -> stringResource(R.string.inbox_consultation)

@@ -121,4 +121,7 @@
     <string name="inbox_buy">Compra</string>
     <string name="inbox_sell">Venta</string>
     <string name="inbox_consultation">Consulta</string>
+    <string name="chat_today">Avui</string>
+    <string name="chat_reviews">valoracions</string>
+    <string name="chat_write_message">Escriu un missatge..</string>
 </resources>

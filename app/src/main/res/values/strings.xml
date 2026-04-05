@@ -123,4 +123,7 @@
     <string name="inbox_buy">Buy</string>
     <string name="inbox_sell">Sell</string>
     <string name="inbox_consultation">Consultation</string>
+    <string name="chat_today">Today</string>
+    <string name="chat_reviews">reviews</string>
+    <string name="chat_write_message">Write a message..</string>
 </resources>

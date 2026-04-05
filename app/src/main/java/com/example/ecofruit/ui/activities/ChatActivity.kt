@@ -35,6 +35,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -58,7 +59,8 @@ import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.collections.emptyList
+import com.example.ecofruit.R
+import com.example.ecofruit.ui.screens.displayName
 
 class ChatActivity : ComponentActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
@@ -112,8 +114,6 @@ class ChatActivity : ComponentActivity() {
 }
 // ── Screen ─────────────────────────────────────────────────────────────────
 
-//TODO: onuser click in top bar -> viewprofile
-//TODO: fix stringsreources
 @Composable
 fun ChatScreen(
     currentUser: User = ChatMockData.currentUser,
@@ -194,7 +194,7 @@ fun ChatScreen(
                 contentPadding = PaddingValues(vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                item { DateDivider(label = "Hoy") }
+                item { DateDivider(label = stringResource(R.string.chat_today)) }
 
                 items(messages, key = { it.id }) { message ->
                     val isMe = message.isFromCurrentUser(currentUser.id)
@@ -242,7 +242,7 @@ private fun ChatTopBar(
             IconButton(onClick = onBackClick) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
+                    contentDescription = "Go back",
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
@@ -271,7 +271,7 @@ private fun ChatTopBar(
                     ) {
                         Text("⭐", fontSize = 10.sp)
                         Text(
-                            text = "%.1f".format(other.rating) + " · ${other.reviewCount} reseñas",
+                            text = "%.1f".format(other.rating) + " · ${other.reviewCount} " + stringResource(R.string.chat_reviews),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -286,7 +286,7 @@ private fun ChatTopBar(
                     color = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Text(
-                        text = conversation.base.tag.name.lowercase().replaceFirstChar { it.uppercase() },
+                        text = conversation.base.tag.displayName(),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -444,7 +444,7 @@ private fun ChatInputBar(
                 onValueChange = onValueChange,
                 placeholder = {
                     Text(
-                        "Escribe un mensaje…",
+                        stringResource(R.string.chat_write_message),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -473,7 +473,7 @@ private fun ChatInputBar(
             ) {
                 Icon(
                     Icons.AutoMirrored.Outlined.Send,
-                    contentDescription = "Enviar",
+                    contentDescription = "Send",
                     modifier = Modifier.size(20.dp),
                 )
             }
