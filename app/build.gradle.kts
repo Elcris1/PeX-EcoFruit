@@ -65,4 +65,8 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    //mapLibre
+    implementation(libs.maplibre.compose)
+    implementation("com.google.accompanist:accompanist-permissions:0.36.0")
 }
