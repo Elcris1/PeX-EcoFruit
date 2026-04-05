@@ -80,4 +80,17 @@
     <string name="product_unit_lb">Lb</string>
     <string name="product_unit_liter">L</string>
     <string name="product_unit_unit">Unitat</string>
+    <string name="home_recommended_header">Recomanat per tu</string>
+    <string name="home_recomended_subheader">Selecció de productes diara basada en els teus gustos</string>
+    <string name="home_favourite_header">Els teus preferits</string>
+    <string name="home_favourite_subheader">Productes que has guardat</string>
+    <string name="home_search_bar">Cerca fruites, verdures, productors..</string>
+    <string name="home_your_producers">Els teus productors</string>
+    <string name="home_producers_news">Novetats de qui segueixes</string>
+    <string name="followed_producers_section_label">seccio_productors_seguits</string>
+    <string name="toggle_btn_label">botó activador</string>
+    <string name="home_show_more">Mostrar més (%d)</string>
+    <string name="home_show_less">Mostrar menys</string>
+    <string name="home_eco_tag">ECO</string>
+    <string name="home_favourite_content_description">Icona favorits</string>
 </resources>

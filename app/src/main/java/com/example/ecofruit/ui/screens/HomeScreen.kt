@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,6 +48,9 @@ import com.example.ecofruit.ui.data.mock.MockData
 import com.example.ecofruit.ui.data.mock.ProductsMockData.allProducts
 import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.model.User
+import com.example.ecofruit.R
+import com.example.ecofruit.ui.data.constants.toDisplayNameRes
+
 
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 //TODO: Cambiar el unit mostrado en el producto por los valores locales
@@ -93,8 +97,8 @@ fun HomeScreen(
                     // ── Sección: Productos Recomendados ──
                     item {
                         ProductSection(
-                            title = "Recomendados para ti",
-                            subtitle = "Selección del día basada en tus gustos",
+                            title = stringResource(R.string.home_recommended_header),
+                            subtitle = stringResource(R.string.home_recomended_subheader),
                             icon = Icons.Outlined.Star,
                             products = recommendedProducts,
                             onProductClick = onProductClick,
@@ -120,8 +124,8 @@ fun HomeScreen(
                     // ── Sección: Favoritos ──
                     item {
                         ProductSection(
-                            title = "Tus favoritos",
-                            subtitle = "Productos que has guardado",
+                            title = stringResource(R.string.home_favourite_header),
+                            subtitle = stringResource(R.string.home_favourite_subheader),
                             icon = Icons.Filled.Favorite,
                             iconTint = MaterialTheme.colorScheme.error,
                             products = favouriteProducts,
@@ -155,7 +159,7 @@ private fun HomeTopBar(
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = "Ecofruit",
+                    text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -196,7 +200,7 @@ private fun SearchBar(onClick: () -> Unit) {
             )
             Spacer(Modifier.width(10.dp))
             Text(
-                text = "Buscar frutas, verduras, productores…",
+                text = stringResource(R.string.home_search_bar),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -334,8 +338,8 @@ private fun FollowedProducersSection(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         SectionHeader(
-            title = "Tus productores",
-            subtitle = "Novedades de a quien sigues",
+            title = stringResource(R.string.home_your_producers),
+            subtitle = stringResource(R.string.home_producers_news),
             icon = Icons.Outlined.Person,
             itemCount = producerProducts.size,
             expanded = expanded,
@@ -350,7 +354,7 @@ private fun FollowedProducersSection(
             transitionSpec = {
                 fadeIn(tween(300)) togetherWith fadeOut(tween(200))
             },
-            label = "followed_producers_section",
+            label = stringResource(R.string.followed_producers_section_label),
         ) { isExpanded ->
             if (isExpanded) {
                 ExpandedProductGrid(
@@ -434,7 +438,7 @@ private fun SectionHeader(
         AnimatedContent(
             targetState = expanded,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "toggle_btn",
+            label = stringResource(R.string.toggle_btn_label),
         ) { isExpanded ->
             TextButton(
                 onClick = onToggle,
@@ -443,7 +447,7 @@ private fun SectionHeader(
                 ),
             ) {
                 Text(
-                    text = if (isExpanded) "Ver menos" else "Ver más ($itemCount)",
+                    text = if (isExpanded) stringResource(R.string.home_show_less) else stringResource(R.string.home_show_more, itemCount),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -572,7 +576,7 @@ fun ProductCard(
                         shape = RoundedCornerShape(8.dp),
                     ) {
                         Text(
-                            text = "ECO",
+                            text = stringResource(R.string.home_eco_tag),
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSecondary,
@@ -593,7 +597,7 @@ fun ProductCard(
                     Icon(
                         imageVector = if (isFavorite) Icons.Filled.Favorite
                         else Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorito",
+                        contentDescription = stringResource(R.string.home_favourite_content_description),
                         tint = if (isFavorite) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp),
@@ -650,7 +654,7 @@ fun ProductCard(
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        text = "/${product.unit}",
+                        text = "/" + stringResource(product.unit.toDisplayNameRes()),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 2.dp),
@@ -772,22 +776,27 @@ private val favouriteProducts = allProducts.filter {
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen(
-        currentUser = currentUser,
-        recommendedProducts = recommendedProducts,
-        followedProducerProducts = followedProducerProducts,
-        favouriteProducts = favouriteProducts
-    )
+    EcoFruitTheme() {
+        HomeScreen(
+            currentUser = currentUser,
+            recommendedProducts = recommendedProducts,
+            followedProducerProducts = followedProducerProducts,
+            favouriteProducts = favouriteProducts
+        )
+    }
+
 }
 
 @Preview(showBackground = true,
     uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun HomeScreenDarkPreview() {
-    HomeScreen(
-        currentUser = currentUser,
-        recommendedProducts = recommendedProducts,
-        followedProducerProducts = followedProducerProducts,
-        favouriteProducts = favouriteProducts
-    )
+    EcoFruitTheme(darkTheme = true) {
+        HomeScreen(
+            currentUser = currentUser,
+            recommendedProducts = recommendedProducts,
+            followedProducerProducts = followedProducerProducts,
+            favouriteProducts = favouriteProducts
+        )
+    }
 }

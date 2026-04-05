@@ -82,4 +82,17 @@
     <string name="product_unit_lb">Lb</string>
     <string name="product_unit_liter">L</string>
     <string name="product_unit_unit">Unit</string>
+    <string name="home_recommended_header">Recommended for you</string>
+    <string name="home_recomended_subheader">Product selection of the day based on your type</string>
+    <string name="home_favourite_header">Your favourites</string>
+    <string name="home_favourite_subheader">Products that you have saved</string>
+    <string name="home_search_bar">Search fruits, vegetables, productors..</string>
+    <string name="home_your_producers">Your producers</string>
+    <string name="home_producers_news">News from people you follow</string>
+    <string name="followed_producers_section_label">followed_producers_section</string>
+    <string name="toggle_btn_label">Toggle button</string>
+    <string name="home_show_more">Show more (%d)</string>
+    <string name="home_show_less">Show less</string>
+    <string name="home_eco_tag">ECO</string>
+    <string name="home_favourite_content_description">Favourite icon</string>
 </resources>
