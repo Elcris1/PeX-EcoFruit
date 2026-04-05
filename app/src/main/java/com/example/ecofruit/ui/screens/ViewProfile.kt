@@ -47,11 +47,9 @@ import com.example.ecofruit.ui.data.model.User
 
 
 
-//TODO: fix spacing card articulos top
 //TODO: fix imagen/placeholder (usar el del ownprofile)
 //TODO: fix top app bar
 //TODO: mostrar followers
-//TODO: actualizar siguiendo/nosiguiendo text
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
@@ -512,12 +510,14 @@ private fun ListingsGrid(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 row.forEach { listing ->
-                    ListingCard(
-                        userId = userId,
-                        listing = listing,
-                        onClick = { onListingClick(listing.id) },
-                        modifier = Modifier.weight(1f)
+                    ProductCard(
+                        product = listing,
+                        isFollowing = false,
+                        onClick = {onListingClick(listing.id)},
+                        modifier = Modifier.weight(1f),
+                        currentUserId = userId
                     )
+
                 }
                 // Fill empty slot if odd count
                 if (row.size == 1) Spacer(modifier = Modifier.weight(1f))

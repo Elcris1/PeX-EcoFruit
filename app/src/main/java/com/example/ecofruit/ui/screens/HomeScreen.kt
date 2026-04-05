@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -316,7 +318,7 @@ private fun ProductSection(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(items = displayed, key = { it.id }) { product ->
-                        ProductCard(product = product, onClick = { onProductClick(product) }, currentUser = currentUser)
+                        ProductCard(product = product, onClick = { onProductClick(product) }, currentUserId = currentUser.id)
                     }
                 }
             }
@@ -500,7 +502,7 @@ private fun ExpandedProductGrid(
                             product = product,
                             onClick = { onProductClick(product) },
                             modifier = Modifier.weight(1f),
-                            currentUser = currentUser
+                            currentUserId = currentUser.id
                         )
                     }
 
@@ -522,12 +524,12 @@ private fun ExpandedProductGrid(
 @Composable
 fun ProductCard(
     product: Product,
-    currentUser: User,
+    currentUserId: String,
     isFollowing: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var isFavorite by remember { mutableStateOf(currentUser.id in product.favouritesList) }
+    var isFavorite by remember { mutableStateOf(currentUserId in product.favouritesList) }
 
     val cardWidth = if (modifier == Modifier) 158.dp else Dp.Unspecified
     //val rounded = product.userId in currentUser.following
@@ -562,6 +564,8 @@ fun ProductCard(
                         .build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
+                    placeholder =  rememberVectorPainter(Icons.Default.Image),
+                    error = rememberVectorPainter(Icons.Default.Image),
                     modifier = Modifier.fillMaxSize()
                 )
 
@@ -716,7 +720,7 @@ private fun ProducerProductCard(
             product = producerProduct,
             onClick = onClick,
             modifier = Modifier.fillMaxWidth(),
-            currentUser = currentUser,
+            currentUserId = currentUser.id,
             isFollowing = true
         )
     }
