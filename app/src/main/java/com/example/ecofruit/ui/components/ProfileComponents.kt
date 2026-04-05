@@ -80,7 +80,7 @@ private fun ProfileText(name: String){
             .mapNotNull { it.firstOrNull()?.uppercaseChar() }
             .take(2)
             .joinToString(""),
-        style = MaterialTheme.typography.headlineMedium,
+        //style = MaterialTheme.typography.headlineMedium,
         fontWeight = FontWeight.Bold,
         color = colorScheme.onPrimaryContainer,
     )

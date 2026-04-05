@@ -5,10 +5,10 @@ import com.example.ecofruit.ui.data.constants.ProductUnit
 import org.maplibre.android.geometry.LatLng
 
 data class Product (
-    var id: String? = "",
+    var id: String = "",
     val name: String,
     val description: String,
-    val createdAt: Long? = 0,
+    var createdAt: Long = 0,
     val imagesUrl: List<String>,
     var location: LatLng? = null,
     val price: Double,

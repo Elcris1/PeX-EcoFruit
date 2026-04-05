@@ -5,6 +5,9 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +49,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -70,6 +74,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -80,6 +85,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.activities.MainScreen
+import com.example.ecofruit.ui.components.AnimatedCard
+import com.example.ecofruit.ui.components.AnimatedCheck
 import com.example.ecofruit.ui.components.CustomTextField
 import com.example.ecofruit.ui.components.GeneralButton
 import com.example.ecofruit.ui.components.InteractiveMap
@@ -206,14 +213,14 @@ fun SellScreen(
                 },
                 onPublish = {
                     onPublish(createProduct())
-                    clearValues()
+                    page += 1
                 }
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Surface(
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier.padding(innerPadding).padding(horizontal = 10.dp),
             color = MaterialTheme.colorScheme.background
         ) {
             when (page) {
@@ -259,6 +266,12 @@ fun SellScreen(
                 2 -> PublishSellingScreen(
                     selectedLocation = selectedLocation,
                     onLocationSelected = {selectedLocation = it}
+                )
+                3 -> SuccessScreen(
+                    onNewProduct = {
+                        page = 0
+                        clearValues()
+                    }
                 )
             }
         }
@@ -342,134 +355,142 @@ private fun InitialSellingScreen(
     onUnitExpandedChange: (Boolean) -> Unit
 ) {
 
+    val enterAnim = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        enterAnim.animateTo(1f, tween(800, easing = EaseOutCubic))
+    }
 
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
 
-        Text(
-            text = "Información general",
-            style = MaterialTheme.typography.titleLarge,
-            color = colorScheme.primary
-        )
-
-        Divider(color = MaterialTheme.colorScheme.outlineVariant)
-
-        CustomTextField(
-            value = name,
-            onValueChange = { onNameChange(it) },
-            label = "Nombre",
-            placeholder = "Introduce el nombre",
-            icon = Icons.Default.Person,
-            errorMessage = nameError
-        )
-
-        CustomTextField(
-            value = description,
-            onValueChange = {onDescriptionChange(it) },
-            label = "Descripción",
-            placeholder = "Introduce la descripción",
-            icon = Icons.Default.Info,
-            errorMessage = descriptionError
-        )
-
-        // Selector de categoría (Dropdown)
-        ExposedDropdownMenuBox(
-            expanded = categoryExpanded,
-            onExpandedChange = { onCategoryExpandedChange(it) }
+    AnimatedCard(enterAnim) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            TextField(
-                value = stringResource(selectedCategory.toDisplayNameRes()),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Categoría") },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = colorScheme.surface,
-                    unfocusedContainerColor = colorScheme.surface
-                ),
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(categoryExpanded)
-                },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+
+            Text(
+                text = "Información general",
+                style = MaterialTheme.typography.titleLarge,
+                color = colorScheme.primary
             )
 
-            ExposedDropdownMenu(
+
+            CustomTextField(
+                value = name,
+                onValueChange = { onNameChange(it) },
+                label = "Nombre",
+                placeholder = "Introduce el nombre",
+                icon = Icons.Default.Person,
+                errorMessage = nameError
+            )
+
+            CustomTextField(
+                value = description,
+                onValueChange = {onDescriptionChange(it) },
+                label = "Descripción",
+                placeholder = "Introduce la descripción",
+                icon = Icons.Default.Info,
+                errorMessage = descriptionError
+            )
+
+            // Selector de categoría (Dropdown)
+            ExposedDropdownMenuBox(
                 expanded = categoryExpanded,
-                onDismissRequest = { onCategoryExpandedChange(false)}
+                onExpandedChange = { onCategoryExpandedChange(it) }
             ) {
-                ProductType.values().forEach { type ->
-                    DropdownMenuItem(
-                        text = { Text(stringResource(type.toDisplayNameRes())) },
-                        onClick = {
-                            onCategoryChange(type)
-                            onCategoryExpandedChange(false)
-                        }
-                    )
+                TextField(
+                    value = stringResource(selectedCategory.toDisplayNameRes()),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Categoría") },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = colorScheme.surface,
+                        unfocusedContainerColor = colorScheme.surface
+                    ),
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(categoryExpanded)
+                    },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = categoryExpanded,
+                    onDismissRequest = { onCategoryExpandedChange(false)}
+                ) {
+                    ProductType.values().forEach { type ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(type.toDisplayNameRes())) },
+                            onClick = {
+                                onCategoryChange(type)
+                                onCategoryExpandedChange(false)
+                            }
+                        )
+                    }
                 }
             }
-        }
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(
-                checked = isOrganic,
-                onCheckedChange = { onOrganicChange(it) }
-            )
-            Text(text = "Producto orgánico")
-        }
-
-        CustomTextField(
-            value = price,
-            onValueChange = { onPriceChange (it)},
-            label = stringResource(R.string.label_price),
-            placeholder = stringResource(R.string.placeholder_price),
-            icon = Icons.Default.AttachMoney,
-            keyboardType = KeyboardType.Number,
-            errorMessage = priceError
-        )
-
-        // ⚖️ Unidad
-        ExposedDropdownMenuBox(
-            expanded = unitExpanded,
-            onExpandedChange = { onUnitExpandedChange(it) }
-        ) {
-            TextField(
-                value = stringResource(selectedUnit.toDisplayNameRes()),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Unidad") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(unitExpanded)
-                },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = colorScheme.surface,
-                    unfocusedContainerColor = colorScheme.surface
-                ),
-                modifier = Modifier.menuAnchor().fillMaxWidth()
-            )
-
-            ExposedDropdownMenu(
-                expanded = unitExpanded,
-                onDismissRequest = { onUnitExpandedChange(false) }
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                ProductUnit.values().forEach {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(it.toDisplayNameRes())) },
-                        onClick = {
-                            onUnitChange(it)
-                            onUnitExpandedChange(false)
-                        }
-                    )
+                Checkbox(
+                    checked = isOrganic,
+                    onCheckedChange = { onOrganicChange(it) }
+                )
+                Text(text = "Producto orgánico")
+            }
+
+            CustomTextField(
+                value = price,
+                onValueChange = { onPriceChange (it)},
+                label = stringResource(R.string.label_price),
+                placeholder = stringResource(R.string.placeholder_price),
+                icon = Icons.Default.AttachMoney,
+                keyboardType = KeyboardType.Number,
+                errorMessage = priceError
+            )
+
+            // ⚖️ Unidad
+            ExposedDropdownMenuBox(
+                expanded = unitExpanded,
+                onExpandedChange = { onUnitExpandedChange(it) }
+            ) {
+                TextField(
+                    value = stringResource(selectedUnit.toDisplayNameRes()),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Unidad") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(unitExpanded)
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = colorScheme.surface,
+                        unfocusedContainerColor = colorScheme.surface
+                    ),
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = unitExpanded,
+                    onDismissRequest = { onUnitExpandedChange(false) }
+                ) {
+                    ProductUnit.values().forEach {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(it.toDisplayNameRes())) },
+                            onClick = {
+                                onUnitChange(it)
+                                onUnitExpandedChange(false)
+                            }
+                        )
+                    }
                 }
             }
         }
     }
+
+
 }
 
 
@@ -486,81 +507,97 @@ private fun SelectImagesScreen(
     ) { uris ->
         onImageChange(uris.take(6)) // seguridad extra
     }
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
 
-        item {
-            Text(
-                text = "Imagenes para el producto",
-                style = MaterialTheme.typography.titleLarge,
-                color = colorScheme.primary
-            )
-        }
+    val enterAnim = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        enterAnim.animateTo(1f, tween(800, easing = EaseOutCubic))
+    }
 
 
-        item {
-            GeneralButton (
-                text = "Seleccionar imagenes",
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                launcher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+
+    AnimatedCard(enterAnim) {
+
+        Spacer(Modifier.height(10.dp))
+
+
+        LazyColumn(
+            modifier = Modifier
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+
+
+            item {
+                Text(
+                    text = "Imagenes para el producto",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colorScheme.primary,
                 )
             }
-        }
 
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
+            item {
+                GeneralButton (
+                    text = "Seleccionar imagenes",
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    launcher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                }
+            }
 
-        }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
 
-        // ✅ Grid manual en filas de 3 — sin LazyVerticalGrid anidado
-        items(images.chunked(3)) { rowImages ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                rowImages.forEach { uri ->
-                    Box(modifier = Modifier.weight(1f)) {
-                        AsyncImage(
-                            model = uri,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                        )
-                        IconButton(
-                            onClick = { onImageChange(images - uri) },
-                            modifier = Modifier.align(Alignment.TopEnd)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Eliminar",
-                                tint = MaterialTheme.colorScheme.onPrimary,
+            }
+
+            // ✅ Grid manual en filas de 3 — sin LazyVerticalGrid anidado
+            items(images.chunked(3)) { rowImages ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    rowImages.forEach { uri ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            AsyncImage(
+                                model = uri,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .background(
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                        shape = CircleShape
-                                    )
-                                    .padding(2.dp)
-                                    .size(16.dp)
+                                    .aspectRatio(1f)
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
                             )
+                            IconButton(
+                                onClick = { onImageChange(images - uri) },
+                                modifier = Modifier.align(Alignment.TopEnd)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Eliminar",
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier
+                                        .background(
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                            shape = CircleShape
+                                        )
+                                        .padding(2.dp)
+                                        .size(16.dp)
+                                )
+                            }
                         }
                     }
-                }
-                // Rellena huecos vacíos en la última fila para mantener el grid
-                repeat(3 - rowImages.size) {
-                    Spacer(modifier = Modifier.weight(1f))
+                    // Rellena huecos vacíos en la última fila para mantener el grid
+                    repeat(3 - rowImages.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
+        Spacer(Modifier.height(10.dp))
+
     }
+
 }
 
 @Composable
@@ -570,8 +607,8 @@ private fun PublishSellingScreen(
 ) {
 
 
-    Column {
-        Text(text = "Pubish product")
+    Column  {
+        Text(text = "Ubicación del producto")
 
         var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
 
@@ -589,6 +626,42 @@ private fun PublishSellingScreen(
 }
 
 
+@Composable
+private fun SuccessScreen(
+    onNewProduct: () -> Unit = {}
+) {
+    val enterAnim = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        enterAnim.animateTo(1f, tween(800, easing = EaseOutCubic))
+    }
+
+    Spacer(Modifier.height(100.dp))
+    AnimatedCard(enterAnim) {
+        Column(
+            Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(50.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(20.dp))
+            AnimatedCheck()
+
+            Text(
+                "Producto publicado",
+                style = typography.titleLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    color = colorScheme.onSurface
+                ),
+                textAlign = TextAlign.Center
+            )
+            GeneralButton(
+                text = "Publicar otro producto",
+                onClick = onNewProduct,
+                modifier = Modifier.fillMaxWidth(0.8f)
+            )
+            Spacer(Modifier.height(10.dp))
+        }
+    }
+}
 
 @Preview(showBackground = true)
 @Composable

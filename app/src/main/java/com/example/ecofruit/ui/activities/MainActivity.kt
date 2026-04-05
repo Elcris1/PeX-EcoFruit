@@ -184,7 +184,16 @@ fun MainScreen(
                 favouriteProducts
             ) }
             composable(Screen.Search.route)   { SearchScreen() }
-            composable(Screen.Sell.route)     { SellScreen() }
+            composable(Screen.Sell.route)     { SellScreen(
+                onPublish = {product ->
+                    currentUser?.let {
+                        product.userId = currentUser.id
+                        product.userName = currentUser.name
+                        product.userAvatar = currentUser.profileImageUrl
+                        productsViewModel.addProduct(product)
+                    }
+                }
+            ) }
             composable(Screen.Inbox.route)    { InboxScreen(
                 currentUser = user,
                 chatViewModel = chatViewModel,

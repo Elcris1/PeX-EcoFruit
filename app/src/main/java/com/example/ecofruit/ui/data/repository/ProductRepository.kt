@@ -26,6 +26,8 @@ class ProductRepository {
     }
 
     fun addProduct(product: Product) {
+        product.createdAt = System.currentTimeMillis()
+        product.id = "P_${products.size + 1}"
         products += product
     }
 

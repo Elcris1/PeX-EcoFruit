@@ -64,5 +64,11 @@ class ProductViewModel(
         }
     }
 
+    fun addProduct(product: Product) {
+        viewModelScope.launch {
+            productRepository.addProduct(product)
+        }
+    }
+
 
 }
