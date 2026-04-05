@@ -133,4 +133,18 @@
     <string name="not_defined">Sense definir</string>
     <string name="view_profile_empty_products">No hi ha productes publicats</string>
     <string name="view_profile_empty_reviews">No hi ha valoracions publicades</string>
+    <string name="settings">Ajustaments</string>
+    <string name="general">General</string>
+    <string name="dark_theme_title">Mode fosc</string>
+    <string name="dark_theme_subtitle">Activar el tema fosc a l\'aplicacció</string>
+    <string name="notifications">Notificacions</string>
+    <string name="notifications_subtitle">Activar les notifiacions de l\'applicació</string>
+    <string name="language">Idioma</string>
+    <string name="network">Xarxa</string>
+    <string name="only_wifi">Només Wi-Fi</string>
+    <string name="only_wifi_description">Descarrega informació només emprant Wi-Fi</string>
+    <string name="reset_settings">Restablir configuració per defecte</string>
+    <string name="reset_settings_ttile">Restablir configuració</string>
+    <string name="reset_settings_description">Es perdran totes les configuracions personalitzades. Aquesta acció no es pot desfer.</string>
+    <string name="reset">Restablir</string>
 </resources>

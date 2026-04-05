@@ -33,10 +33,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecofruit.ui.data.model.Settings
+import com.example.ecofruit.R
 
 class SettingsActivity : ComponentActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
@@ -59,8 +61,6 @@ class SettingsActivity : ComponentActivity() {
     }
 }
 
-//TODO: fix stringresources
-//TODO: remove useless configurations
 
 // ── Root screen ────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,7 +77,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text       = "Ajustes",
+                        text       = stringResource(R.string.settings),
                         style      = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                         color      = MaterialTheme.colorScheme.onPrimary,
@@ -87,7 +87,7 @@ fun SettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(R.string.back),
                             tint               = MaterialTheme.colorScheme.onPrimary,
                         )
                     }
@@ -109,53 +109,54 @@ fun SettingsScreen(
         ) {
 
             // ── Section: General ──────────────────────────────────────────────
-            item { SettingsSectionHeader(title = "General", icon = Icons.Outlined.Settings) }
+            item { SettingsSectionHeader(title = stringResource(R.string.general), icon = Icons.Outlined.Settings) }
 
             item {
                 SettingsCard {
                     SwitchPreferenceRow(
                         icon        = Icons.Outlined.DarkMode,
-                        title       = "Tema oscuro",
-                        subtitle    = "Activar modo noche en la aplicación",
+                        title       = stringResource(R.string.dark_theme_title),
+                        subtitle    = stringResource(R.string.dark_theme_subtitle),
                         checked     = settings.darkTheme,
                         onCheckedChange = viewModel::setDarkTheme,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     SwitchPreferenceRow(
                         icon        = Icons.Outlined.Notifications,
-                        title       = "Notificaciones",
-                        subtitle    = "Alertas de cosecha y cambios del mercado",
+                        title       =  stringResource(R.string.notifications),
+                        subtitle    = stringResource(R.string.notifications_subtitle),
                         checked     = settings.notifications,
                         onCheckedChange = viewModel::setNotifications,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     DropdownPreferenceRow(
                         icon     = Icons.Outlined.Language,
-                        title    = "Idioma",
+                        title    = stringResource(R.string.language),
                         current  = when (settings.language) {
-                            "es" -> "Español"
-                            "en" -> "English"
-                            "ca" -> "Català"
+                            "es" -> stringResource(R.string.language_spanish)
+                            "en" -> stringResource(R.string.language_english)
+                            "ca" -> stringResource(R.string.language_catalan)
                             else -> settings.language
                         },
-                        options  = listOf("es" to "Español", "en" to "English", "ca" to "Català"),
+                        options  = listOf("es" to stringResource(R.string.language_spanish), "en" to stringResource(R.string.language_english), "ca" to stringResource(R.string.language_catalan)),
                         onSelect = viewModel::setLanguage,
                     )
                 }
             }
 
             // ── Section: Red ──────────────────────────────────────────────────
-            item { SettingsSectionHeader(title = "Red", icon = Icons.Outlined.Wifi) }
+            item { SettingsSectionHeader(title = stringResource(R.string.network), icon = Icons.Outlined.Wifi) }
 
             item {
                 SettingsCard {
                     SwitchPreferenceRow(
                         icon        = Icons.Outlined.WifiOff,
-                        title       = "Solo Wi-Fi",
-                        subtitle    = "Descargar datos únicamente con Wi-Fi",
+                        title       =  stringResource(R.string.only_wifi),
+                        subtitle    = stringResource(R.string.only_wifi_description),
                         checked     = settings.wifiOnlyMode,
                         onCheckedChange = viewModel::setWifiOnlyMode,
                     )
+                    /*
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     SwitchPreferenceRow(
                         icon        = Icons.Outlined.DataSaverOn,
@@ -182,9 +183,12 @@ fun SettingsScreen(
                         onCheckedChange = viewModel::setPreloadImages,
                         enabled     = !settings.offlineMode && !settings.dataSaver,
                     )
+
+                     */
                 }
             }
 
+            /*
             // ── Section: Sincronización ───────────────────────────────────────
             item { SettingsSectionHeader(title = "Sincronización", icon = Icons.Outlined.Sync) }
 
@@ -253,6 +257,8 @@ fun SettingsScreen(
                 }
             }
 
+             */
+
             // ── Danger zone ───────────────────────────────────────────────────
             item { Spacer(Modifier.height(8.dp)) }
             item {
@@ -273,7 +279,7 @@ fun SettingsScreen(
                         modifier           = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Restablecer ajustes por defecto")
+                    Text(stringResource(R.string.reset_settings))
                 }
             }
             item { Spacer(Modifier.height(16.dp)) }
@@ -291,18 +297,18 @@ fun SettingsScreen(
                     tint = MaterialTheme.colorScheme.error,
                 )
             },
-            title = { Text("Restablecer ajustes") },
-            text  = { Text("Se perderán todas las preferencias personalizadas. Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(R.string.reset_settings_ttile)) },
+            text  = { Text(stringResource(R.string.reset_settings_description)) },
             confirmButton = {
                 TextButton(
                     onClick = { viewModel.resetAll(); showResetDialog = false },
                     colors  = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
                     )
-                ) { Text("Restablecer") }
+                ) { Text(stringResource(R.string.reset)) }
             },
             dismissButton = {
-                TextButton(onClick = { showResetDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.cancel)) }
             },
         )
     }
