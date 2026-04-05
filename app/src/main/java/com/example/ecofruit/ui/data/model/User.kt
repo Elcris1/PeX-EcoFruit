@@ -43,6 +43,6 @@ data class User (
 
 data class FullUserInfo(
     val user: User,
-    val products: List<Product>,
+    var products: List<Product>,
     val reviews: List<Review>
 )

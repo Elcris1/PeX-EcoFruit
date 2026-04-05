@@ -124,4 +124,13 @@
     <string name="chat_today">Avui</string>
     <string name="chat_reviews">valoracions</string>
     <string name="chat_write_message">Escriu un missatge..</string>
+    <string name="view_profile_products">Productes</string>
+    <string name="view_profile_reviews">Valoracions</string>
+    <string name="edit">Editar</string>
+    <string name="view_profile_follow">Seguir</string>
+    <string name="view_profile_following">Seguint</string>
+    <string name="view_profile_bio_not_defined">Biografia no definida.</string>
+    <string name="not_defined">Sense definir</string>
+    <string name="view_profile_empty_products">No hi ha productes publicats</string>
+    <string name="view_profile_empty_reviews">No hi ha valoracions publicades</string>
 </resources>

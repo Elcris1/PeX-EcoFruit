@@ -126,4 +126,13 @@
     <string name="chat_today">Today</string>
     <string name="chat_reviews">reviews</string>
     <string name="chat_write_message">Write a message..</string>
+    <string name="view_profile_products">Products</string>
+    <string name="view_profile_reviews">Reviews</string>
+    <string name="edit">Edit</string>
+    <string name="view_profile_follow">Follow</string>
+    <string name="view_profile_following">Following</string>
+    <string name="view_profile_bio_not_defined">Bio not defined.</string>
+    <string name="not_defined">Not defined</string>
+    <string name="view_profile_empty_products">No posted items yet</string>
+    <string name="view_profile_empty_reviews">No reviews yet</string>
 </resources>

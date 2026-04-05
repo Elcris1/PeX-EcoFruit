@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,6 +45,7 @@ import com.example.ecofruit.ui.data.model.FullUserInfo
 import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.model.Review
 import com.example.ecofruit.ui.data.model.User
+import com.example.ecofruit.R
 
 
 
@@ -63,7 +65,7 @@ fun UserProfileScreen(
     onListingClick: (String) -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Artículos", "Valoraciones")
+    val tabs = listOf(stringResource(R.string.view_profile_products), stringResource(R.string.view_profile_reviews))
 
     val scrollState = rememberScrollState()
     val headerAlpha by remember {
@@ -192,7 +194,7 @@ fun UserProfileScreen(
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            "Editar",
+                                            stringResource(R.string.edit),
                                             style = MaterialTheme.typography.labelLarge
                                         )
                                     }
@@ -209,7 +211,7 @@ fun UserProfileScreen(
                                         ) {
                                             Icon(
                                                 Icons.Outlined.MailOutline,
-                                                contentDescription = "Mensaje",
+                                                contentDescription = "Messaje",
                                                 modifier = Modifier.size(18.dp)
                                             )
                                         }
@@ -228,11 +230,11 @@ fun UserProfileScreen(
                                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                                         ) {
 
-                                            var followingText = "Seguir"
+                                            var followingText = stringResource(R.string.view_profile_follow)
                                             if(following) {
-                                                followingText = "Siguiendo"
+                                                followingText = stringResource(R.string.view_profile_following)
                                             } else {
-                                                followingText = "Seguir"
+                                                followingText = stringResource(R.string.view_profile_follow)
                                                 Icon(
                                                     Icons.Outlined.PersonAdd,
                                                     contentDescription = null,
@@ -265,7 +267,7 @@ fun UserProfileScreen(
 
                             // Bio
                             Text(
-                                text = profile.user.bio.ifBlank { "bio not defined" },
+                                text = profile.user.bio.ifBlank { stringResource(R.string.view_profile_bio_not_defined)},
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = colorScheme.onSurfaceVariant,
                                 maxLines = 3,
@@ -289,7 +291,7 @@ fun UserProfileScreen(
                                     )
                                         //TODO: finish this
                                         Text(
-                                            if (profile.user.location != null) "Barcelona" else "Sin definir",
+                                            if (profile.user.location != null) "Barcelona - Mocked" else stringResource(R.string.not_defined),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = colorScheme.onSurfaceVariant
                                         )
@@ -307,7 +309,7 @@ fun UserProfileScreen(
                                         tint = colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        "Desde ${getYear(profile.user.createdAt)}",
+                                        stringResource(R.string.from) + " ${getYear(profile.user.createdAt)}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = colorScheme.onSurfaceVariant
                                     )
@@ -420,16 +422,7 @@ fun UserProfileScreen(
                 IconButton(onClick = onBack) {
                     Icon(
                         Icons.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = if (headerAlpha > 0.5f) colorScheme.onSurface else colorScheme.onPrimary
-                    )
-                }
-            },
-            actions = {
-                IconButton(onClick = {}) {
-                    Icon(
-                        Icons.Outlined.MoreVert,
-                        contentDescription = "Más opciones",
+                        contentDescription = "Go back",
                         tint = if (headerAlpha > 0.5f) colorScheme.onSurface else colorScheme.onPrimary
                     )
                 }
@@ -495,7 +488,7 @@ private fun ListingsGrid(
     if (listings.isEmpty()) {
         EmptyState(
             icon = Icons.Outlined.Inventory2,
-            message = "Aún no hay artículos publicados"
+            message = stringResource(R.string.view_profile_empty_products)
         )
         return
     }
@@ -613,7 +606,7 @@ private fun ListingCard(
             ) {
                 Icon(
                     if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = "Favorito",
+                    contentDescription = "Favourite",
                     tint = if (isFav) colorScheme.error else colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
@@ -629,7 +622,7 @@ private fun ReviewsList(reviews: List<Review>) {
     if (reviews.isEmpty()) {
         EmptyState(
             icon = Icons.Outlined.RateReview,
-            message = "Aún no hay valoraciones"
+            message = stringResource(R.string.view_profile_empty_reviews)
         )
         return
     }
@@ -768,54 +761,69 @@ private fun EmptyState(
 //  Preview
 // ─────────────────────────────────────────────
 
+private val currentUser = User(
+    id = "u3",
+    name = "Alex",
+    email = "alex@ecofruit.com",
+    rating = 4.7,
+    reviewCount = 58,
+    profileImageUrl = "",
+    location = null,
+    followers = 10,
+    following = listOf("u1", "u2"),
+    createdAt = 0,
+    isProducer = false,
+    bio = "Apasionada del slow fashion y el consumo responsable 🌿 Vendo ropa de calidad que ya no uso.",
+)
+private val products = listOf(
+    Product(id= "1", name= "Chaqueta de lana vintage", description="Chaqueta", imagesUrl = listOf(""), price = 35.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf("u3"), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
+    Product(id= "2", name= "Vestido boho floral", description="Chaqueta", imagesUrl = listOf(""), price = 22.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
+    Product(id= "3", name= "Botines de cuero", description="Chaqueta", imagesUrl = listOf(""), price = 45.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
+    Product(id= "4", name= "Bolso", description="Chaqueta", imagesUrl = listOf(""), price = 18.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf("u3"), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
+    Product(id= "5", name= "Gorro", description="Chaqueta", imagesUrl = listOf(""), price = 12.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
+    Product(id= "6", name= "Pañuelo", description="Chaqueta", imagesUrl = listOf(""), price = 22.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
+)
+private var profile = FullUserInfo(
+    user = User(
+        id = "u1",
+        name = "Laura García",
+        email = "laura@ecofruit.com",
+        rating = 4.7,
+        reviewCount = 58,
+        profileImageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHRh730XAA9_DpBhSC9yF-DlqiKXC_xtzU3A&s",
+        location = null,
+        followers = 10,
+        following = listOf("u2"),
+        createdAt = 0,
+        isProducer = true,
+        bio = "Apasionada del slow fashion y el consumo responsable 🌿 Vendo ropa de calidad que ya no uso.",
+    ),
+    products = products,
+    reviews = listOf(
+        Review(id = "r1", authorName = "Marta L.", userId = "u5", dstId = "u1", title="Todo perfecto, muy rápida enviando y el artículo tal como se describía. ¡Repetiría!", authorAvatar = "", createdAt = 0, reviewType = ReviewType.USER, rating = 5.0, description = "Repetiria"),
+        Review(id = "r2", authorName = "Jordi F.", userId ="u4", dstId= "u1", title="Buen vendedor, trato amable. El producto llegó en buen estado.", authorAvatar = "", createdAt = 0, reviewType = ReviewType.USER, rating = 3.0, description = "Repetiria"),
+        Review(id = "r3", authorName = "Sara M.", userId= "u2", dstId = "u1", title="Genial experiencia, muy recomendable.", authorAvatar = "", createdAt = 0, reviewType = ReviewType.USER, rating = 1.0, description = "No")
+    )
+)
 @Preview(showBackground = true)
 @Composable
 fun UserProfileScreenPreview() {
     // Replace AppTheme with your actual theme composable
     EcoFruitTheme {
-        val currentUser = User(
-            id = "u3",
-            name = "Alex",
-            email = "alex@ecofruit.com",
-            rating = 4.7,
-            reviewCount = 58,
-            profileImageUrl = "",
-            location = null,
-            followers = 10,
-            following = listOf("u1", "u2"),
-            createdAt = 0,
-            isProducer = false,
-            bio = "Apasionada del slow fashion y el consumo responsable 🌿 Vendo ropa de calidad que ya no uso.",
+        UserProfileScreen(
+            currentUser = currentUser,
+            profile = profile,
+            isOwnProfile = currentUser.id == profile.user.id
         )
-        val profile = FullUserInfo(
-            user = User(
-                id = "u1",
-                name = "Laura García",
-                email = "laura@ecofruit.com",
-                rating = 4.7,
-                reviewCount = 58,
-                profileImageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHRh730XAA9_DpBhSC9yF-DlqiKXC_xtzU3A&s",
-                location = null,
-                followers = 10,
-                following = listOf("u2"),
-                createdAt = 0,
-                isProducer = true,
-                bio = "Apasionada del slow fashion y el consumo responsable 🌿 Vendo ropa de calidad que ya no uso.",
-            ),
-            products = listOf(
-                Product(id= "1", name= "Chaqueta de lana vintage", description="Chaqueta", imagesUrl = listOf(""), price = 35.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf("u3"), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
-                Product(id= "2", name= "Vestido boho floral", description="Chaqueta", imagesUrl = listOf(""), price = 22.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
-                Product(id= "3", name= "Botines de cuero", description="Chaqueta", imagesUrl = listOf(""), price = 45.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
-                Product(id= "4", name= "Bolso", description="Chaqueta", imagesUrl = listOf(""), price = 18.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf("u3"), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
-                Product(id= "5", name= "Gorro", description="Chaqueta", imagesUrl = listOf(""), price = 12.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
-                Product(id= "6", name= "Pañuelo", description="Chaqueta", imagesUrl = listOf(""), price = 22.0, userId = "u1", userName = "Laura García", userAvatar = "", favouritesList = listOf(), rating=5.0, reviewCount = 1,  createdAt = 0, unit = ProductUnit.KG, isOrganic = false, type= ProductType.OTHER),
-                ),
-            reviews = listOf(
-                Review(id = "r1", authorName = "Marta L.", userId = "u5", dstId = "u1", title="Todo perfecto, muy rápida enviando y el artículo tal como se describía. ¡Repetiría!", authorAvatar = "", createdAt = 0, reviewType = ReviewType.USER, rating = 5.0, description = "Repetiria"),
-                Review(id = "r2", authorName = "Jordi F.", userId ="u4", dstId= "u1", title="Buen vendedor, trato amable. El producto llegó en buen estado.", authorAvatar = "", createdAt = 0, reviewType = ReviewType.USER, rating = 3.0, description = "Repetiria"),
-                Review(id = "r3", authorName = "Sara M.", userId= "u2", dstId = "u1", title="Genial experiencia, muy recomendable.", authorAvatar = "", createdAt = 0, reviewType = ReviewType.USER, rating = 1.0, description = "No")
-            )
-        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun NoProductsPreview() {
+    // Replace AppTheme with your actual theme composable
+    EcoFruitTheme {
+        profile.products = emptyList()
         UserProfileScreen(
             currentUser = currentUser,
             profile = profile,
