@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.screens
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,6 +53,7 @@ import com.example.ecofruit.ui.viewmodels.ConversationUI
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import com.example.ecofruit.R
 
 
 
@@ -109,7 +113,7 @@ fun InboxScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = "Mensajes",
+                        text = stringResource(R.string.inbox_messages),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -134,7 +138,7 @@ fun InboxScreen(
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
-                            "Buscar conversaciones…",
+                            stringResource(R.string.inbox_search),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -165,7 +169,7 @@ fun InboxScreen(
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChipItem(
-                        label = "Todos",
+                        label = stringResource(R.string.inbox_all),
                         selected = selectedFilter == null,
                         onClick = { selectedFilter = null },
                     )
@@ -192,7 +196,7 @@ fun InboxScreen(
                     Text("💬", fontSize = 48.sp)
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        "Sin conversaciones",
+                        stringResource(R.string.inbox_no_conversations),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -300,7 +304,7 @@ private fun ConversationItem(
                     Spacer(Modifier.height(2.dp))
                     Text(
                         text = buildString {
-                            if (isMine) append("Tú: ")
+                            if (isMine) append(stringResource(R.string.inbox_you) + " ")
                             append(lastMsg?.text ?: "")
                         },
                         style = MaterialTheme.typography.bodySmall,
@@ -396,10 +400,11 @@ private fun FilterChipItem(label: String, selected: Boolean, onClick: () -> Unit
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
+@Composable
 private fun ConversationTag.displayName() = when (this) {
-    ConversationTag.COMPRA   -> "Compra"
-    ConversationTag.VENTA    -> "Venta"
-    ConversationTag.CONSULTA -> "Consulta"
+    ConversationTag.COMPRA   -> stringResource(R.string.inbox_buy)
+    ConversationTag.VENTA    -> stringResource(R.string.inbox_sell)
+    ConversationTag.CONSULTA -> stringResource(R.string.inbox_consultation)
 }
 
 private fun LocalDateTime.toRelativeLabel(): String {

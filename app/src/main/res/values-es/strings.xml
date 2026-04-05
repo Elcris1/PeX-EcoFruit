@@ -112,4 +112,12 @@
     <string name="sell_prodcut_posted">¡Producto publicado!</string>
     <string name="sell_product_post_again">Crear nueva publicación</string>
     <string name="map_touch_to_select">Toca el mapa para seleccionar una ubicación</string>
+    <string name="inbox_messages">Mensajes</string>
+    <string name="inbox_search">Buscar conversaciones...</string>
+    <string name="inbox_all">Todas</string>
+    <string name="inbox_no_conversations">Sin conversaciones</string>
+    <string name="inbox_you">"Tú: "</string>
+    <string name="inbox_buy">Compra</string>
+    <string name="inbox_sell">Venta</string>
+    <string name="inbox_consultation">Consulta</string>
 </resources>

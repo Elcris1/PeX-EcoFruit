@@ -115,4 +115,12 @@
     <string name="sell_prodcut_posted">Product posted!</string>
     <string name="sell_product_post_again">Create a new post</string>
     <string name="map_touch_to_select">Touch map a position to select it</string>
+    <string name="inbox_messages">Messages</string>
+    <string name="inbox_search">Search conversations...</string>
+    <string name="inbox_all">All</string>
+    <string name="inbox_no_conversations">No conversations</string>
+    <string name="inbox_you">You:</string>
+    <string name="inbox_buy">Buy</string>
+    <string name="inbox_sell">Sell</string>
+    <string name="inbox_consultation">Consultation</string>
 </resources>
