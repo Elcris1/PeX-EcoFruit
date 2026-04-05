@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenuItem
@@ -54,6 +55,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,27 +66,48 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.activities.MainScreen
 import com.example.ecofruit.ui.components.CustomTextField
 import com.example.ecofruit.ui.components.GeneralButton
+import com.example.ecofruit.ui.components.InteractiveMap
 import com.example.ecofruit.ui.components.OutlinedGeneralButton
 import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
 import com.example.ecofruit.ui.data.constants.toDisplayNameRes
+import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.theme.EcoFruitTheme
+import org.maplibre.android.MapLibre
+import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.Style
+import org.maplibre.android.style.layers.CircleLayer
+import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.layers.SymbolLayer
+import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.Point
+
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
-fun SellScreen() {
-
+fun SellScreen(
+    onPublish: (Product) -> Unit = {}
+) {
 
     //TAB BAR VARIABLES
     var page by mutableIntStateOf(0)
@@ -123,6 +147,47 @@ fun SellScreen() {
     //Screen 1:
     var images by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
+    //Screen 2:
+    var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
+
+    fun createProduct(): Product {
+        return Product(
+            name = name,
+            description = description,
+            imagesUrl = emptyList(),
+            price = price.toDouble(),
+            unit = selectedUnit,
+            isOrganic = isOrganic,
+            type = selectedCategory,
+            location = selectedLocation
+        )
+    }
+
+    fun clearValues() {
+        //Sc1
+        page = 0
+        name = ""
+        description = ""
+        selectedCategory = ProductType.FRUITS
+        categoryExpanded = false
+        isOrganic = false
+        price = ""
+        selectedUnit = ProductUnit.KG
+        unitExpanded = false
+
+        //Sc1 errors
+        nameError = null
+        descriptionError = null
+        priceError = null
+
+        //Sc2
+        images = emptyList()
+
+        //Sc3
+        selectedLocation = null
+
+    }
+
 
     Scaffold(
         topBar = {
@@ -140,7 +205,8 @@ fun SellScreen() {
                     }
                 },
                 onPublish = {
-
+                    onPublish(createProduct())
+                    clearValues()
                 }
             )
         },
@@ -190,7 +256,10 @@ fun SellScreen() {
                     images = images,
                     onImageChange = {images = it}
                 )
-                2 -> PublishSellingScreen()
+                2 -> PublishSellingScreen(
+                    selectedLocation = selectedLocation,
+                    onLocationSelected = {selectedLocation = it}
+                )
             }
         }
 
@@ -221,33 +290,22 @@ private fun SellTopBar(
         ),
         navigationIcon = {
             if(page > 0){
-                TextButton(
-                    onClick = onBackClick
-                ) {
-                    Text(
-                        text = "Atras",
-                        color = colorScheme.onSurface
-                    )
-                }
-
+                OutlinedGeneralButton(
+                    text = "Atras",
+                    onClick = onBackClick,
+                    modifier = Modifier.padding(end = 10.dp)
+                )
             }
         },
         actions = {
             if (page < 2) {
-                TextButton(
+                OutlinedGeneralButton(
+                    text = "Siguiente",
                     onClick = onNextClick
-                ) {
-                    Text(
-                        text = "Siguiente",
-                        color = colorScheme.onSurface
-                    )
-                }
+                )
             } else {
-                TextButton(
-                    onClick = onPublish
-                ) {
-                    Text("Publicar")
-                }
+                OutlinedGeneralButton(text = "Publicar", onClick = onPublish)
+
             }
 
         }
@@ -506,9 +564,31 @@ private fun SelectImagesScreen(
 }
 
 @Composable
-private fun PublishSellingScreen() {
-    Text(text = "Pubish product")
+private fun PublishSellingScreen(
+    selectedLocation: LatLng? = null,
+    onLocationSelected: (LatLng) -> Unit = {}
+) {
+
+
+    Column {
+        Text(text = "Pubish product")
+
+        var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
+
+
+        InteractiveMap(
+            mapLibreMap = mapLibreMap,
+            onMapLibreMapChange = {mapLibreMap = it},
+
+            selectedLocation = selectedLocation,
+            onLocationSelected = onLocationSelected,
+
+        )
+    }
+
 }
+
+
 
 @Preview(showBackground = true)
 @Composable

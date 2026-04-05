@@ -2,23 +2,25 @@ package com.example.ecofruit.ui.data.model
 
 import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
+import org.maplibre.android.geometry.LatLng
 
 data class Product (
-    val id: String,
+    var id: String? = "",
     val name: String,
     val description: String,
-    val createdAt: Long,
+    val createdAt: Long? = 0,
     val imagesUrl: List<String>,
+    var location: LatLng? = null,
     val price: Double,
     val unit: ProductUnit,
     val isOrganic: Boolean,
     val type: ProductType,
-    val userId: String,
-    val userName: String,
-    val userAvatar: String,
-    var favouritesList: List<String>, //list of user ids that liked the item
-    var rating: Double,
-    var reviewCount: Int
+    var userId: String = "",
+    var userName: String = "",
+    var userAvatar: String = "",
+    var favouritesList: List<String> = emptyList(), //list of user ids that liked the item
+    var rating: Double = 0.0,
+    var reviewCount: Int = 0
 ) {
     fun recommendationScore(): Double {
         val ratingThreshold = 15
