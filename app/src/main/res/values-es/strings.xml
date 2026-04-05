@@ -146,4 +146,8 @@
     <string name="reset_settings_ttile">Restablecer ajustes</string>
     <string name="reset_settings_description">Se perderán todas las preferencias personalizadas. Esta acción no se puede deshacer.</string>
     <string name="reset">Restablecer</string>
+    <string name="precise">precisa</string>
+    <string name="aproximated">aproximada</string>
+    <string name="location_right_granted">Permiso concedido en modo %s</string>
+    <string name="right_denied">Permiso denegado</string>
 </resources>

@@ -1,12 +1,18 @@
 package com.example.ecofruit.ui.activities
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -22,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -47,7 +54,7 @@ import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlin.getValue
-
+import com.example.ecofruit.R
 class MainActivity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
     private val productsViewModel: ProductViewModel by viewModels { ViewModelFactory() }
@@ -77,22 +84,49 @@ class MainActivity : ComponentActivity() {
     }
 }
 private val TAG = "MainActivity"
+private val permissions=arrayOf(
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.ACCESS_COARSE_LOCATION,
+)
 
-//TODO: manage rights for location and wifi
+//TODO: manage rights for  wifi
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun MainScreen(
     productsViewModel: ProductViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     chatViewModel: ChatViewModel = viewModel()
 ) {
+    //SCreen required
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val context = LocalContext.current
-    val user by userViewModel.currentUser.collectAsState()
-    val conversations by chatViewModel.conversations.collectAsState()
 
-    val conversationsUpdate by chatViewModel.conversationUpdate.collectAsState()
+
+    //Location rights
+    val launchMultiplePermissions = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions() )
+    {
+            permissionMaps->
+        val fineGranted = permissionMaps[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseGranted = permissionMaps[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+
+        if (fineGranted || coarseGranted)
+        {
+            val mode = if (fineGranted) context.getString(R.string.precise) else context.getString(R.string.aproximated)
+            Toast.makeText(context, context.getString(R.string.location_right_granted, mode), Toast.LENGTH_SHORT).show()
+        }
+        else{
+            Toast.makeText(context,context.getString(R.string.right_denied), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    //General info
+    val user by userViewModel.currentUser.collectAsState()
+
+    //inbox
+    val conversations by chatViewModel.conversations.collectAsState()
 
 
     val visibleTabs = bottomNavItems.filter { screen ->
@@ -110,17 +144,16 @@ fun MainScreen(
             chatViewModel.getConversationsFromUser(it.id)
             productsViewModel.loadHomePage(it)
         }
-    }
 
-    LaunchedEffect(conversationsUpdate, user?.id) {
-        user?.id?.let { it->
-            Log.d(TAG, "UPDATING CONVERSATIONS")
-            chatViewModel.getConversationsFromUser(user?.id?: "")
-
+        if (permissions.any {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    it
+                ) != PackageManager.PERMISSION_GRANTED
+            }) {
+            launchMultiplePermissions.launch(permissions)
         }
     }
-
-
 
 
 

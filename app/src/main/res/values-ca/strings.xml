@@ -147,4 +147,8 @@
     <string name="reset_settings_ttile">Restablir configuració</string>
     <string name="reset_settings_description">Es perdran totes les configuracions personalitzades. Aquesta acció no es pot desfer.</string>
     <string name="reset">Restablir</string>
+    <string name="precise">precisa</string>
+    <string name="aproximated">aproximada</string>
+    <string name="location_right_granted">Permís concedit en mode %s</string>
+    <string name="right_denied">Permis denegat</string>
 </resources>

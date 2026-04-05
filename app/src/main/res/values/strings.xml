@@ -152,4 +152,8 @@
     <string name="reset_settings_ttile">Reset settings</string>
     <string name="reset_settings_description">All personalized preferences will be lost. This action can\'t be turned back.</string>
     <string name="reset">Reset</string>
+    <string name="precise">precise</string>
+    <string name="aproximated">aproximated</string>
+    <string name="location_right_granted">Permission granted in %s mode</string>
+    <string name="right_denied">Permission denied</string>
 </resources>
