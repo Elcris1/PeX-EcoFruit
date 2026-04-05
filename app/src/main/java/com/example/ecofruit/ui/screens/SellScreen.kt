@@ -305,7 +305,7 @@ private fun SellTopBar(
             containerColor = MaterialTheme.colorScheme.background,
         ),
         navigationIcon = {
-            if(page > 0){
+            if(page > 0 && page < 3){
                 OutlinedGeneralButton(
                     text = stringResource(R.string.back),
                     onClick = onBackClick,
@@ -319,7 +319,7 @@ private fun SellTopBar(
                     text = stringResource(R.string.next),
                     onClick = onNextClick
                 )
-            } else {
+            } else if (page < 3) {
                 OutlinedGeneralButton(text = stringResource(R.string.publish), onClick = onPublish)
 
             }

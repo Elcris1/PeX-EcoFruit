@@ -111,4 +111,5 @@
     <string name="sell_product_location">Ubicación de origen del producto</string>
     <string name="sell_prodcut_posted">¡Producto publicado!</string>
     <string name="sell_product_post_again">Crear nueva publicación</string>
+    <string name="map_touch_to_select">Toca el mapa para seleccionar una ubicación</string>
 </resources>

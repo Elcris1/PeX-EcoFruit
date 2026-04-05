@@ -29,12 +29,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.ecofruit.R
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -102,7 +104,7 @@ fun InteractiveMap(
                 color = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Text(
-                    text = "Toca el mapa para seleccionar una ubicación",
+                    text = stringResource(R.string.map_touch_to_select),
                     modifier = Modifier.padding(12.dp)
                 )
             }

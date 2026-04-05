@@ -114,4 +114,5 @@
     <string name="sell_product_location">Location source of the product</string>
     <string name="sell_prodcut_posted">Product posted!</string>
     <string name="sell_product_post_again">Create a new post</string>
+    <string name="map_touch_to_select">Touch map a position to select it</string>
 </resources>

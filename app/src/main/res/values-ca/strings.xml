@@ -112,4 +112,5 @@
     <string name="sell_product_location">Ubació d\'origen del producte</string>
     <string name="sell_prodcut_posted">Producte publicat!</string>
     <string name="sell_product_post_again">Crear nova publicació</string>
+    <string name="map_touch_to_select">Toca el mapa per seleccionar l\'ubicació</string>
 </resources>
