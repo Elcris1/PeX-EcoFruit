@@ -3,11 +3,14 @@ package com.example.ecofruit.ui.viewmodels
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import com.example.ecofruit.ui.data.model.Settings
 import com.example.ecofruit.ui.data.repository.SettingsRepository
+import com.example.ecofruit.ui.managers.NetworkPreferenceManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -23,8 +26,19 @@ class SettingsViewModel(
             initialValue = Settings()
         )
 
+    private val networkManager = NetworkPreferenceManager(application)
+
+    init {
+        viewModelScope.launch {
+            val savedSettings = repo.settingsFlow.first() // primer valor real de disco
+            networkManager.applyWifiOnly(savedSettings.wifiOnlyMode)
+        }
+    }
     // ── Network ───────────────────────────────────────────────────────────────
-    fun setWifiOnlyMode(v: Boolean)      = viewModelScope.launch { repo.setWifiOnlyMode(v) }
+    fun setWifiOnlyMode(v: Boolean)      = viewModelScope.launch {
+        repo.setWifiOnlyMode(v)
+        networkManager.applyWifiOnly(v)
+    }
     fun setDataSaver(v: Boolean)         = viewModelScope.launch { repo.setDataSaver(v) }
     fun setAutoSync(v: Boolean)          = viewModelScope.launch { repo.setAutoSync(v) }
     fun setSyncFrequency(v: String)      = viewModelScope.launch { repo.setSyncFrequency(v) }
