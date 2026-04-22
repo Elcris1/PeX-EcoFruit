@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.viewmodels
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -28,6 +29,9 @@ class AuthViewModel (
 
     private val _uiState = MutableStateFlow<RequestUiState<FirebaseUser>>(RequestUiState.Idle())
     val uiState = _uiState.asStateFlow()
+
+    private val _resetPasswordState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
+    val resetPasswordState = _resetPasswordState.asStateFlow()
 
     init {
         checkSession()
@@ -131,6 +135,22 @@ class AuthViewModel (
                 _uiState.value = RequestUiState.Error(it.message ?: "Login con Google fallido")
             }
         }
+    }
+
+    fun sendPasswordResetEmail(email: String) {
+        _resetPasswordState.value = RequestUiState.Loading()
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    _resetPasswordState.value = RequestUiState.Success(Unit)
+                } else {
+                    _resetPasswordState.value = RequestUiState.Error(task.exception?.message ?: "Error al enviar correo")
+                }
+            }
+    }
+
+    fun clearResetPasswordState() {
+        _resetPasswordState.value = RequestUiState.Idle()
     }
 
     fun logout() {

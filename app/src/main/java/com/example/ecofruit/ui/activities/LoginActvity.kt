@@ -50,6 +50,7 @@ import com.example.ecofruit.ui.components.LoadingButton
 import com.example.ecofruit.ui.components.OutlinedGeneralButton
 import com.example.ecofruit.ui.components.PasswordTextField
 import com.example.ecofruit.ui.data.model.RequestUiState
+import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
@@ -59,6 +60,7 @@ import kotlinx.coroutines.launch
 class LoginActvity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,7 +69,7 @@ class LoginActvity : ComponentActivity() {
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
             EcoFruitTheme (darkTheme = settings.darkTheme) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginScreen(modifier = Modifier.padding(innerPadding), userViewModel)
+                    LoginScreen(modifier = Modifier.padding(innerPadding), userViewModel, authViewModel)
                 }
             }
         }
@@ -79,6 +81,7 @@ class LoginActvity : ComponentActivity() {
 fun LoginScreen(
     modifier: Modifier = Modifier,
     userViewModel: UserViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography  = MaterialTheme.typography
@@ -127,7 +130,7 @@ fun LoginScreen(
             .background(colorScheme.background)
     ) {
         if(resetPasswordDialog) {
-            ForgotPasswordModal(onDismiss = { resetPasswordDialog = false })
+            ForgotPasswordModal(onDismiss = { resetPasswordDialog = false }, authViewModel =  authViewModel)
         }
 
         // Contenido principal
@@ -251,7 +254,7 @@ private enum class ForgotStep { INPUT, LOADING, SUCCESS }
 @SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ForgotPasswordModal(onDismiss: () -> Unit) {
+fun ForgotPasswordModal(onDismiss: () -> Unit, authViewModel: AuthViewModel = viewModel() ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography  = MaterialTheme.typography
     val scope       = rememberCoroutineScope()
@@ -264,6 +267,21 @@ fun ForgotPasswordModal(onDismiss: () -> Unit) {
     // Animación de escala/fade al aparecer
     val scaleAnim = remember { Animatable(0.85f) }
     val alphaAnim = remember { Animatable(0f) }
+    val resetState by authViewModel.resetPasswordState.collectAsState()
+
+    when (resetState) {
+        is RequestUiState.Loading -> {
+            step = ForgotStep.LOADING
+        }
+        is RequestUiState.Success -> {
+            step = ForgotStep.SUCCESS
+        }
+        is RequestUiState.Error -> {
+            Toast.makeText(context, (resetState as RequestUiState.Error).message, Toast.LENGTH_LONG).show()
+            step = ForgotStep.INPUT
+        }
+        else -> Unit
+    }
 
     LaunchedEffect(Unit) {
         scaleAnim.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
@@ -329,9 +347,7 @@ fun ForgotPasswordModal(onDismiss: () -> Unit) {
                                     emailError = context.getString(R.string.email_not_valid)
                                 } else {
                                     scope.launch {
-                                        step = ForgotStep.LOADING
-                                        delay(2000)
-                                        step = ForgotStep.SUCCESS
+                                        authViewModel.sendPasswordResetEmail(resetEmail)
                                     }
                                 }
                             }
@@ -380,6 +396,7 @@ fun ForgotPasswordModal(onDismiss: () -> Unit) {
                             text= stringResource(R.string.understood),
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            authViewModel.clearResetPasswordState()
                             onDismiss()
                         }
                     }
