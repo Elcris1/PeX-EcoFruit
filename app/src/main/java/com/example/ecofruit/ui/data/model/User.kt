@@ -1,20 +1,18 @@
 package com.example.ecofruit.ui.data.model
 
-import android.location.Location
-
 data class User (
-    val id: String,
-    val name: String,
-    val email: String,
-    val createdAt: Long,
-    val profileImageUrl: String,
-    val bio: String,
-    val location: Location?,
-    val isProducer: Boolean,
-    var following: List<String>,
-    var followers: Int,
-    val reviewCount: Int,
-    val rating: Double
+    val id: String = "",
+    val name: String = "",
+    val email: String = "",
+    val createdAt: Long = 0L,
+    val profileImageUrl: String = "",
+    val bio: String = "",
+    val location: LocationData? = null,
+    val isProducer: Boolean = false,
+    var following: List<String> = emptyList(),
+    var followers: Int = 0,
+    val reviewCount: Int = 0,
+    val rating: Double = 0.0
 ) {
     fun avatarInitials() : String {
         return name.trim()

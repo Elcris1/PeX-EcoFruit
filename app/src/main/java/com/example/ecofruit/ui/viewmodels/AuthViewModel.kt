@@ -6,15 +6,19 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ecofruit.ui.data.model.RequestUiState
+import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.data.repository.AuthRepository
+import com.example.ecofruit.ui.data.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel (
-    private val repo: AuthRepository = AuthRepository()
+    private val authRepo: AuthRepository = AuthRepository(),
+    private val userRepo: UserRepository = UserRepository.getInstance()
 ) : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
@@ -24,6 +28,28 @@ class AuthViewModel (
 
     private val _uiState = MutableStateFlow<RequestUiState<FirebaseUser>>(RequestUiState.Idle())
     val uiState = _uiState.asStateFlow()
+
+    init {
+        checkSession()
+    }
+
+    private fun checkSession() {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            _uiState.value = RequestUiState.Loading()
+            viewModelScope.launch {
+                userRepo.getUserFromFirestore(currentUser.uid).onSuccess { user ->
+                    if (user != null) {
+                        _uiState.value = RequestUiState.Success(currentUser)
+                    } else {
+                        _uiState.value = RequestUiState.Idle()
+                    }
+                }.onFailure {
+                    _uiState.value = RequestUiState.Error(it.message ?: "Error al recuperar sesión")
+                }
+            }
+        }
+    }
 
     fun login(email: String, password: String) {
         _uiState.value = RequestUiState.Loading()
@@ -38,13 +64,36 @@ class AuthViewModel (
             }
     }
 
-    fun register(email: String, password: String) {
+    fun register(name: String, email: String, password: String) {
         _uiState.value = RequestUiState.Loading()
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    user = auth.currentUser
-                    user?.let { _uiState.value = RequestUiState.Success(it) }
+                    val firebaseUser = auth.currentUser
+                    if (firebaseUser != null) {
+                        val newUser = User(
+                            id = firebaseUser.uid,
+                            name = name,
+                            email = email,
+                            createdAt = System.currentTimeMillis(),
+                            profileImageUrl = "",
+                            bio = "",
+                            location = null,
+                            isProducer = false,
+                            following = emptyList(),
+                            followers = 0,
+                            reviewCount = 0,
+                            rating = 0.0
+                        )
+                        viewModelScope.launch {
+                            userRepo.createUserInFirestore(newUser).onSuccess {
+                                user = firebaseUser
+                                _uiState.value = RequestUiState.Success(firebaseUser)
+                            }.onFailure {
+                                _uiState.value = RequestUiState.Error(it.message ?: "Error al crear perfil en Firestore")
+                            }
+                        }
+                    }
                 } else {
                     _uiState.value = RequestUiState.Error(task.exception?.message ?: "Registro fallido")
                 }
@@ -54,9 +103,30 @@ class AuthViewModel (
     fun signInWithGoogle(idToken: String) {
         _uiState.value = RequestUiState.Loading()
         viewModelScope.launch {
-            repo.signInWithGoogle(idToken).onSuccess {
-                user = it
-                _uiState.value = RequestUiState.Success(it)
+            authRepo.signInWithGoogle(idToken).onSuccess { firebaseUser ->
+                userRepo.getUserFromFirestore(firebaseUser.uid).onSuccess { existingUser ->
+                    if (existingUser == null) {
+                        val newUser = User(
+                            id = firebaseUser.uid,
+                            name = firebaseUser.displayName ?: "Usuario Google",
+                            email = firebaseUser.email ?: "",
+                            createdAt = System.currentTimeMillis(),
+                            profileImageUrl = firebaseUser.photoUrl?.toString() ?: "",
+                            bio = "",
+                            location = null,
+                            isProducer = false,
+                            following = emptyList(),
+                            followers = 0,
+                            reviewCount = 0,
+                            rating = 0.0
+                        )
+                        userRepo.createUserInFirestore(newUser)
+                    }
+                    user = firebaseUser
+                    _uiState.value = RequestUiState.Success(firebaseUser)
+                }.onFailure {
+                    _uiState.value = RequestUiState.Error("Error al verificar perfil")
+                }
             }.onFailure {
                 _uiState.value = RequestUiState.Error(it.message ?: "Login con Google fallido")
             }
@@ -65,6 +135,7 @@ class AuthViewModel (
 
     fun logout() {
         auth.signOut()
+        userRepo.logOut()
         user = null
         _uiState.value = RequestUiState.Idle()
     }

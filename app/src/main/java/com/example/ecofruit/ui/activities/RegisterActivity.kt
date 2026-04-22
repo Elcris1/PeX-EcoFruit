@@ -84,7 +84,6 @@ class RegisterActivity : ComponentActivity() {
 
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
-    private val authViewModel: AuthViewModel by viewModels ()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,10 +95,7 @@ class RegisterActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize()) { innerPadding ->
                     RegisterScreen(
                         modifier = Modifier.padding(innerPadding),
-                        userViewModel = userViewModel,
-                        onRegisterClick = {name, email, password ->
-                            authViewModel.register(email, password )
-                        }
+                        userViewModel = userViewModel
                     )
                 }
             }
@@ -111,7 +107,6 @@ class RegisterActivity : ComponentActivity() {
     @Composable
     fun RegisterScreen(
         modifier: Modifier = Modifier,
-        onRegisterClick: ( name: String, email: String, password: String) -> Unit = {  _, _, _ -> },
         userViewModel: UserViewModel = viewModel()
     ) {
         val context = LocalContext.current
@@ -245,7 +240,6 @@ class RegisterActivity : ComponentActivity() {
                         ) {
                             if (validate()) {
                                 scope.launch {
-                                    onRegisterClick(name,email, password)
                                     userViewModel.registerUser(name, email, password)
                                 }
                             }

@@ -3,16 +3,21 @@ package com.example.ecofruit.ui.data.repository
 import android.util.Log
 import com.example.ecofruit.ui.data.mock.MockData
 import com.example.ecofruit.ui.data.model.User
-import kotlinx.coroutines.delay
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.util.UUID
-
+import kotlinx.coroutines.tasks.await
 
 class UserRepository private constructor() {
     private val TAG = "UserRepository"
+    private val db = Firebase.firestore
+    private val auth = Firebase.auth
+    private val usersCollection = db.collection("users")
 
     private val _users = MutableStateFlow<List<User>>(emptyList())
 
@@ -23,6 +28,48 @@ class UserRepository private constructor() {
         _users.value = MockData.users
     }
 
+    suspend fun login(email: String, password: String): Result<User> = runCatching {
+        val result = auth.signInWithEmailAndPassword(email, password).await()
+        val firebaseUser = result.user ?: throw Exception("Login failed")
+        val user = getUserFromFirestore(firebaseUser.uid).getOrThrow() ?: throw Exception("User not found")
+        _user.value = user
+        user
+    }
+
+    suspend fun registerUser(name: String, email: String, password: String): Result<User> = runCatching {
+        val result = auth.createUserWithEmailAndPassword(email, password).await()
+        val firebaseUser = result.user ?: throw Exception("Registration failed")
+        val newUser = User(
+            id = firebaseUser.uid,
+            name = name,
+            email = email,
+            createdAt = System.currentTimeMillis(),
+            profileImageUrl = "",
+            bio = "",
+            location = null,
+            isProducer = false,
+            following = emptyList(),
+            followers = 0,
+            reviewCount = 0,
+            rating = 0.0
+        )
+        createUserInFirestore(newUser).getOrThrow()
+        _user.value = newUser
+        newUser
+    }
+
+    suspend fun createUserInFirestore(user: User): Result<Unit> = runCatching {
+        usersCollection.document(user.id).set(user).await()
+        _user.value = user
+    }
+
+    suspend fun getUserFromFirestore(userId: String): Result<User?> = runCatching {
+        val snapshot = usersCollection.document(userId).get().await()
+        val user = snapshot.toObject(User::class.java)
+        if (user != null) _user.value = user
+        user
+    }
+
     fun getUserById(userId: String): User? {
         return _users.value.find { it.id == userId }
     }
@@ -31,52 +78,9 @@ class UserRepository private constructor() {
         return _users.value.find { it.email == email }
     }
 
-    suspend fun login(email: String, password: String): Result<User> {
-        delay(1000) // Simula latencia de red
-        val user = getUserByEmail(email)
-
-        return if (user != null) {
-            _user.value = user
-            Result.success(user)
-        } else {
-            Result.failure(Exception("Credenciales incorrectas"))
-        }
-    }
     fun logOut() {
+        auth.signOut()
         _user.value = null
-    }
-
-    suspend fun registerUser(name: String, email: String, password: String): Result<User>{
-        Log.d(TAG, "Registering user")
-        delay(1000)
-        var user: User? = null
-        if (getUserByEmail(email) == null) {
-            user = User(
-                id = UUID.randomUUID().toString(),
-                name = name,
-                email = email,
-                createdAt = System.currentTimeMillis(),
-                profileImageUrl = "",
-                bio = "",
-                isProducer = false,
-                followers = 0,
-                following = emptyList(),
-                reviewCount = 0,
-                rating = 0.0,
-                location = null
-            )
-            Log.d(TAG, "User created ${user}")
-            _users.update { currentUsers ->
-                currentUsers + user
-            }
-        }
-        if (user!= null){
-            _user.value = user
-            return Result.success(user)
-        } else {
-            return Result.failure(Exception("Error creando usuario, email ya en uso"))
-        }
-
     }
 
     fun followUser(userId: String) {
@@ -99,8 +103,6 @@ class UserRepository private constructor() {
         }
     }
 
-
-    //Patron singleton
     companion object {
         @Volatile
         private var INSTANCE: UserRepository? = null
