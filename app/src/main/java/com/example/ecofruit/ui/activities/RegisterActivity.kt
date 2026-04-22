@@ -72,6 +72,7 @@ import com.example.ecofruit.ui.components.PasswordTextField
 import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.theme.EcoFruitTheme
+import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
@@ -83,6 +84,7 @@ class RegisterActivity : ComponentActivity() {
 
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
+    private val authViewModel: AuthViewModel by viewModels ()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,7 +96,10 @@ class RegisterActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize()) { innerPadding ->
                     RegisterScreen(
                         modifier = Modifier.padding(innerPadding),
-                        userViewModel = userViewModel
+                        userViewModel = userViewModel,
+                        onRegisterClick = {name, email, password ->
+                            authViewModel.register(email, password )
+                        }
                     )
                 }
             }
@@ -106,7 +111,7 @@ class RegisterActivity : ComponentActivity() {
     @Composable
     fun RegisterScreen(
         modifier: Modifier = Modifier,
-        onRegisterClick: (name: String, email: String, password: String) -> Unit = { _, _, _ -> },
+        onRegisterClick: ( name: String, email: String, password: String) -> Unit = {  _, _, _ -> },
         userViewModel: UserViewModel = viewModel()
     ) {
         val context = LocalContext.current
@@ -240,6 +245,7 @@ class RegisterActivity : ComponentActivity() {
                         ) {
                             if (validate()) {
                                 scope.launch {
+                                    onRegisterClick(name,email, password)
                                     userViewModel.registerUser(name, email, password)
                                 }
                             }

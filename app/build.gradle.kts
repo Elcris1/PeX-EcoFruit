@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -70,4 +71,16 @@ dependencies {
     //mapLibre
     implementation(libs.maplibre.compose)
     implementation("com.google.accompanist:accompanist-permissions:0.36.0")
+
+    //Firebase:
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+    implementation("com.google.firebase:firebase-auth")
+
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+
+    // Credential Manager (API moderna, recomendada)
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 }
