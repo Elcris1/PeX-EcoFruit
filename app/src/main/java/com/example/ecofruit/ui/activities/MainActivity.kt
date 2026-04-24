@@ -55,6 +55,8 @@ import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlin.getValue
 import com.example.ecofruit.R
+import com.example.ecofruit.ui.data.model.RequestUiState
+
 class MainActivity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
     private val productsViewModel: ProductViewModel by viewModels { ViewModelFactory() }
@@ -238,10 +240,15 @@ fun MainScreen(
                     }
                 }
             ) }
-            composable(Screen.Profile.route)  { ProfileScreen(
+            composable(Screen.Profile.route)  { 
+                val producerState by userViewModel.producerState.collectAsState()
+                ProfileScreen(
                 user = user,
+                uiState = producerState,
                 onEditProfile = {},
-                onConvertToProducer = {},
+                onConvertToProducer = {
+                    userViewModel.changeProducerState()
+                },
                 onSettings = {
                     Intent(context, SettingsActivity::class.java).also {
                         context.startActivity(it)

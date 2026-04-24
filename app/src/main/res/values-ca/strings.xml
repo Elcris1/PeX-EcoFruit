@@ -151,4 +151,6 @@
     <string name="aproximated">aproximada</string>
     <string name="location_right_granted">Permís concedit en mode %s</string>
     <string name="right_denied">Permis denegat</string>
+    <string name="profile_go_consumer_title">Parar la venta</string>
+    <string name="profile_go_consumer_desc">Cansat de vendre? Tanca la teva tenda</string>
 </resources>

@@ -43,7 +43,7 @@ class UserRepository private constructor() {
             id = firebaseUser.uid,
             name = name,
             email = email,
-            createdAt = System.currentTimeMillis(),
+            createdAt = System.currentTimeMillis()/1000,
             profileImageUrl = "",
             bio = "",
             location = null,
@@ -68,6 +68,12 @@ class UserRepository private constructor() {
         val user = snapshot.toObject(User::class.java)
         if (user != null) _user.value = user
         user
+    }
+
+    suspend fun changeProducerState(): Result<Unit> = runCatching {
+        val currentUser = _user.value ?: throw Exception("No user logged in")
+        usersCollection.document(currentUser.id).update("isProducer", !_user.value!!.isProducer).await()
+        _user.value = currentUser.copy(isProducer = !_user.value!!.isProducer)
     }
 
     fun getUserById(userId: String): User? {

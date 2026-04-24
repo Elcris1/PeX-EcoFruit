@@ -156,4 +156,6 @@
     <string name="aproximated">aproximated</string>
     <string name="location_right_granted">Permission granted in %s mode</string>
     <string name="right_denied">Permission denied</string>
+    <string name="profile_go_consumer_title">Stop selling</string>
+    <string name="profile_go_consumer_desc">Tired of selling? Close your shop</string>
 </resources>

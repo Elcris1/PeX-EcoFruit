@@ -26,6 +26,8 @@ class UserViewModel(
     val registerUiState:  StateFlow<RequestUiState<User>> = _registerUiState.asStateFlow()
 
 
+
+
     fun logUserIn(email: String, password: String) {
 
         viewModelScope.launch {
@@ -46,6 +48,20 @@ class UserViewModel(
             userRepo.registerUser(name, email, password)
                 .onSuccess { _registerUiState.value = RequestUiState.Success(it) }
                 .onFailure { _registerUiState.value = RequestUiState.Error(it.message ?: "Error") }
+        }
+    }
+
+    private val _producerState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
+    val producerState = _producerState.asStateFlow()
+
+    fun changeProducerState() {
+        _producerState.value = RequestUiState.Loading()
+        viewModelScope.launch {
+            userRepo.changeProducerState().onSuccess {
+                _producerState.value = RequestUiState.Success(Unit)
+            }.onFailure {
+                _producerState.value = RequestUiState.Error(it.message ?: "Error al convertir a productor")
+            }
         }
     }
 
