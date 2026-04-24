@@ -1,17 +1,28 @@
 package com.example.ecofruit.ui.components
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.location.LocationManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -37,6 +48,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.ecofruit.R
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -48,8 +65,10 @@ import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.Point
+import java.lang.Exception
 
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun InteractiveMap(
     mapLibreMap: MapLibreMap? = null,
@@ -62,51 +81,137 @@ fun InteractiveMap(
 
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+    
+    var locationLatLng by remember { mutableStateOf<LatLng?>(null) }
+    var isFetchingLocation by remember { mutableStateOf(false) }
+    var locationError by remember { mutableStateOf<String?>(null) }
+
+    fun isLocationEnabled(context: Context): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
+    @SuppressLint("MissingPermission")
+    fun fetchCurrentLocation() {
+        if (!permissionState.status.isGranted) return
+        if (!isLocationEnabled(context)) {
+            locationError = "Please turn on location services"
+            return
+        }
+
+        isFetchingLocation = true
+        locationError = null
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+            .addOnSuccessListener { location ->
+                isFetchingLocation = false
+                if (location != null) {
+                    locationLatLng = LatLng(location.latitude, location.longitude)
+                } else {
+                    locationError = "Could not fetch location"
+                }
+            }
+            .addOnFailureListener { e: Exception ->
+                isFetchingLocation = false
+                locationError = e.message ?: "Error fetching location"
+            }
+    }
+
+    // Proactively request permissions if not granted
+    LaunchedEffect(Unit) {
+        if (!permissionState.status.isGranted && !permissionState.status.shouldShowRationale) {
+            permissionState.launchPermissionRequest()
+        }
+    }
+
+    LaunchedEffect(permissionState.status.isGranted) {
+        if (permissionState.status.isGranted) {
+            fetchCurrentLocation()
+        }
+    }
+
     val height = if (modifier == Modifier) 158.dp else Dp.Unspecified
 
     Box(
         modifier = modifier
             .then(if (height != Dp.Unspecified) Modifier.fillMaxSize() else Modifier)
     ) {
-        MapLibreImplementation (
-            modifier = Modifier.fillMaxSize(),
-            initialLatLng = initialLatLng,
-            initialZoom = 12.0,
-            onMapReady = { map ->
-                onMapLibreMapChange(map)
-
-            },
-            onLocationSelected = {latlng ->
-                onLocationSelected(latlng)
-            }
-        )
-        // Coordenadas en pantalla
-        selectedLocation?.let { latLng ->
-            Card(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
+        if (!permissionState.status.isGranted) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = "📍 %.5f, %.5f".format(latLng.latitude, latLng.longitude),
-                    modifier = Modifier.padding(12.dp)
-                )
+                Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(48.dp))
+                Spacer(Modifier.height(8.dp))
+                Text("Location permission is required to show your current position on the map.")
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = { permissionState.launchPermissionRequest() }) {
+                    Text("Grant Permission")
+                }
             }
-        }
-
-        // Instrucción si no hay selección
-        if (selectedLocation == null) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(16.dp),
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.primaryContainer
+        } else if (!isLocationEnabled(context)) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = stringResource(R.string.map_touch_to_select),
-                    modifier = Modifier.padding(12.dp)
-                )
+                Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(48.dp))
+                Spacer(Modifier.height(8.dp))
+                Text("Location services are turned off. Please enable them to see your current position.")
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = { fetchCurrentLocation() }) {
+                    Text("Retry after enabling")
+                }
+            }
+        } else if (isFetchingLocation) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            MapLibreImplementation (
+                modifier = Modifier.fillMaxSize(),
+                initialLatLng = locationLatLng ?: initialLatLng,
+                initialZoom = if (locationLatLng != null) 15.0 else 12.0,
+                onMapReady = { map ->
+                    onMapLibreMapChange(map)
+
+                },
+                onLocationSelected = {latlng ->
+                    onLocationSelected(latlng)
+                }
+            )
+            // Coordenadas en pantalla
+            selectedLocation?.let { latLng ->
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "📍 %.5f, %.5f".format(latLng.latitude, latLng.longitude),
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            }
+
+            // Instrucción si no hay selección
+            if (selectedLocation == null) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Text(
+                        text = stringResource(R.string.map_touch_to_select),
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
             }
         }
     }

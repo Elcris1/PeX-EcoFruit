@@ -22,7 +22,6 @@ class UserViewModel(
     private val _uiState = MutableStateFlow<RequestUiState<User>>(RequestUiState.Idle())
     val uiState: StateFlow<RequestUiState<User>> = _uiState.asStateFlow()
 
-
     fun logOut() {
         userRepo.logOut()
     }

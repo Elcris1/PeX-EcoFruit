@@ -68,6 +68,9 @@ dependencies {
     implementation(libs.maplibre.compose)
     implementation("com.google.accompanist:accompanist-permissions:0.36.0")
 
+    // Location
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
     //Firebase:
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-auth")
