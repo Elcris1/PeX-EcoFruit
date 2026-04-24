@@ -12,7 +12,6 @@ import com.example.ecofruit.ui.data.repository.AuthRepository
 import com.example.ecofruit.ui.data.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -27,17 +26,27 @@ class AuthViewModel (
     var user by mutableStateOf<FirebaseUser?>(auth.currentUser)
         private set
 
-    // Atributo para el modelo de usuario de la aplicación
-    var currentAppUserModel by mutableStateOf<User?>(null)
+    // Atributo para el modelo de usuario de la aplicación, sincronizado con el repositorio singleton
+    var currentAppUserModel by mutableStateOf<User?>(userRepo.user.value)
         private set
 
     private val _uiState = MutableStateFlow<RequestUiState<FirebaseUser>>(RequestUiState.Idle())
     val uiState = _uiState.asStateFlow()
+    
+    private val _registerUiState = MutableStateFlow<RequestUiState<FirebaseUser>>(RequestUiState.Idle())
+    val registerUiState = _registerUiState.asStateFlow()
+
 
     private val _resetPasswordState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
     val resetPasswordState = _resetPasswordState.asStateFlow()
 
     init {
+        // Observamos el StateFlow del repositorio para mantener este ViewModel actualizado
+        viewModelScope.launch {
+            userRepo.user.collect { updatedUser ->
+                currentAppUserModel = updatedUser
+            }
+        }
         checkSession()
     }
 
@@ -46,9 +55,9 @@ class AuthViewModel (
         if (currentUser != null) {
             _uiState.value = RequestUiState.Loading()
             viewModelScope.launch {
+                // reloadUser ya actualiza el StateFlow en el repositorio
                 userRepo.reloadUser().onSuccess { appUser ->
                     if (appUser != null) {
-                        currentAppUserModel = appUser
                         _uiState.value = RequestUiState.Success(currentUser)
                     } else {
                         _uiState.value = RequestUiState.Idle()
@@ -69,8 +78,8 @@ class AuthViewModel (
                     user = firebaseUser
                     viewModelScope.launch {
                         if (firebaseUser != null) {
-                            userRepo.getUserFromFirestore(firebaseUser.uid).onSuccess { appUser ->
-                                currentAppUserModel = appUser
+                            // getUserFromFirestore ya actualiza el StateFlow en el repositorio
+                            userRepo.getUserFromFirestore(firebaseUser.uid).onSuccess {
                                 _uiState.value = RequestUiState.Success(firebaseUser)
                             }.onFailure {
                                 _uiState.value = RequestUiState.Error(it.message ?: "Error al cargar perfil")
@@ -84,7 +93,7 @@ class AuthViewModel (
     }
 
     fun register(name: String, email: String, password: String) {
-        _uiState.value = RequestUiState.Loading()
+        _registerUiState.value = RequestUiState.Loading()
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -94,7 +103,7 @@ class AuthViewModel (
                             id = firebaseUser.uid,
                             name = name,
                             email = email,
-                            createdAt = System.currentTimeMillis(),
+                            createdAt = System.currentTimeMillis()/1000,
                             profileImageUrl = "",
                             bio = "",
                             location = null,
@@ -105,17 +114,17 @@ class AuthViewModel (
                             rating = 0.0
                         )
                         viewModelScope.launch {
+                            // createUserInFirestore ya actualiza el StateFlow en el repositorio
                             userRepo.createUserInFirestore(newUser).onSuccess {
                                 user = firebaseUser
-                                currentAppUserModel = newUser
-                                _uiState.value = RequestUiState.Success(firebaseUser)
+                                _registerUiState.value  = RequestUiState.Success(firebaseUser)
                             }.onFailure {
-                                _uiState.value = RequestUiState.Error(it.message ?: "Error al crear perfil en Firestore")
+                                _registerUiState.value = RequestUiState.Error(it.message ?: "Error al crear perfil en Firestore")
                             }
                         }
                     }
                 } else {
-                    _uiState.value = RequestUiState.Error(task.exception?.message ?: "Registro fallido")
+                    _registerUiState.value = RequestUiState.Error(task.exception?.message ?: "Registro fallido")
                 }
             }
     }
@@ -130,7 +139,7 @@ class AuthViewModel (
                             id = firebaseUser.uid,
                             name = firebaseUser.displayName ?: "Usuario Google",
                             email = firebaseUser.email ?: "",
-                            createdAt = System.currentTimeMillis(),
+                            createdAt = System.currentTimeMillis()/1000,
                             profileImageUrl = firebaseUser.photoUrl?.toString() ?: "",
                             bio = "",
                             location = null,
@@ -141,9 +150,6 @@ class AuthViewModel (
                             rating = 0.0
                         )
                         userRepo.createUserInFirestore(newUser)
-                        currentAppUserModel = newUser
-                    } else {
-                        currentAppUserModel = existingUser
                     }
                     user = firebaseUser
                     _uiState.value = RequestUiState.Success(firebaseUser)
@@ -176,7 +182,6 @@ class AuthViewModel (
         auth.signOut()
         userRepo.logOut()
         user = null
-        currentAppUserModel = null
         _uiState.value = RequestUiState.Idle()
     }
 }

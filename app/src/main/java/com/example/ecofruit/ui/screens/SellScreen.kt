@@ -222,7 +222,7 @@ fun SellScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(text = errorMessage, color = colorScheme.error)
                             Spacer(Modifier.height(16.dp))
-                            GeneralButton(text = stringResource(R.string.retry), onClick = {
+                            GeneralButton(text = stringResource(R.string.retry), modifier=Modifier.fillMaxSize(0.8f), onClick = {
                                 onPublish(createProduct(), images)
                             })
                         }

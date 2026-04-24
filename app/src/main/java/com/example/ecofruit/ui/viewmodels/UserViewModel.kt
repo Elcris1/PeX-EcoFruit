@@ -22,34 +22,11 @@ class UserViewModel(
     private val _uiState = MutableStateFlow<RequestUiState<User>>(RequestUiState.Idle())
     val uiState: StateFlow<RequestUiState<User>> = _uiState.asStateFlow()
 
-    private val _registerUiState = MutableStateFlow<RequestUiState<User>>(RequestUiState.Idle())
-    val registerUiState:  StateFlow<RequestUiState<User>> = _registerUiState.asStateFlow()
-
-
-
-
-    fun logUserIn(email: String, password: String) {
-
-        viewModelScope.launch {
-            _uiState.value = RequestUiState.Loading()
-            userRepo.login(email, password)
-                .onSuccess { _uiState.value = RequestUiState.Success(it) }
-                .onFailure { _uiState.value = RequestUiState.Error(it.message ?: "Error") }
-        }
-    }
 
     fun logOut() {
         userRepo.logOut()
     }
 
-    fun registerUser(name: String, email: String, password: String) {
-        viewModelScope.launch {
-            _registerUiState.value = RequestUiState.Loading()
-            userRepo.registerUser(name, email, password)
-                .onSuccess { _registerUiState.value = RequestUiState.Success(it) }
-                .onFailure { _registerUiState.value = RequestUiState.Error(it.message ?: "Error") }
-        }
-    }
 
     private val _producerState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
     val producerState = _producerState.asStateFlow()

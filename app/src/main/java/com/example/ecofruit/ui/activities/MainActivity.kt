@@ -51,11 +51,14 @@ import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.model.RequestUiState
+import com.example.ecofruit.ui.viewmodels.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
     private val productsViewModel: ProductViewModel by viewModels { ViewModelFactory() }
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val authViweModel: AuthViewModel by viewModels()
+
     private val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,6 +69,7 @@ class MainActivity : ComponentActivity() {
             EcoFruitTheme (darkTheme = settings.darkTheme) {
                 MainScreen(
                     productsViewModel = productsViewModel,
+                    authViewModel = authViweModel,
                     userViewModel = userViewModel,
                     chatViewModel = chatViewModel
                 )
@@ -87,6 +91,7 @@ private val permissions = arrayOf(
 @Composable
 fun MainScreen(
     productsViewModel: ProductViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     chatViewModel: ChatViewModel = viewModel()
 ) {
@@ -109,7 +114,7 @@ fun MainScreen(
         }
     }
 
-    val user by userViewModel.currentUser.collectAsState()
+    val user = authViewModel.currentAppUserModel
     val conversations by chatViewModel.conversations.collectAsState()
 
     val visibleTabs = bottomNavItems.filter { screen ->

@@ -107,10 +107,11 @@ class RegisterActivity : ComponentActivity() {
     @Composable
     fun RegisterScreen(
         modifier: Modifier = Modifier,
-        userViewModel: UserViewModel = viewModel()
+        userViewModel: UserViewModel = viewModel(),
+        authViewModel: AuthViewModel = viewModel()
     ) {
         val context = LocalContext.current
-        val uiState by userViewModel.registerUiState.collectAsState()
+        val uiState by authViewModel.registerUiState.collectAsState()
 
         var isLoading       by remember { mutableStateOf(false) }
         var name          by remember { mutableStateOf("") }
@@ -240,7 +241,7 @@ class RegisterActivity : ComponentActivity() {
                         ) {
                             if (validate()) {
                                 scope.launch {
-                                    userViewModel.registerUser(name, email, password)
+                                    authViewModel.register(name, email, password)
                                 }
                             }
                         }

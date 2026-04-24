@@ -65,8 +65,10 @@ class UserRepository private constructor() {
 
     suspend fun getUserFromFirestore(userId: String): Result<User?> = runCatching {
         val snapshot = usersCollection.document(userId).get().await()
+        Log.d(TAG, snapshot.toString())
         val user = snapshot.toObject(User::class.java)
         if (user != null) _user.value = user
+        Log.d(TAG, user.toString())
         user
     }
 

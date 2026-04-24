@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.screens
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -99,6 +100,7 @@ fun ProfileScreen(
     )
 
     Box(modifier = modifier.fillMaxSize()) {
+        Log.d("PROFILESCREEN", user.toString())
         if (user != null) {
             val menuItems = listOf(
                 ProfileMenuItem(

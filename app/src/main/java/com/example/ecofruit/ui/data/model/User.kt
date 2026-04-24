@@ -1,5 +1,7 @@
 package com.example.ecofruit.ui.data.model
 
+import com.google.firebase.firestore.PropertyName
+
 data class User (
     val id: String = "",
     val name: String = "",
@@ -8,6 +10,8 @@ data class User (
     val profileImageUrl: String = "",
     val bio: String = "",
     val location: LocationData? = null,
+    @get:PropertyName("isProducer")
+    @get:JvmName("isProducer")
     val isProducer: Boolean = false,
     var following: List<String> = emptyList(),
     var followers: Int = 0,
