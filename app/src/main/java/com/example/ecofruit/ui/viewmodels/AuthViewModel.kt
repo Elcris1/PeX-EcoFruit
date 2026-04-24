@@ -27,6 +27,10 @@ class AuthViewModel (
     var user by mutableStateOf<FirebaseUser?>(auth.currentUser)
         private set
 
+    // Atributo para el modelo de usuario de la aplicación
+    var currentAppUserModel by mutableStateOf<User?>(null)
+        private set
+
     private val _uiState = MutableStateFlow<RequestUiState<FirebaseUser>>(RequestUiState.Idle())
     val uiState = _uiState.asStateFlow()
 
@@ -42,8 +46,9 @@ class AuthViewModel (
         if (currentUser != null) {
             _uiState.value = RequestUiState.Loading()
             viewModelScope.launch {
-                userRepo.getUserFromFirestore(currentUser.uid).onSuccess { user ->
-                    if (user != null) {
+                userRepo.reloadUser().onSuccess { appUser ->
+                    if (appUser != null) {
+                        currentAppUserModel = appUser
                         _uiState.value = RequestUiState.Success(currentUser)
                     } else {
                         _uiState.value = RequestUiState.Idle()
@@ -60,8 +65,18 @@ class AuthViewModel (
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    user = auth.currentUser
-                    user?.let { _uiState.value = RequestUiState.Success(it) }
+                    val firebaseUser = auth.currentUser
+                    user = firebaseUser
+                    viewModelScope.launch {
+                        if (firebaseUser != null) {
+                            userRepo.getUserFromFirestore(firebaseUser.uid).onSuccess { appUser ->
+                                currentAppUserModel = appUser
+                                _uiState.value = RequestUiState.Success(firebaseUser)
+                            }.onFailure {
+                                _uiState.value = RequestUiState.Error(it.message ?: "Error al cargar perfil")
+                            }
+                        }
+                    }
                 } else {
                     _uiState.value = RequestUiState.Error(task.exception?.message ?: "Login fallido")
                 }
@@ -92,6 +107,7 @@ class AuthViewModel (
                         viewModelScope.launch {
                             userRepo.createUserInFirestore(newUser).onSuccess {
                                 user = firebaseUser
+                                currentAppUserModel = newUser
                                 _uiState.value = RequestUiState.Success(firebaseUser)
                             }.onFailure {
                                 _uiState.value = RequestUiState.Error(it.message ?: "Error al crear perfil en Firestore")
@@ -125,6 +141,9 @@ class AuthViewModel (
                             rating = 0.0
                         )
                         userRepo.createUserInFirestore(newUser)
+                        currentAppUserModel = newUser
+                    } else {
+                        currentAppUserModel = existingUser
                     }
                     user = firebaseUser
                     _uiState.value = RequestUiState.Success(firebaseUser)
@@ -157,6 +176,7 @@ class AuthViewModel (
         auth.signOut()
         userRepo.logOut()
         user = null
+        currentAppUserModel = null
         _uiState.value = RequestUiState.Idle()
     }
 }

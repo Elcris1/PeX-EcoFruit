@@ -70,10 +70,15 @@ class UserRepository private constructor() {
         user
     }
 
+    suspend fun reloadUser(): Result<User?> = runCatching {
+        val currentUser = auth.currentUser ?: return@runCatching null
+        getUserFromFirestore(currentUser.uid).getOrThrow()
+    }
+
     suspend fun changeProducerState(): Result<Unit> = runCatching {
         val currentUser = _user.value ?: throw Exception("No user logged in")
-        usersCollection.document(currentUser.id).update("isProducer", !_user.value!!.isProducer).await()
-        _user.value = currentUser.copy(isProducer = !_user.value!!.isProducer)
+        usersCollection.document(currentUser.id).update("isProducer", !currentUser.isProducer).await()
+        _user.value = currentUser.copy(isProducer = !currentUser.isProducer)
     }
 
     fun getUserById(userId: String): User? {

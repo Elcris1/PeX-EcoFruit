@@ -158,4 +158,5 @@
     <string name="right_denied">Permission denied</string>
     <string name="profile_go_consumer_title">Stop selling</string>
     <string name="profile_go_consumer_desc">Tired of selling? Close your shop</string>
+    <string name="retry">Retry</string>
 </resources>

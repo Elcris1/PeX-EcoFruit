@@ -24,9 +24,10 @@ class ProfileViewModel (
     fun getUserProfile(userId: String) {
         viewModelScope.launch {
             val user = userRepository.getUserById(userId)
-            val products = productRepository.getProductsFromUserId(userId)
+            val productsResult = productRepository.getProductsFromUserId(userId)
+            val products = productsResult.getOrNull()
             val reviews = reviewRepository.getReviewsToUser(userId)
-            if (user != null && products != null && reviews != null)  {
+            if (user != null && products != null)  {
                 _profile.value = FullUserInfo(
                     user = user,
                     products = products,

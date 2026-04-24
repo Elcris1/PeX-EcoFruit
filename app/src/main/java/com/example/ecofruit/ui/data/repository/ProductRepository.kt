@@ -1,34 +1,56 @@
 package com.example.ecofruit.ui.data.repository
 
-import com.example.ecofruit.ui.data.mock.MockData
+import android.net.Uri
 import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.model.User
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
+import kotlinx.coroutines.tasks.await
 
 class ProductRepository {
 
-    private var products: List<Product> = emptyList()
-    init {
-        products = MockData.products
-    }
-    fun getProducts(): List<Product> = products
+    private val db = Firebase.firestore
+    private val productsCollection = db.collection("products")
+    private val storage = Firebase.storage
+    private val storageRef = storage.reference.child("products")
 
-    fun getProductsFromUserId(userId: String) = getProducts().filter { it.userId == userId }
-
-    fun getFavouriteProducts(userId: String): List<Product> {
-        return getProducts().filter { userId in it.favouritesList }.sortedByDescending { it.rating }
+    suspend fun getProducts(): Result<List<Product>> = runCatching {
+        productsCollection.get().await().toObjects(Product::class.java)
     }
 
-    fun getProductsFromFollowingUsers(user: User): List<Product> {
-        return getProducts().filter { it.userId in user.following }.sortedByDescending { it.createdAt }
-    }
-    fun getRecommendedProducts(userId: String) : List<Product> {
-        return getProducts().sortedByDescending { it.recommendationScore() }
+    suspend fun getProductsFromUserId(userId: String): Result<List<Product>> = runCatching {
+        productsCollection.whereEqualTo("userId", userId).get().await().toObjects(Product::class.java)
     }
 
-    fun addProduct(product: Product) {
-        product.createdAt = System.currentTimeMillis()
-        product.id = "P_${products.size + 1}"
-        products += product
+    suspend fun getFavouriteProducts(userId: String): Result<List<Product>> = runCatching {
+        productsCollection.whereArrayContains("favouritesList", userId).get().await()
+            .toObjects(Product::class.java).sortedByDescending { it.rating }
+    }
+
+    suspend fun getProductsFromFollowingUsers(user: User): Result<List<Product>> = runCatching {
+        if (user.following.isEmpty()) return@runCatching emptyList()
+        productsCollection.whereIn("userId", user.following).get().await()
+            .toObjects(Product::class.java).sortedByDescending { it.createdAt }
+    }
+
+    suspend fun getRecommendedProducts(): Result<List<Product>> = runCatching {
+        productsCollection.get().await().toObjects(Product::class.java)
+            .sortedByDescending { it.recommendationScore() }
+    }
+
+    suspend fun addProduct(product: Product): Result<Unit> = runCatching {
+        val docRef = if (product.id.isEmpty()) productsCollection.document() else productsCollection.document(product.id)
+        product.id = docRef.id
+        product.createdAt = System.currentTimeMillis()/1000
+        docRef.set(product).await()
+    }
+
+    suspend fun uploadProductImage(uri: Uri): Result<String> = runCatching {
+        val fileName = "product_${System.currentTimeMillis()}_${uri.lastPathSegment}"
+        val ref = storageRef.child(fileName)
+        ref.putFile(uri).await()
+        ref.downloadUrl.await().toString()
     }
 
     companion object {
@@ -41,7 +63,6 @@ class ProductRepository {
                     INSTANCE = it
                 }
             }
-
         }
     }
 }

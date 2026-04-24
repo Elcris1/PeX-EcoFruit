@@ -58,7 +58,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class LoginActvity : ComponentActivity() {
-    private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val authViewModel: AuthViewModel by viewModels()
 
@@ -69,7 +68,7 @@ class LoginActvity : ComponentActivity() {
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
             EcoFruitTheme (darkTheme = settings.darkTheme) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginScreen(modifier = Modifier.padding(innerPadding), userViewModel, authViewModel)
+                    LoginScreen(modifier = Modifier.padding(innerPadding), authViewModel)
                 }
             }
         }
@@ -80,13 +79,12 @@ class LoginActvity : ComponentActivity() {
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    userViewModel: UserViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography  = MaterialTheme.typography
     val context = LocalContext.current
-    val uiState by userViewModel.uiState.collectAsState()
+    val uiState by authViewModel.uiState.collectAsState()
 
 
     var email           by remember { mutableStateOf("") }
@@ -210,7 +208,7 @@ fun LoginScreen(
                                 }
                                 if (valid) {
                                     scope.launch {
-                                        userViewModel.logUserIn(email, password)
+                                        authViewModel.login(email, password)
                                     }
                                 }
                             }

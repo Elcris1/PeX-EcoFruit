@@ -153,4 +153,5 @@
     <string name="right_denied">Permis denegat</string>
     <string name="profile_go_consumer_title">Parar la venta</string>
     <string name="profile_go_consumer_desc">Cansat de vendre? Tanca la teva tenda</string>
+    <string name="retry">Tornar a intentar</string>
 </resources>

@@ -6,11 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.ecofruit"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.ecofruit"
@@ -76,6 +72,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation(libs.firebase.storage)
 
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.2.0")
