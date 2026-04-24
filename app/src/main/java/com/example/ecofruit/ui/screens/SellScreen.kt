@@ -213,7 +213,11 @@ fun SellScreen(
             when (addProductState) {
                 is RequestUiState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(Modifier.height(16.dp))
+                            Text(text = stringResource(R.string.sell_publishing_product))
+                        }
                     }
                 }
                 is RequestUiState.Error -> {

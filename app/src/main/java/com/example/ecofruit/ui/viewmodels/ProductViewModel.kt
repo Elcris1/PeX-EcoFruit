@@ -8,6 +8,8 @@ import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.repository.ProductRepository
 import com.example.ecofruit.ui.data.repository.UserRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -84,27 +86,36 @@ class ProductViewModel(
         viewModelScope.launch {
             _addProductState.value = RequestUiState.Loading()
             
-            val imageUrls = mutableListOf<String>()
-            var uploadErrorOccurred = false
-            
-            imageUris.forEach { uri ->
-                productRepository.uploadProductImage(uri).onSuccess { url ->
-                    imageUrls.add(url)
-                }.onFailure {
-                    uploadErrorOccurred = true
+            try {
+                // Upload all images concurrently using async/awaitAll
+                val uploadResults = imageUris.map { uri ->
+                    async { productRepository.uploadProductImage(uri) }
+                }.awaitAll()
+
+                val imageUrls = mutableListOf<String>()
+                var uploadErrorOccurred = false
+                
+                uploadResults.forEach { result ->
+                    result.onSuccess { url ->
+                        imageUrls.add(url)
+                    }.onFailure {
+                        uploadErrorOccurred = true
+                    }
                 }
-            }
-            
-            if (uploadErrorOccurred) {
-                _addProductState.value = RequestUiState.Error("Error uploading some images")
-                return@launch
-            }
-            
-            val finalProduct = product.copy(imagesUrl = imageUrls)
-            productRepository.addProduct(finalProduct).onSuccess {
-                _addProductState.value = RequestUiState.Success(Unit)
-            }.onFailure {
-                _addProductState.value = RequestUiState.Error(it.message ?: "Error adding product to database")
+                
+                if (uploadErrorOccurred) {
+                    _addProductState.value = RequestUiState.Error("Error uploading some images")
+                    return@launch
+                }
+                
+                val finalProduct = product.copy(imagesUrl = imageUrls)
+                productRepository.addProduct(finalProduct).onSuccess {
+                    _addProductState.value = RequestUiState.Success(Unit)
+                }.onFailure {
+                    _addProductState.value = RequestUiState.Error(it.message ?: "Error adding product to database")
+                }
+            } catch (e: Exception) {
+                _addProductState.value = RequestUiState.Error(e.message ?: "An unexpected error occurred")
             }
         }
     }

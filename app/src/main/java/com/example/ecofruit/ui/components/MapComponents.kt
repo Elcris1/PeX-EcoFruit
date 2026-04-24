@@ -2,8 +2,13 @@ package com.example.ecofruit.ui.components
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
+import android.content.IntentSender
 import android.location.LocationManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,8 +57,12 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
+import com.google.android.gms.location.SettingsClient
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -82,26 +91,31 @@ fun InteractiveMap(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     
     var locationLatLng by remember { mutableStateOf<LatLng?>(null) }
     var isFetchingLocation by remember { mutableStateOf(false) }
     var locationError by remember { mutableStateOf<String?>(null) }
 
-    fun isLocationEnabled(context: Context): Boolean {
+    fun checkIsLocationEnabled(context: Context): Boolean {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
                 locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
+    var locationEnabled by remember { mutableStateOf(checkIsLocationEnabled(context)) }
+
     @SuppressLint("MissingPermission")
     fun fetchCurrentLocation() {
         if (!permissionState.status.isGranted) return
-        if (!isLocationEnabled(context)) {
+        if (!checkIsLocationEnabled(context)) {
+            locationEnabled = false
             locationError = "Please turn on location services"
             return
         }
 
+        locationEnabled = true
         isFetchingLocation = true
         locationError = null
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
@@ -120,6 +134,54 @@ fun InteractiveMap(
             }
     }
 
+    // Re-check status when app resumes
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                locationEnabled = checkIsLocationEnabled(context)
+                if (permissionState.status.isGranted && locationEnabled && locationLatLng == null) {
+                    fetchCurrentLocation()
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    val settingResultRequest = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        locationEnabled = checkIsLocationEnabled(context)
+        if (result.resultCode == Activity.RESULT_OK) {
+            fetchCurrentLocation()
+        }
+    }
+
+    fun checkLocationSettings() {
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build()
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val client: SettingsClient = LocationServices.getSettingsClient(context)
+        val task = client.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener {
+            locationEnabled = true
+            fetchCurrentLocation()
+        }
+
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                try {
+                    val intentSenderRequest = IntentSenderRequest.Builder(exception.resolution.intentSender).build()
+                    settingResultRequest.launch(intentSenderRequest)
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    // Ignore the error.
+                }
+            }
+        }
+    }
+
     // Proactively request permissions if not granted
     LaunchedEffect(Unit) {
         if (!permissionState.status.isGranted && !permissionState.status.shouldShowRationale) {
@@ -129,7 +191,10 @@ fun InteractiveMap(
 
     LaunchedEffect(permissionState.status.isGranted) {
         if (permissionState.status.isGranted) {
-            fetchCurrentLocation()
+            locationEnabled = checkIsLocationEnabled(context)
+            if (locationEnabled) {
+                fetchCurrentLocation()
+            }
         }
     }
 
@@ -153,7 +218,7 @@ fun InteractiveMap(
                     Text("Grant Permission")
                 }
             }
-        } else if (!isLocationEnabled(context)) {
+        } else if (!locationEnabled) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -163,8 +228,8 @@ fun InteractiveMap(
                 Spacer(Modifier.height(8.dp))
                 Text("Location services are turned off. Please enable them to see your current position.")
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = { fetchCurrentLocation() }) {
-                    Text("Retry after enabling")
+                Button(onClick = { checkLocationSettings() }) {
+                    Text("Enable Location")
                 }
             }
         } else if (isFetchingLocation) {

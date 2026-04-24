@@ -153,4 +153,5 @@
     <string name="profile_go_consumer_title">Parar la venta</string>
     <string name="profile_go_consumer_desc">Cansado de vender? Cierra tu tienda</string>
     <string name="retry">Volver a intentar</string>
+    <string name="sell_publishing_product">Publicando producto...</string>
 </resources>

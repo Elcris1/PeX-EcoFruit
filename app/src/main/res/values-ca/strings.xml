@@ -154,4 +154,5 @@
     <string name="profile_go_consumer_title">Parar la venta</string>
     <string name="profile_go_consumer_desc">Cansat de vendre? Tanca la teva tenda</string>
     <string name="retry">Tornar a intentar</string>
+    <string name="sell_publishing_product">Publicant producte...</string>
 </resources>
