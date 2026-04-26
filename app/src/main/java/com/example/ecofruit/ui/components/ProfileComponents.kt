@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -64,7 +65,8 @@ fun UserImage(imageUrl: String, name: String, modifier: Modifier = Modifier.size
             contentDescription = "Imagen de usuario",
             modifier = modifier,
             contentScale = ContentScale.Crop,
-           //TODO: poner imagen para cuando haya error.
+            placeholder = painterResource(R.drawable.ic_user_placeholder),
+            error = painterResource(R.drawable.ic_user_placeholder)
         )
     } else {
         ProfileText(name)
