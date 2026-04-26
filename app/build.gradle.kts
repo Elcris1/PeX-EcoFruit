@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation(libs.ui)
+    implementation(libs.androidx.tv.material)
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
     implementation(composeBom)
     implementation(libs.androidx.core.ktx)

@@ -51,6 +51,7 @@ import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.model.RequestUiState
+import com.example.ecofruit.ui.screens.EditProfileScreen
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
 
 class MainActivity : ComponentActivity() {
@@ -125,6 +126,8 @@ fun MainScreen(
     val followedProducerProductsState by productsViewModel.followingProducts.collectAsStateWithLifecycle()
     val favouriteProductsState by productsViewModel.favouriteProducts.collectAsStateWithLifecycle()
 
+    val editProfileState by userViewModel.updateState.collectAsState()
+
     LaunchedEffect(user) {
         user?.let { it ->
             chatViewModel.getConversationsFromUser(it.id)
@@ -140,27 +143,30 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                visibleTabs.forEach { screen ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = screen.icon,
-                                contentDescription = stringResource(screen.labelRes)
-                            )
-                        },
-                        label = { Text(stringResource(screen.labelRes)) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            val showBar = currentDestination?.route != "edit_profile"
+            if (showBar) {
+                NavigationBar {
+                    visibleTabs.forEach { screen ->
+                        NavigationBarItem(
+                            icon = {
+                                Icon(
+                                    imageVector = screen.icon,
+                                    contentDescription = stringResource(screen.labelRes)
+                                )
+                            },
+                            label = { Text(stringResource(screen.labelRes)) },
+                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -219,7 +225,7 @@ fun MainScreen(
                 ProfileScreen(
                     user = user,
                     uiState = producerState,
-                    onEditProfile = {},
+                    onEditProfile = {navController.navigate("edit_profile") },
                     onConvertToProducer = { userViewModel.changeProducerState() },
                     onSettings = {
                         Intent(context, SettingsActivity::class.java).also {
@@ -235,6 +241,31 @@ fun MainScreen(
                         }
                     }
                 )
+            }
+            composable("edit_profile") {
+                if (user == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    return@composable
+                }
+                EditProfileScreen(
+                    user     = user,
+                    editProfileState = editProfileState,
+                    onSave   = { name, bio, avatarUri, location ->
+                        userViewModel.updateUser(
+                            updatedUser = user.copy(
+                                name = name,
+                                bio = bio,
+                                location = location
+                               ),
+                            imageUri = avatarUri
+                        )
+                    },
+                    onCancel = {
+                        navController.popBackStack()
+                        userViewModel.resetUpdateState()
+                    },
+                )
+
             }
         }
     }

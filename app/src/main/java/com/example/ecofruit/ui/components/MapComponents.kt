@@ -6,6 +6,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.IntentSender
 import android.location.LocationManager
+import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -96,7 +97,6 @@ fun InteractiveMap(
     
     var locationLatLng by remember { mutableStateOf<LatLng?>(null) }
     var isFetchingLocation by remember { mutableStateOf(false) }
-    var locationError by remember { mutableStateOf<String?>(null) }
 
     fun checkIsLocationEnabled(context: Context): Boolean {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -111,26 +111,21 @@ fun InteractiveMap(
         if (!permissionState.status.isGranted) return
         if (!checkIsLocationEnabled(context)) {
             locationEnabled = false
-            locationError = "Please turn on location services"
             return
         }
 
         locationEnabled = true
         isFetchingLocation = true
-        locationError = null
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
             .addOnSuccessListener { location ->
                 isFetchingLocation = false
                 if (location != null) {
                     locationLatLng = LatLng(location.latitude, location.longitude)
-                } else {
-                    locationError = "Could not fetch location"
                 }
             }
-            .addOnFailureListener { e: Exception ->
+            .addOnFailureListener {
                 isFetchingLocation = false
-                locationError = e.message ?: "Error fetching location"
             }
     }
 
@@ -232,15 +227,16 @@ fun InteractiveMap(
                     Text("Enable Location")
                 }
             }
-        } else if (isFetchingLocation) {
+        } else if (isFetchingLocation && selectedLocation == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else {
             MapLibreImplementation (
                 modifier = Modifier.fillMaxSize(),
-                initialLatLng = locationLatLng ?: initialLatLng,
-                initialZoom = if (locationLatLng != null) 15.0 else 12.0,
+                initialLatLng = selectedLocation ?: locationLatLng ?: initialLatLng,
+                markerLatLng = selectedLocation,
+                initialZoom = if (selectedLocation != null || locationLatLng != null) 15.0 else 12.0,
                 onMapReady = { map ->
                     onMapLibreMapChange(map)
 
@@ -281,11 +277,14 @@ fun InteractiveMap(
         }
     }
 }
+
+@SuppressLint("ClickableViewAccessibility")
 @Composable
 private fun MapLibreImplementation(
     modifier: Modifier = Modifier,
     styleUrl: String = "https://tiles.openfreemap.org/styles/liberty",
     initialLatLng: LatLng = LatLng(41.3874, 2.1686),
+    markerLatLng: LatLng? = null,
     initialZoom: Double = 9.0,
     onMapReady: (MapLibreMap) -> Unit = {},
     onLocationSelected: (LatLng) -> Unit = {}
@@ -294,7 +293,7 @@ private fun MapLibreImplementation(
     val lifecycleOwner = LocalLifecycleOwner.current
 
     var mapReference by remember { mutableStateOf<MapLibreMap?>(null) }
-    var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
+    var selectedLatLng by remember { mutableStateOf<LatLng?>(markerLatLng) }
 
     val mapView = remember {
         MapLibre.getInstance(context)
@@ -315,6 +314,19 @@ private fun MapLibreImplementation(
                     onLocationSelected(latLng)
                     true // consumir el evento
                 }
+            }
+            
+            // Fix gesture conflict with BottomSheet/Scrollable containers
+            setOnTouchListener { v, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        v.parent.requestDisallowInterceptTouchEvent(true)
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        v.parent.requestDisallowInterceptTouchEvent(false)
+                    }
+                }
+                false // Important: return false to let MapView handle the event
             }
         }
     }

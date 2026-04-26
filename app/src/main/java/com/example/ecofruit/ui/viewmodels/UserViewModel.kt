@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.viewmodels
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,6 +23,9 @@ class UserViewModel(
     private val _uiState = MutableStateFlow<RequestUiState<User>>(RequestUiState.Idle())
     val uiState: StateFlow<RequestUiState<User>> = _uiState.asStateFlow()
 
+    private val _updateState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
+    val updateState: StateFlow<RequestUiState<Unit>> = _updateState.asStateFlow()
+
     fun logOut() {
         userRepo.logOut()
     }
@@ -39,6 +43,21 @@ class UserViewModel(
                 _producerState.value = RequestUiState.Error(it.message ?: "Error al convertir a productor")
             }
         }
+    }
+
+    fun updateUser(updatedUser: User, imageUri: Uri?) {
+        _updateState.value = RequestUiState.Loading()
+        viewModelScope.launch {
+            userRepo.updateUser(updatedUser, imageUri).onSuccess {
+                _updateState.value = RequestUiState.Success(Unit)
+            }.onFailure {
+                _updateState.value = RequestUiState.Error(it.message ?: "Error al actualizar perfil")
+            }
+        }
+    }
+
+    fun resetUpdateState() {
+        _updateState.value = RequestUiState.Idle()
     }
 
     fun followUser(userId: String) {

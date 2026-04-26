@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.data.repository
 
+import android.net.Uri
 import android.util.Log
 import com.example.ecofruit.ui.data.mock.MockData
 import com.example.ecofruit.ui.data.model.User
@@ -7,6 +8,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +20,8 @@ class UserRepository private constructor() {
     private val db = Firebase.firestore
     private val auth = Firebase.auth
     private val usersCollection = db.collection("users")
+    private val storage = Firebase.storage
+    private val profilesRef = storage.reference.child("profiles")
 
     private val _users = MutableStateFlow<List<User>>(emptyList())
 
@@ -81,6 +85,53 @@ class UserRepository private constructor() {
         val currentUser = _user.value ?: throw Exception("No user logged in")
         usersCollection.document(currentUser.id).update("isProducer", !currentUser.isProducer).await()
         _user.value = currentUser.copy(isProducer = !currentUser.isProducer)
+    }
+
+    suspend fun updateUser(updatedUser: User, imageUri: Uri?): Result<Unit> = runCatching {
+        var userToSave = updatedUser
+
+        // 1. Si hay una nueva imagen, subirla a Firebase Storage
+        if (imageUri != null) {
+            val fileRef = profilesRef.child("${updatedUser.id}.jpg")
+            fileRef.putFile(imageUri).await()
+            val downloadUrl = fileRef.downloadUrl.await().toString()
+            userToSave = updatedUser.copy(profileImageUrl = downloadUrl)
+        }
+
+        val batch = db.batch()
+        
+        // 2. Actualizar el documento principal del usuario
+        val userRef = usersCollection.document(userToSave.id)
+        batch.set(userRef, userToSave)
+        
+        // 3. Propagar cambios a sus productos (nombre y avatar)
+        val productsQuery = db.collection("products")
+            .whereEqualTo("userId", userToSave.id)
+            .get()
+            .await()
+            
+        productsQuery.documents.forEach { doc ->
+            batch.update(doc.reference, mapOf(
+                "userName" to userToSave.name,
+                "userAvatar" to userToSave.profileImageUrl
+            ))
+        }
+
+        // 4. Propagar cambios a las reseñas que ha escrito (nombre y avatar del autor)
+        val reviewsQuery = db.collection("reviews")
+            .whereEqualTo("userId", userToSave.id)
+            .get()
+            .await()
+            
+        reviewsQuery.documents.forEach { doc ->
+            batch.update(doc.reference, mapOf(
+                "authorName" to userToSave.name,
+                "authorAvatar" to userToSave.profileImageUrl
+            ))
+        }
+        
+        batch.commit().await()
+        _user.value = userToSave
     }
 
     fun getUserById(userId: String): User? {

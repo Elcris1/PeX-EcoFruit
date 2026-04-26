@@ -17,6 +17,7 @@ foundation = "1.10.5"
 ui = "1.10.5"
 datastoreCore = "1.2.1"
 uiVersion = "1.10.6"
+tvMaterial = "1.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,6 +45,7 @@ androidx-datastore-core = { group = "androidx.datastore", name = "datastore-core
 maplibre-compose = { module = "org.maplibre.compose:maplibre-compose", version = "0.12.1" }
 ui = { group = "androidx.compose.ui", name = "ui", version.ref = "uiVersion" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
+androidx-tv-material = { group = "androidx.tv", name = "tv-material", version.ref = "tvMaterial" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
