@@ -1,6 +1,5 @@
 package com.example.ecofruit.ui.screens
 
-import android.location.Geocoder
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -42,11 +41,8 @@ import com.example.ecofruit.ui.data.model.LocationData
 import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.managers.LocationHelper
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.maplibre.android.geometry.LatLng
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,10 +89,10 @@ fun EditProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Editar Perfil", fontWeight = FontWeight.Bold) },
+                title = { Text(text = stringResource(R.string.edit_profile_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.edit_profile_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -179,7 +175,7 @@ fun EditProfileScreen(
                             ) {
                                 Icon(
                                     imageVector     = Icons.Outlined.CameraAlt,
-                                    contentDescription = "Cambiar foto",
+                                    contentDescription = stringResource(R.string.edit_profile_tappable_avatar),
                                     tint            = colorScheme.onPrimary,
                                     modifier        = Modifier.padding(6.dp).size(16.dp),
                                 )
@@ -187,7 +183,7 @@ fun EditProfileScreen(
                         }
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text  = "Toca para cambiar",
+                            text  = stringResource(R.string.edit_profile_tappable_avatar),
                             style = MaterialTheme.typography.labelSmall,
                             color = colorScheme.onSurfaceVariant,
                         )
@@ -207,7 +203,7 @@ fun EditProfileScreen(
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                     ) {
                         Text(
-                            text       = "Información personal",
+                            text       = stringResource(R.string.edit_profile_personal_info),
                             style      = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color      = colorScheme.onSurface,
@@ -216,10 +212,10 @@ fun EditProfileScreen(
                         OutlinedTextField(
                             value         = name,
                             onValueChange = { name = it },
-                            label         = { Text("Nombre") },
+                            label         = { Text(stringResource(R.string.edit_profile_name_label)) },
                             leadingIcon   = { Icon(Icons.Outlined.Person, null, tint = colorScheme.primary) },
                             isError       = nameError,
-                            supportingText = if (nameError) { { Text("El nombre es obligatorio", color = colorScheme.error) } } else null,
+                            supportingText = if (nameError) { { Text(stringResource(R.string.edit_profile_name_mandatory), color = colorScheme.error) } } else null,
                             singleLine    = true,
                             shape         = RoundedCornerShape(16.dp),
                             colors        = editFieldColors(colorScheme),
@@ -229,7 +225,7 @@ fun EditProfileScreen(
                         OutlinedTextField(
                             value         = bio,
                             onValueChange = { if (it.length <= 200) bio = it },
-                            label         = { Text("Bio") },
+                            label         = { Text(stringResource(R.string.edit_profile_bio_label)) },
                             leadingIcon   = { Icon(Icons.Outlined.Notes, null, tint = colorScheme.primary) },
                             supportingText = { Text("${bio.length} / 200", modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.End)) },
                             minLines      = 3,
@@ -250,7 +246,7 @@ fun EditProfileScreen(
                             Icon(Icons.Outlined.LocationOn, null)
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                text = selectedLocation?.displayName ?: "Seleccionar ubicación",
+                                text = selectedLocation?.displayName ?: stringResource(R.string.edit_profile_location_label),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -267,7 +263,7 @@ fun EditProfileScreen(
                     if (isSaving) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), color = colorScheme.onPrimary)
                     } else {
-                        Text("Guardar cambios", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.edit_profile_save_changes), fontWeight = FontWeight.SemiBold)
                     }
                 }
                 Spacer(Modifier.height(32.dp))
@@ -305,7 +301,7 @@ fun EditProfileScreen(
                         selectedLocation = LocationData(
                             latitude = latLng.latitude,
                             longitude = latLng.longitude,
-                            city = "Ubicación seleccionada"
+                            city = context.getString(R.string.edit_profile_location_selected)
                         )
                     },
                     initialLatLng = selectedLocation?.let { LatLng(it.latitude, it.longitude) } ?: user.location?.let { LatLng(it.latitude, it.longitude) } ?: LatLng(41.3874, 2.1686),
@@ -329,10 +325,10 @@ fun EditProfileScreen(
                             showMapSheet = false
                         }
                     },
-                    modifier = Modifier.align(Alignment.TopStart).padding(16.dp).fillMaxWidth(0.4f),
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp).fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Confirmar")
+                    Text(stringResource(R.string.edit_profile_confirm_location))
                 }
             }
         }

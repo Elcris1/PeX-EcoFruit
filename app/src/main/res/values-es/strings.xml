@@ -154,4 +154,18 @@
     <string name="profile_go_consumer_desc">Cansado de vender? Cierra tu tienda</string>
     <string name="retry">Volver a intentar</string>
     <string name="sell_publishing_product">Publicando producto...</string>
+    <string name="edit_profile_title">Editar Perfil</string>
+    <string name="edit_profile_back">Atras</string>
+    <string name="edit_profile_tappable_avatar">Toca para cambiar imagen</string>
+    <string name="edit_profile_personal_info">Información Personal</string>
+    <string name="edit_profile_name_label">Nombre</string>
+    <string name="edit_profile_name_placeholder">Tu nombre completo</string>
+    <string name="edit_profile_name_mandatory">El nombre es obligatorio</string>
+    <string name="edit_profile_bio_label">Biografía</string>
+    <string name="edit_profile_bio_placeholder">Cuéntanos algo sobre ti…</string>
+    <string name="edit_profile_location_label">Seleccionar Ubicación</string>
+    <string name="edit_profile_save_changes">Guardar Cambios</string>
+    <string name="edit_profile_saving">Guardando…</string>
+    <string name="edit_profile_confirm_location">Confirmar Ubicación</string>
+    <string name="edit_profile_location_selected">Ubicación seleccionada</string>
 </resources>

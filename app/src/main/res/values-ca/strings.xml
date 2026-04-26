@@ -155,4 +155,18 @@
     <string name="profile_go_consumer_desc">Cansat de vendre? Tanca la teva tenda</string>
     <string name="retry">Tornar a intentar</string>
     <string name="sell_publishing_product">Publicant producte...</string>
+    <string name="edit_profile_title">Editar Perfil</string>
+    <string name="edit_profile_back">Enrere</string>
+    <string name="edit_profile_tappable_avatar">Toca per canviar la imatge</string>
+    <string name="edit_profile_personal_info">Informació Personal</string>
+    <string name="edit_profile_name_label">Nom</string>
+    <string name="edit_profile_name_placeholder">El teu nom complet</string>
+    <string name="edit_profile_name_mandatory">El nom és obligatori</string>
+    <string name="edit_profile_bio_label">Biografia</string>
+    <string name="edit_profile_bio_placeholder">Explica\'ns alguna cosa sobre tu…</string>
+    <string name="edit_profile_location_label">Seleccionar Ubicació</string>
+    <string name="edit_profile_save_changes">Guardar Canvis</string>
+    <string name="edit_profile_saving">Guardant…</string>
+    <string name="edit_profile_confirm_location">Confirmar Ubicació</string>
+    <string name="edit_profile_location_selected">Ubicació seleccionada</string>
 </resources>

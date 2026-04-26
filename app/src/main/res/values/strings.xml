@@ -161,4 +161,18 @@
     <string name="retry">Retry</string>
     <string name="sell_publishing_product">Publishing product...</string>
     <string name="title_activity_edit_profile">EditProfile</string>
+    <string name="edit_profile_title">Edit Profile</string>
+    <string name="edit_profile_back">Back</string>
+    <string name="edit_profile_tappable_avatar">Tap to change image</string>
+    <string name="edit_profile_personal_info">Personal Information</string>
+    <string name="edit_profile_name_label">Name</string>
+    <string name="edit_profile_name_placeholder">Your full name</string>
+    <string name="edit_profile_name_mandatory">The name is mandatory</string>
+    <string name="edit_profile_bio_label">Bio</string>
+    <string name="edit_profile_bio_placeholder">Tell us about yourself…</string>
+    <string name="edit_profile_location_label">Select Location</string>
+    <string name="edit_profile_save_changes">Save Changes</string>
+    <string name="edit_profile_saving">Saving…</string>
+    <string name="edit_profile_confirm_location">Confirm Location</string>
+    <string name="edit_profile_location_selected">Selected location</string>
 </resources>
