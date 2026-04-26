@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,16 +60,13 @@ fun HomeScreen(
     recommendedProductsState: RequestUiState<List<Product>>,
     followedProducerProductsState: RequestUiState<List<Product>>,
     favouriteProductsState: RequestUiState<List<Product>>,
-    onProductClick: (Product) -> Unit = {},
-    onCartClick: () -> Unit = {},
-    onNotificationsClick: () -> Unit = {},
+    onProductClick: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
+    onFavouriteClick: (Product, String, Boolean) -> Unit = {_, _, _ ->},
 ) {
     Scaffold(
         topBar = {
             HomeTopBar(
-                onCartClick = onCartClick,
-                onNotificationsClick = onNotificationsClick,
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
@@ -93,6 +91,7 @@ fun HomeScreen(
                         icon = Icons.Outlined.Star,
                         state = recommendedProductsState,
                         onProductClick = onProductClick,
+                        onFavouriteClick = onFavouriteClick,
                         currentUser = currentUser
                     )
                 }
@@ -104,6 +103,7 @@ fun HomeScreen(
                     FollowedProducersSectionStateWrapper(
                         state = followedProducerProductsState,
                         onProductClick = onProductClick,
+                        onFavouriteClick = onFavouriteClick,
                         currentUser = currentUser
                     )
                 }
@@ -119,6 +119,7 @@ fun HomeScreen(
                         iconTint = MaterialTheme.colorScheme.error,
                         state = favouriteProductsState,
                         onProductClick = onProductClick,
+                        onFavouriteClick = onFavouriteClick,
                         currentUser = currentUser
                     )
                 }
@@ -135,7 +136,8 @@ private fun ProductSectionStateWrapper(
     currentUser: User,
     iconTint: Color = MaterialTheme.colorScheme.primary,
     state: RequestUiState<List<Product>>,
-    onProductClick: (Product) -> Unit,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit
 ) {
     when (state) {
         is RequestUiState.Loading -> {
@@ -149,7 +151,8 @@ private fun ProductSectionStateWrapper(
                 currentUser = currentUser,
                 iconTint = iconTint,
                 products = state.data,
-                onProductClick = onProductClick
+                onProductClick = onProductClick,
+                onFavouriteClick = onFavouriteClick
             )
         }
         is RequestUiState.Error -> {
@@ -188,7 +191,8 @@ private fun ProductSectionStateWrapper(
 private fun FollowedProducersSectionStateWrapper(
     state: RequestUiState<List<Product>>,
     currentUser: User,
-    onProductClick: (Product) -> Unit,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit
 ) {
     val title = stringResource(R.string.home_your_producers)
     val subtitle = stringResource(R.string.home_producers_news)
@@ -207,7 +211,8 @@ private fun FollowedProducersSectionStateWrapper(
             FollowedProducersSection(
                 producerProducts = state.data,
                 onProductClick = onProductClick,
-                currentUser = currentUser
+                currentUser = currentUser,
+                onFavouriteClick = onFavouriteClick
             )
         }
         is RequestUiState.Error -> {
@@ -241,7 +246,9 @@ private fun FollowedProducersSectionStateWrapper(
 
 @Composable
 private fun LoadingSection(title: String, subtitle: String, icon: ImageVector, iconTint: Color) {
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 10.dp)) {
         SectionHeader(
             title = title,
             subtitle = subtitle,
@@ -251,7 +258,9 @@ private fun LoadingSection(title: String, subtitle: String, icon: ImageVector, i
             expanded = false,
             onToggle = {}
         )
-        Box(modifier = Modifier.fillMaxWidth().height(150.dp), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(modifier = Modifier.size(30.dp), strokeWidth = 2.dp)
         }
     }
@@ -260,8 +269,6 @@ private fun LoadingSection(title: String, subtitle: String, icon: ImageVector, i
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeTopBar(
-    onCartClick: () -> Unit,
-    onNotificationsClick: () -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -327,7 +334,8 @@ private fun ProductSection(
     currentUser: User,
     iconTint: Color = MaterialTheme.colorScheme.primary,
     products: List<Product>,
-    onProductClick: (Product) -> Unit,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -356,6 +364,7 @@ private fun ProductSection(
                     products = products,
                     onProductClick = onProductClick,
                     currentUser = currentUser,
+                    onFavouriteClick = onFavouriteClick
                 )
             } else {
                 if (products.isNotEmpty()) {
@@ -364,7 +373,14 @@ private fun ProductSection(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(items = displayed, key = { it.id }) { product ->
-                            ProductCard(product = product, onClick = { onProductClick(product) }, currentUserId = currentUser.id)
+                            ProductCard(
+                                product = product, 
+                                onProductClick = { onProductClick(product.id) }, 
+                                currentUserId = currentUser.id, 
+                                onFavouriteClick = { isFavourite ->
+                                    onFavouriteClick(product, currentUser.id, isFavourite)
+                                }
+                            )
                         }
                     }
                 }
@@ -377,7 +393,8 @@ private fun ProductSection(
 private fun FollowedProducersSection(
     producerProducts: List<Product>,
     currentUser: User,
-    onProductClick: (Product) -> Unit,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -407,7 +424,8 @@ private fun FollowedProducersSection(
                     onProductClick = onProductClick,
                     showProducerBadge = true,
                     currentUser = currentUser,
-                    isFollowing = true
+                    isFollowing = true,
+                    onFavouriteClick = onFavouriteClick
                 )
             } else {
                 if (producerProducts.isNotEmpty()) {
@@ -418,8 +436,11 @@ private fun FollowedProducersSection(
                         items(items = displayed, key = { it.id }) { pp ->
                             ProducerProductCard(
                                 producerProduct = pp,
-                                onClick = { onProductClick(pp) },
-                                currentUser = currentUser
+                                onClick = { onProductClick(pp.id) },
+                                currentUser = currentUser,
+                                onFavouriteClick = { isFavourite ->
+                                    onFavouriteClick(pp, currentUser.id, isFavourite)
+                                }
                             )
                         }
                     }
@@ -511,7 +532,8 @@ private fun ExpandedProductGrid(
     products: List<Product>,
     currentUser: User,
     isFollowing: Boolean = false,
-    onProductClick: (Product) -> Unit,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit,
     showProducerBadge: Boolean = false,
     producerAvatars: Map<Int, String> = emptyMap(),
 ) {
@@ -533,15 +555,21 @@ private fun ExpandedProductGrid(
                         ProducerProductCard(
                             producerProduct = product,
                             currentUser = currentUser,
-                            onClick = {onProductClick(product)},
-                            modifier = Modifier.weight(1f)
+                            onClick = {onProductClick(product.id)},
+                            modifier = Modifier.weight(1f),
+                            onFavouriteClick = { isFavourite ->
+                                onFavouriteClick(product, currentUser.id, isFavourite)
+                            }
                         )
                     } else {
                         ProductCard(
                             product = product,
-                            onClick = { onProductClick(product) },
+                            onProductClick = { onProductClick(product.id) },
                             modifier = Modifier.weight(1f),
-                            currentUserId = currentUser.id
+                            currentUserId = currentUser.id,
+                            onFavouriteClick = { isFavourite ->
+                                onFavouriteClick(product, currentUser.id, isFavourite)
+                            }
                         )
                     }
 
@@ -560,7 +588,8 @@ fun ProductCard(
     product: Product,
     currentUserId: String,
     isFollowing: Boolean = false,
-    onClick: () -> Unit,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isFavorite by remember { mutableStateOf(currentUserId in product.favouritesList) }
@@ -576,7 +605,7 @@ fun ProductCard(
             .then(if (cardWidth != Dp.Unspecified) Modifier.width(cardWidth) else Modifier)
             .shadow(elevation = 2.dp, shape = shape)
             .clip(shape)
-            .clickable(onClick = onClick),
+            .clickable(onClick = { onProductClick(product.id) }),
         color = MaterialTheme.colorScheme.surface,
         shape = shape,
     ) {
@@ -596,8 +625,8 @@ fun ProductCard(
                         .build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    placeholder =  rememberVectorPainter(Icons.Default.Image),
-                    error = rememberVectorPainter(Icons.Default.Image),
+                    placeholder = painterResource(R.drawable.ecofruit_background_logo),
+                    error = painterResource(R.drawable.ecofruit_background_logo),
                     modifier = Modifier.fillMaxSize()
                 )
 
@@ -620,7 +649,11 @@ fun ProductCard(
                 }
 
                 IconButton(
-                    onClick = { isFavorite = !isFavorite },
+                    onClick =
+                        {
+                            isFavorite = !isFavorite
+                            onFavouriteClick(isFavorite)
+                        },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .size(36.dp),
@@ -683,7 +716,8 @@ private fun ProducerProductCard(
     producerProduct: Product,
     currentUser: User,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
+    onFavouriteClick: (Boolean) -> Unit,
+    onClick: (String) -> Unit,
 ) {
     val cardWidth = if (modifier == Modifier) 158.dp else Dp.Unspecified
 
@@ -704,7 +738,9 @@ private fun ProducerProductCard(
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                UserImage(producerProduct.userAvatar, producerProduct.userName, modifier = Modifier.size(20.dp).clip(CircleShape))
+                UserImage(producerProduct.userAvatar, producerProduct.userName, modifier = Modifier
+                    .size(20.dp)
+                    .clip(CircleShape))
             }
             Spacer(Modifier.width(5.dp))
             Text(
@@ -718,9 +754,10 @@ private fun ProducerProductCard(
         }
         ProductCard(
             product = producerProduct,
-            onClick = onClick,
+            onProductClick = onClick,
             modifier = Modifier.fillMaxWidth(),
             currentUserId = currentUser.id,
+            onFavouriteClick = onFavouriteClick,
             isFollowing = true
         )
     }

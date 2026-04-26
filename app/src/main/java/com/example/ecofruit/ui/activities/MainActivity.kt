@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        chatViewModel.getConversationsFromUser(userViewModel.currentUser.value?.id ?: "")
+        chatViewModel.getConversationsFromUser(authViweModel.currentAppUserModel?.id ?: "")
     }
 }
 private val permissions = arrayOf(
@@ -128,7 +128,7 @@ fun MainScreen(
     LaunchedEffect(user) {
         user?.let { it ->
             chatViewModel.getConversationsFromUser(it.id)
-            productsViewModel.loadHomePage(it)
+            productsViewModel.loadHomePageRealtime(it)
         }
 
         if (permissions.any {
@@ -175,7 +175,16 @@ fun MainScreen(
                     currentUser = user,
                     recommendedProductsState = recommendedProductsState,
                     followedProducerProductsState = followedProducerProductsState,
-                    favouriteProductsState = favouriteProductsState
+                    favouriteProductsState = favouriteProductsState,
+                    onProductClick = { productId ->
+                        // TODO: Implement navigation to product detail
+                    },
+                    onSearchClick = {
+                        // TODO: Implement search
+                    },
+                    onFavouriteClick = { product, userId, isFavourite ->
+                        productsViewModel.toggleFavourite(product.id, userId, isFavourite)
+                    }
                 )
             }
             composable(Screen.Search.route) { SearchScreen() }
@@ -218,7 +227,7 @@ fun MainScreen(
                         }
                     },
                     onLogout = {
-                        userViewModel.logOut()
+                        authViewModel.logout()
                         Intent(context, LoginActvity::class.java).also {
                             it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             context.startActivity(it)

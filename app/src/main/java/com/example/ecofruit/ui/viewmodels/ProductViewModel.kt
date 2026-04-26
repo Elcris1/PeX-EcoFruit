@@ -71,6 +71,44 @@ class ProductViewModel(
         }
     }
 
+    fun loadHomePageRealtime(user: User) {
+        viewModelScope.launch {
+            _recommendedProducts.value = RequestUiState.Loading()
+            _followingProducts.value = RequestUiState.Loading()
+            _favouriteProducts.value = RequestUiState.Loading()
+
+            launch {
+                productRepository.getRecommendedProductsRealtime().collect { result ->
+                    result.onSuccess {
+                        _recommendedProducts.value = RequestUiState.Success(it)
+                    }.onFailure {
+                        _recommendedProducts.value = RequestUiState.Error(it.message ?: "Error loading recommended products")
+                    }
+                }
+            }
+
+            launch {
+                productRepository.getProductsFromFollowingUsersRealtime(user).collect { result ->
+                    result.onSuccess {
+                        _followingProducts.value = RequestUiState.Success(it)
+                    }.onFailure {
+                        _followingProducts.value = RequestUiState.Error(it.message ?: "Error loading following products")
+                    }
+                }
+            }
+
+            launch {
+                productRepository.getFavouriteProductsRealtime(user.id).collect { result ->
+                    result.onSuccess {
+                        _favouriteProducts.value = RequestUiState.Success(it)
+                    }.onFailure {
+                        _favouriteProducts.value = RequestUiState.Error(it.message ?: "Error loading favourite products")
+                    }
+                }
+            }
+        }
+    }
+
     fun addProduct(product: Product) {
         viewModelScope.launch {
             _addProductState.value = RequestUiState.Loading()
@@ -116,6 +154,14 @@ class ProductViewModel(
                 }
             } catch (e: Exception) {
                 _addProductState.value = RequestUiState.Error(e.message ?: "An unexpected error occurred")
+            }
+        }
+    }
+
+    fun toggleFavourite(productId: String, userId: String, isFavourite: Boolean) {
+        viewModelScope.launch {
+            productRepository.setFavourite(productId, userId, isFavourite).onFailure {
+                // Opcional: manejar error, por ejemplo con un snackbar o revirtiendo el estado en la UI
             }
         }
     }

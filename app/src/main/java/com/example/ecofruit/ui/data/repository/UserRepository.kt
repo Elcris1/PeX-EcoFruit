@@ -87,9 +87,6 @@ class UserRepository private constructor() {
         return _users.value.find { it.id == userId }
     }
 
-    fun getUserByEmail(email: String): User? {
-        return _users.value.find { it.email == email }
-    }
 
     fun logOut() {
         auth.signOut()
