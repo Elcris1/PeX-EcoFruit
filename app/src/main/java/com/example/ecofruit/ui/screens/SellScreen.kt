@@ -56,6 +56,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,10 +80,13 @@ import com.example.ecofruit.ui.components.OutlinedGeneralButton
 import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
 import com.example.ecofruit.ui.data.constants.toDisplayNameRes
+import com.example.ecofruit.ui.data.model.LocationData
 import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.model.RequestUiState
+import com.example.ecofruit.ui.managers.LocationHelper
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.viewmodels.ProductViewModel
+import kotlinx.coroutines.launch
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 
@@ -95,6 +99,7 @@ fun SellScreen(
 ) {
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val addProductState by productViewModel.addProductState.collectAsState()
 
     //TAB BAR VARIABLES
@@ -137,7 +142,7 @@ fun SellScreen(
     var images by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
     //Screen 2:
-    var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
+    var selectedLocation by remember { mutableStateOf<LocationData?>(null) }
 
     fun createProduct(): Product {
         return Product(
@@ -275,7 +280,12 @@ fun SellScreen(
                         )
                         2 -> PublishSellingScreen(
                             selectedLocation = selectedLocation,
-                            onLocationSelected = {selectedLocation = it}
+                            onLocationSelected = { latLng ->
+                                scope.launch {
+                                    val locData = LocationHelper.reverseGeocode(context, latLng.latitude, latLng.longitude)
+                                    selectedLocation = locData ?: LocationData(latitude = latLng.latitude, longitude = latLng.longitude)
+                                }
+                            }
                         )
                         3 -> SuccessScreen(
                             onNewProduct = {
@@ -434,7 +444,7 @@ private fun InitialSellingScreen(
                     expanded = categoryExpanded,
                     onDismissRequest = { onCategoryExpandedChange(false)}
                 ) {
-                    ProductType.values().forEach { type ->
+                    ProductType.entries.forEach { type ->
                         DropdownMenuItem(
                             text = { Text(stringResource(type.toDisplayNameRes())) },
                             onClick = {
@@ -490,7 +500,7 @@ private fun InitialSellingScreen(
                     expanded = unitExpanded,
                     onDismissRequest = { onUnitExpandedChange(false) }
                 ) {
-                    ProductUnit.values().forEach {
+                    ProductUnit.entries.forEach {
                         DropdownMenuItem(
                             text = { Text(stringResource(it.toDisplayNameRes())) },
                             onClick = {
@@ -615,7 +625,7 @@ private fun SelectImagesScreen(
 
 @Composable
 private fun PublishSellingScreen(
-    selectedLocation: LatLng? = null,
+    selectedLocation: LocationData? = null,
     onLocationSelected: (LatLng) -> Unit = {}
 ) {
 
@@ -630,7 +640,7 @@ private fun PublishSellingScreen(
             mapLibreMap = mapLibreMap,
             onMapLibreMapChange = {mapLibreMap = it},
 
-            selectedLocation = selectedLocation,
+            selectedLocation = selectedLocation?.let { LatLng(it.latitude, it.longitude) },
             onLocationSelected = onLocationSelected,
 
         )

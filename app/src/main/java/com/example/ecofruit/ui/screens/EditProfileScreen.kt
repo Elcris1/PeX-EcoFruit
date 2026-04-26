@@ -301,7 +301,7 @@ fun EditProfileScreen(
                         selectedLocation = LocationData(
                             latitude = latLng.latitude,
                             longitude = latLng.longitude,
-                            city = context.getString(R.string.edit_profile_location_selected)
+                            city = ""
                         )
                     },
                     initialLatLng = selectedLocation?.let { LatLng(it.latitude, it.longitude) } ?: user.location?.let { LatLng(it.latitude, it.longitude) } ?: LatLng(41.3874, 2.1686),
@@ -325,7 +325,7 @@ fun EditProfileScreen(
                             showMapSheet = false
                         }
                     },
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp).fillMaxWidth(),
+                    modifier = Modifier.align(Alignment.TopStart).padding(16.dp).fillMaxWidth(0.6f),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(stringResource(R.string.edit_profile_confirm_location))

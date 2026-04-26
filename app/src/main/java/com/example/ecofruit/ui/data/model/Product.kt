@@ -2,7 +2,6 @@ package com.example.ecofruit.ui.data.model
 
 import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
-import org.maplibre.android.geometry.LatLng
 
 data class Product (
     var id: String = "",
@@ -10,7 +9,7 @@ data class Product (
     val description: String = "",
     var createdAt: Long = 0,
     val imagesUrl: List<String> = emptyList(),
-    var location: LatLng? = null,
+    var location: LocationData? = null,
     val price: Double = 0.0,
     val unit: ProductUnit = ProductUnit.KG,
     val isOrganic: Boolean = false,
