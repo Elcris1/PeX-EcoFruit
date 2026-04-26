@@ -160,4 +160,5 @@
     <string name="profile_go_consumer_desc">Tired of selling? Close your shop</string>
     <string name="retry">Retry</string>
     <string name="sell_publishing_product">Publishing product...</string>
+    <string name="title_activity_edit_profile">EditProfile</string>
 </resources>

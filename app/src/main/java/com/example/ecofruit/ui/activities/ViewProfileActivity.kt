@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.ecofruit.ui.screens.UserProfileScreen
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.viewmodels.ChatViewModel
+import com.example.ecofruit.ui.viewmodels.ProductViewModel
 import com.example.ecofruit.ui.viewmodels.ProfileViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
@@ -29,13 +30,14 @@ class ViewProfileActivity : ComponentActivity() {
     private val profileViewModel: ProfileViewModel by viewModels { ViewModelFactory() }
     private val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
     val settingsViewModel: SettingsViewModel by viewModels()
+    val productViewModel: ProductViewModel by viewModels { ViewModelFactory() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             val user by userViewModel.currentUser.collectAsState()
-            val profile by profileViewModel.profile.collectAsState()
+            val profileState by profileViewModel.profileState.collectAsState()
             val userId = intent.getStringExtra("user_id")?: ""
             val settings by settingsViewModel.settings.collectAsState()
 
@@ -45,8 +47,7 @@ class ViewProfileActivity : ComponentActivity() {
             EcoFruitTheme (darkTheme = settings.darkTheme) {
                 UserProfileScreen(
                     currentUser = user!!,
-                    profile = profile,
-                    isOwnProfile = user!!.id == profile?.user?.id,
+                    profileState = profileState,
                     onBack = {
                         finish()
                     },
@@ -62,6 +63,9 @@ class ViewProfileActivity : ComponentActivity() {
                         } else {
                             userViewModel.unfollowUser(userId)
                         }
+                    },
+                    onFavouriteClick = {product, userId, favourite ->
+                        productViewModel.toggleFavourite(product.id, userId, favourite)
                     },
                     onListingClick = {
                         //TODO: OPEN VIEW PRODUCT
