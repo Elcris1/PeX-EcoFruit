@@ -43,23 +43,7 @@ import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.model.RequestUiState
 
 
-@Composable
-fun ProfileScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("👤 Perfil", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Información del usuario")
-        }
-    }
-}
-
-
-// ─────────────────────────────────────────────
-//  Data model
-// ─────────────────────────────────────────────
-
-
+//TODO: añadir my products en caso de ser prodcutor para poder ver y editar tus productos
 
 data class ProfileMenuItem(
     val icon: ImageVector,

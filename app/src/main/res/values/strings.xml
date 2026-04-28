@@ -175,4 +175,5 @@
     <string name="edit_profile_saving">Saving…</string>
     <string name="edit_profile_confirm_location">Confirm Location</string>
     <string name="edit_profile_location_selected">Selected location</string>
+    <string name="title_activity_view_product_actvity">ViewProductActvity</string>
 </resources>

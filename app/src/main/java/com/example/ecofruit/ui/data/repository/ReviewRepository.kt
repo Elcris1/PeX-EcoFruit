@@ -4,6 +4,9 @@ import com.example.ecofruit.ui.data.model.Review
 import com.example.ecofruit.ui.data.constants.ReviewType
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class ReviewRepository {
@@ -22,6 +25,48 @@ class ReviewRepository {
             .get()
             .await()
             .toObjects(Review::class.java)
+    }
+
+    fun getReviewsToUserRealtime(userId: String): Flow<Result<List<Review>>> = callbackFlow {
+        val subscription = reviewsCollection
+            .whereEqualTo("reviewType", ReviewType.USER.name)
+            .whereEqualTo("dstId", userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.failure(error))
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val reviews = snapshot.toObjects(Review::class.java)
+                    trySend(Result.success(reviews))
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+    suspend fun getReviewsToProduct(productId: String): Result<List<Review>> = runCatching {
+        reviewsCollection
+            .whereEqualTo("reviewType", ReviewType.PRODUCT.name)
+            .whereEqualTo("dstId", productId)
+            .get()
+            .await()
+            .toObjects(Review::class.java)
+    }
+
+    fun getReviewsToProductRealtime(productId: String): Flow<Result<List<Review>>> = callbackFlow {
+        val subscription = reviewsCollection
+            .whereEqualTo("reviewType", ReviewType.PRODUCT.name)
+            .whereEqualTo("dstId", productId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.failure(error))
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val reviews = snapshot.toObjects(Review::class.java)
+                    trySend(Result.success(reviews))
+                }
+            }
+        awaitClose { subscription.remove() }
     }
 
     suspend fun addReview(review: Review): Result<Unit> = runCatching {
@@ -53,7 +98,8 @@ class ReviewRepository {
                 "reviewCount" to newCount
             ))
         }.await()
-        newReviewRef.set(finalReview).await()
+        // newReviewRef.set(finalReview).await() // This was redundant and might be causing issues if transaction already set it. 
+        // Actually, transaction.set(newReviewRef, finalReview) already handles it.
     }
 
     companion object {

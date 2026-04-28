@@ -47,6 +47,7 @@ import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.model.RequestUiState
 
+//TODO: add the possibility to create reaviews with a tab button on the reviw screen, we can use the modal from before
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
@@ -286,9 +287,8 @@ fun UserProfileScreen(
                                             modifier = Modifier.size(14.dp),
                                             tint = colorScheme.onSurfaceVariant
                                         )
-                                            //TODO: finish this
                                             Text(
-                                                if (profile.user.location != null) "Barcelona - Mocked" else stringResource(R.string.not_defined),
+                                                if (profile.user.location != null) profile.user.location.shortDisplayName else stringResource(R.string.not_defined),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = colorScheme.onSurfaceVariant
                                             )
@@ -579,13 +579,13 @@ private fun ReviewsList(reviews: List<Review>) {
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         reviews.forEach { review ->
-            ReviewCard(review = review)
+            ProfileReviewCard(review = review)
         }
     }
 }
 
 @Composable
-private fun ReviewCard(review: Review) {
+private fun ProfileReviewCard(review: Review) {
     val colorScheme = MaterialTheme.colorScheme
 
     Card(

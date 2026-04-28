@@ -26,7 +26,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -53,6 +52,7 @@ import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.screens.EditProfileScreen
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
+import androidx.compose.ui.res.stringResource
 
 class MainActivity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
@@ -183,7 +183,10 @@ fun MainScreen(
                     followedProducerProductsState = followedProducerProductsState,
                     favouriteProductsState = favouriteProductsState,
                     onProductClick = { productId ->
-                        // TODO: Implement navigation to product detail
+                        Intent(context, ViewProductActivity::class.java).also {
+                            it.putExtra("product_id", productId)
+                            context.startActivity(it)
+                        }
                     },
                     onSearchClick = {
                         // TODO: Implement search
