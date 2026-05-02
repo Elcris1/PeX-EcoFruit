@@ -17,6 +17,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.constants.ReviewType
 import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.model.Review
@@ -25,7 +27,6 @@ import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import com.example.ecofruit.ui.viewmodels.ProductViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
-import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 
 class ViewProductActivity : ComponentActivity() {
@@ -57,17 +58,19 @@ class ViewProductActivity : ComponentActivity() {
 
             LaunchedEffect(addReviewState) {
                 if (addReviewState is RequestUiState.Success) {
-                    Toast.makeText(context, "Reseña añadida correctamente", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.product_detail_added_success), Toast.LENGTH_SHORT).show()
                 } else if (addReviewState is RequestUiState.Error) {
-                    Toast.makeText(context, "Error al añadir reseña: ${(addReviewState as RequestUiState.Error).message}", Toast.LENGTH_SHORT).show()
+                    val message = (addReviewState as RequestUiState.Error).message
+                    Toast.makeText(context, context.getString(R.string.product_detail_added_error, message), Toast.LENGTH_SHORT).show()
                 }
             }
 
             LaunchedEffect(deleteReviewState) {
                 if (deleteReviewState is RequestUiState.Success) {
-                    Toast.makeText(context, "Reseña eliminada", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.product_detail_deleted_success), Toast.LENGTH_SHORT).show()
                 } else if (deleteReviewState is RequestUiState.Error) {
-                    Toast.makeText(context, "Error al eliminar reseña: ${(deleteReviewState as RequestUiState.Error).message}", Toast.LENGTH_SHORT).show()
+                    val message = (deleteReviewState as RequestUiState.Error).message
+                    Toast.makeText(context, context.getString(R.string.product_detail_deleted_error, message), Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -120,15 +123,15 @@ class ViewProductActivity : ComponentActivity() {
                                     }
                                 )
                             } else {
-                                Text("Producto no encontrado", modifier = Modifier.align(Alignment.Center))
+                                Text(stringResource(R.string.product_detail_not_found), modifier = Modifier.align(Alignment.Center))
                             }
                         }
                         is RequestUiState.Error -> {
-                            Text("Error: ${state.message}", modifier = Modifier.align(Alignment.Center))
+                            Text("${stringResource(R.string.retry)}: ${state.message}", modifier = Modifier.align(Alignment.Center))
                         }
                         else -> {
                             if (productId.isEmpty()) {
-                                Text("ID de producto no proporcionado", modifier = Modifier.align(Alignment.Center))
+                                Text(stringResource(R.string.product_detail_id_missing), modifier = Modifier.align(Alignment.Center))
                             }
                         }
                     }

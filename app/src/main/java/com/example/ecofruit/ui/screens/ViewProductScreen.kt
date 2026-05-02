@@ -37,6 +37,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
 import com.example.ecofruit.ui.data.constants.toDisplayNameRes
@@ -255,7 +256,7 @@ fun AddReviewDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Añadir reseña",
+                    text = stringResource(R.string.product_detail_add_review_dialog_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -286,7 +287,7 @@ fun AddReviewDialog(
                 OutlinedTextField(
                     value = comment,
                     onValueChange = { comment = it },
-                    label = { Text("Tu comentario") },
+                    label = { Text(stringResource(R.string.product_detail_comment_placeholder)) },
                     modifier = Modifier.fillMaxWidth().height(120.dp),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -302,14 +303,14 @@ fun AddReviewDialog(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Cancelar")
+                        Text(stringResource(R.string.cancel))
                     }
                     Button(
                         onClick = { onSubmit(rating, comment) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Publicar")
+                        Text(stringResource(R.string.publish))
                     }
                 }
             }
@@ -474,7 +475,7 @@ fun FloatingTopBar(
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Volver",
+                    contentDescription = stringResource(R.string.back),
                     tint = if (isCollapsed) MaterialTheme.colorScheme.onSurface else Color.White,
                     modifier = Modifier.size(22.dp)
                 )
@@ -544,7 +545,7 @@ fun OrganicBadge() {
                 modifier = Modifier.size(13.dp)
             )
             Text(
-                text = "Ecológico",
+                text = stringResource(R.string.product_detail_eco_label),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -593,7 +594,7 @@ fun RatingRow(rating: Double, reviewCount: Int) {
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            text = "($reviewCount reseñas)",
+            text = stringResource(R.string.product_detail_reviews_count, reviewCount),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -687,14 +688,14 @@ fun MetaInfoGrid(product: Product) {
             product.location?.let { loc ->
                 MetaChip(
                     icon = Icons.Default.LocationOn,
-                    label = "Ubicación",
+                    label = stringResource(R.string.product_detail_location_label),
                     value = loc.shortDisplayName,
                     modifier = Modifier.weight(1f)
                 )
             }
             MetaChip(
                 icon = Icons.Default.CalendarToday,
-                label = "Publicado",
+                label = stringResource(R.string.product_detail_published_label),
                 value = dateFormat.format(Date(product.createdAt*1000)),
                 modifier = Modifier.weight(1f)
             )
@@ -705,13 +706,13 @@ fun MetaInfoGrid(product: Product) {
         ) {
             MetaChip(
                 icon = Icons.Default.Scale,
-                label = "Unidad de venta",
+                label = stringResource(R.string.product_detail_unit_label),
                 value = stringResource(product.unit.toDisplayNameRes()),
                 modifier = Modifier.weight(1f)
             )
             MetaChip(
                 icon = Icons.Default.Category,
-                label = "Categoría",
+                label = stringResource(R.string.product_detail_category_label),
                 value = "${product.type.toEmoji()} " + stringResource(product.type.toDisplayNameRes()),
                 modifier = Modifier.weight(1f)
             )
@@ -772,13 +773,13 @@ fun ExpandableDescription(description: String) {
 
     Column {
         Text(
-            text = "Descripción",
+            text = stringResource(R.string.product_detail_description_label),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = description.ifBlank { "Sin descripción disponible." },
+            text = description.ifBlank { stringResource(R.string.product_detail_no_description) },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = maxLines,
@@ -792,7 +793,7 @@ fun ExpandableDescription(description: String) {
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Text(
-                    text = if (expanded) "Ver menos" else "Ver más",
+                    text = if (expanded) stringResource(R.string.product_detail_show_less) else stringResource(R.string.product_detail_show_more),
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -818,7 +819,7 @@ fun SellerCard(name: String, avatarUrl: String, joinedDate: Long, onProducerClic
 
     Column {
         Text(
-            text = "Productor",
+            text = stringResource(R.string.product_detail_producer_label),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -862,12 +863,12 @@ fun SellerCard(name: String, avatarUrl: String, joinedDate: Long, onProducerClic
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = name.ifBlank { "Productor" },
+                        text = name.ifBlank { stringResource(R.string.product_detail_producer_label) },
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Miembro desde ${dateFormat.format(Date(joinedDate))}",
+                        text = stringResource(R.string.product_detail_member_since, dateFormat.format(Date(joinedDate))),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -908,7 +909,7 @@ fun ReviewsSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Reseñas",
+                text = stringResource(R.string.product_detail_reviews_title),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -928,7 +929,7 @@ fun ReviewsSection(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Añadir reseña",
+                    text = stringResource(R.string.product_detail_add_review_btn),
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
             }
@@ -958,7 +959,7 @@ fun ReviewsSection(
                 ) {
                     Text(text = "🌾", fontSize = 32.sp)
                     Text(
-                        text = "Sé el primero en opinar",
+                        text = stringResource(R.string.product_detail_be_first_review),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -986,8 +987,8 @@ fun ReviewsSection(
                     )
                 ) {
                     Text(
-                        text = if (expanded) "Ver menos reseñas"
-                        else "Ver todas las reseñas (${reviews.size})",
+                        text = if (expanded) stringResource(R.string.product_detail_show_less_reviews)
+                        else stringResource(R.string.product_detail_show_all_reviews, reviews.size),
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -1024,7 +1025,7 @@ fun RatingSummaryCard(reviews: List<Review>, rating: Double, reviewCount: Int) {
                 )
                 StarRating(rating = rating, size = 16.dp)
                 Text(
-                    text = "$reviewCount reseñas",
+                    text = stringResource(R.string.product_detail_reviews_count, reviewCount),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
@@ -1093,7 +1094,7 @@ fun ReviewCard(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Reviewer info
+            // Cabecera: Avatar, Info y Estrellas
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1123,7 +1124,7 @@ fun ReviewCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = review.authorName.ifBlank { "Usuario" },
+                        text = review.authorName.ifBlank { stringResource(R.string.product_detail_default_username) },
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -1137,35 +1138,36 @@ fun ReviewCard(
                 StarRating(rating = review.rating, size = 14.dp)
             }
 
-            // Comentario y botón eliminar
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top
-            ) {
-                if (review.description.isNotBlank()) {
-                    Text(
-                        text = review.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 20.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                } else {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-
-                if (review.userId == currentUserId) {
-                    IconButton(
-                        onClick = { onDeleteReview(review) },
-                        modifier = Modifier
-                            .size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Eliminar reseña",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(18.dp)
+            // Cuerpo: Comentario y Botón eliminar alineado
+            if (review.description.isNotBlank() || review.userId == currentUserId) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    if (review.description.isNotBlank()) {
+                        Text(
+                            text = review.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 20.sp,
+                            modifier = Modifier.weight(1f)
                         )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+
+                    if (review.userId == currentUserId) {
+                        IconButton(
+                            onClick = { onDeleteReview(review) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.product_detail_delete_review_desc),
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -1222,7 +1224,7 @@ fun ContactProducerButton(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "Contactar Productor",
+                    text = stringResource(R.string.product_detail_contact_producer),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.3.sp
