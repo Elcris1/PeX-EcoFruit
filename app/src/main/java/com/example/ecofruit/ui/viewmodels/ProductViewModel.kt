@@ -49,6 +49,9 @@ class ProductViewModel(
     private val _addReviewState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
     val addReviewState: StateFlow<RequestUiState<Unit>> = _addReviewState.asStateFlow()
 
+    private val _deleteReviewState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
+    val deleteReviewState: StateFlow<RequestUiState<Unit>> = _deleteReviewState.asStateFlow()
+
     fun loadHomePage(user: User) {
         viewModelScope.launch {
             // Ponemos todos los estados en Loading primero
@@ -233,6 +236,17 @@ class ProductViewModel(
                 _addReviewState.value = RequestUiState.Success(Unit)
             }.onFailure {
                 _addReviewState.value = RequestUiState.Error(it.message ?: "Error adding review")
+            }
+        }
+    }
+
+    fun deleteReview(review: Review) {
+        viewModelScope.launch {
+            _deleteReviewState.value = RequestUiState.Loading()
+            reviewRepository.deleteReview(review).onSuccess {
+                _deleteReviewState.value = RequestUiState.Success(Unit)
+            }.onFailure {
+                _deleteReviewState.value = RequestUiState.Error(it.message ?: "Error deleting review")
             }
         }
     }

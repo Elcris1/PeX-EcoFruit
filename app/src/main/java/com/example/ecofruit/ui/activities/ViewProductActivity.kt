@@ -22,6 +22,7 @@ import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.model.Review
 import com.example.ecofruit.ui.screens.ProductDetailScreen
 import com.example.ecofruit.ui.theme.EcoFruitTheme
+import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import com.example.ecofruit.ui.viewmodels.ProductViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
@@ -29,7 +30,7 @@ import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 
 class ViewProductActivity : ComponentActivity() {
 
-    private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
+    private val authViewModel: AuthViewModel by viewModels()
     private val productViewModel: ProductViewModel by viewModels { ViewModelFactory() }
     private val settingsViewModel: SettingsViewModel by viewModels()
 
@@ -40,10 +41,11 @@ class ViewProductActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val settings by settingsViewModel.settings.collectAsState()
-            val user by userViewModel.currentUser.collectAsState()
+            val user = authViewModel.currentAppUserModel
             val productState by productViewModel.product.collectAsState()
             val reviewsState by productViewModel.reviews.collectAsState()
             val addReviewState by productViewModel.addReviewState.collectAsState()
+            val deleteReviewState by productViewModel.deleteReviewState.collectAsState()
             val context = LocalContext.current
 
             LaunchedEffect(productId) {
@@ -58,6 +60,14 @@ class ViewProductActivity : ComponentActivity() {
                     Toast.makeText(context, "Reseña añadida correctamente", Toast.LENGTH_SHORT).show()
                 } else if (addReviewState is RequestUiState.Error) {
                     Toast.makeText(context, "Error al añadir reseña: ${(addReviewState as RequestUiState.Error).message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            LaunchedEffect(deleteReviewState) {
+                if (deleteReviewState is RequestUiState.Success) {
+                    Toast.makeText(context, "Reseña eliminada", Toast.LENGTH_SHORT).show()
+                } else if (deleteReviewState is RequestUiState.Error) {
+                    Toast.makeText(context, "Error al eliminar reseña: ${(deleteReviewState as RequestUiState.Error).message}", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -104,6 +114,9 @@ class ViewProductActivity : ComponentActivity() {
                                             )
                                             productViewModel.addReview(newReview)
                                         }
+                                    },
+                                    onDeleteReview = { review ->
+                                        productViewModel.deleteReview(review)
                                     }
                                 )
                             } else {

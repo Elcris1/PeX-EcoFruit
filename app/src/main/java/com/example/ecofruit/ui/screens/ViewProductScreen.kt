@@ -56,7 +56,6 @@ import kotlin.math.roundToInt
 // Main Screen
 // ─────────────────────────────────────────────────────────────────
 
-//TODO: show delete button on own reviews
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
@@ -68,6 +67,7 @@ fun ProductDetailScreen(
     onProducerClick: () -> Unit,
     onToggleFavourite: (Boolean) -> Unit = {},
     onAddReview: (Int, String) -> Unit = { _, _ -> },
+    onDeleteReview: (Review) -> Unit = {}
 ) {
     var isFavourite by remember(product.favouritesList, currentUserId) {
         mutableStateOf(product.favouritesList.contains(currentUserId))
@@ -198,7 +198,9 @@ fun ProductDetailScreen(
                         reviews = reviews,
                         rating = product.rating,
                         reviewCount = product.reviewCount,
-                        onAddReview = { showAddReviewDialog = true }
+                        currentUserId = currentUserId,
+                        onAddReview = { showAddReviewDialog = true },
+                        onDeleteReview = onDeleteReview
                     )
                 }
             }
@@ -825,7 +827,9 @@ fun SellerCard(name: String, avatarUrl: String, joinedDate: Long, onProducerClic
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().clickable{
+                onProducerClick()
+            }
         ) {
             Row(
                 modifier = Modifier.padding(16.dp),
@@ -873,9 +877,7 @@ fun SellerCard(name: String, avatarUrl: String, joinedDate: Long, onProducerClic
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp).clickable{
-                        onProducerClick()
-                    }
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -891,7 +893,9 @@ fun ReviewsSection(
     reviews: List<Review>,
     rating: Double,
     reviewCount: Int,
-    onAddReview: () -> Unit
+    currentUserId: String = "",
+    onAddReview: () -> Unit,
+    onDeleteReview: (Review) -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     val visibleReviews = if (expanded) reviews else reviews.take(2)
@@ -963,7 +967,11 @@ fun ReviewsSection(
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 visibleReviews.forEach { review ->
-                    ReviewCard(review = review)
+                    ReviewCard(
+                        review = review,
+                        currentUserId = currentUserId,
+                        onDeleteReview = onDeleteReview
+                    )
                 }
             }
 
@@ -1068,7 +1076,11 @@ fun RatingSummaryCard(reviews: List<Review>, rating: Double, reviewCount: Int) {
 }
 
 @Composable
-fun ReviewCard(review: Review) {
+fun ReviewCard(
+    review: Review,
+    currentUserId: String = "",
+    onDeleteReview: (Review) -> Unit = {}
+) {
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale("es", "ES")) }
 
     Surface(
@@ -1125,14 +1137,37 @@ fun ReviewCard(review: Review) {
                 StarRating(rating = review.rating, size = 14.dp)
             }
 
-            // Comment
-            if (review.description.isNotBlank()) {
-                Text(
-                    text = review.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 20.sp
-                )
+            // Comentario y botón eliminar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                if (review.description.isNotBlank()) {
+                    Text(
+                        text = review.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+
+                if (review.userId == currentUserId) {
+                    IconButton(
+                        onClick = { onDeleteReview(review) },
+                        modifier = Modifier
+                            .size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Eliminar reseña",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
             }
         }
     }
