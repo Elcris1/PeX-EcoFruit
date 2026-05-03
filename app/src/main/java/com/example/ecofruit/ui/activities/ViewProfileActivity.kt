@@ -2,6 +2,7 @@ package com.example.ecofruit.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.constants.ReviewType
 import com.example.ecofruit.ui.data.model.RequestUiState
@@ -18,6 +20,7 @@ import com.example.ecofruit.ui.data.model.Review
 import com.example.ecofruit.ui.screens.UserProfileScreen
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
+import com.example.ecofruit.ui.viewmodels.ChatViewModel
 import com.example.ecofruit.ui.viewmodels.ProductViewModel
 import com.example.ecofruit.ui.viewmodels.ProfileViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
@@ -30,6 +33,7 @@ class ViewProfileActivity : ComponentActivity() {
     private val profileViewModel: ProfileViewModel by viewModels { ViewModelFactory() }
     val settingsViewModel: SettingsViewModel by viewModels()
     val productViewModel: ProductViewModel by viewModels { ViewModelFactory() }
+    val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +44,8 @@ class ViewProfileActivity : ComponentActivity() {
             val profileState by profileViewModel.profileState.collectAsState()
             val addReviewState by profileViewModel.addReviewState.collectAsState()
             val deleteReviewState by profileViewModel.deleteReviewState.collectAsState()
+            val contactState by chatViewModel.contactState.collectAsState()
+
             
             val userId = intent.getStringExtra("user_id") ?: ""
             val settings by settingsViewModel.settings.collectAsState()
@@ -50,6 +56,22 @@ class ViewProfileActivity : ComponentActivity() {
                     profileViewModel.getUserProfile(userId)
                 }
             }
+
+            LaunchedEffect(contactState) {
+                if (contactState is RequestUiState.Success) {
+                    val conversationId = (contactState as RequestUiState.Success<String>).data
+                    Intent(context, ChatActivity::class.java).also {
+                        it.putExtra("conversation_id", conversationId)
+                        context.startActivity(it)
+                    }
+                    chatViewModel.resetContactState()
+                } else if (contactState is RequestUiState.Error) {
+                    val error = (contactState as RequestUiState.Error).message
+                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                    chatViewModel.resetContactState()
+                }
+            }
+
 
             LaunchedEffect(addReviewState) {
                 if (addReviewState is RequestUiState.Success) {
@@ -76,7 +98,13 @@ class ViewProfileActivity : ComponentActivity() {
                         profileState = profileState,
                         onBack = { finish() },
                         onMessage = {
-                            //TODO: CREATE conversation and redirect to chat
+                            user?.let { currentUser ->
+                                if (currentUser.id == userId) {
+                                    Toast.makeText(context, context.getString(R.string.product_detail_contact_self_error), Toast.LENGTH_SHORT).show()
+                                } else {
+                                    chatViewModel.contactProducer(currentUser.id, userId, null)
+                                }
+                            }
                         },
                         onEditProfile = {
                             //TODO: Create edit profile
