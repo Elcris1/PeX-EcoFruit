@@ -217,6 +217,7 @@ fun ProductDetailScreen(
         // ── Bottom CTA ──
         ContactProducerButton(
             onClick = onContactProducer,
+            enabled = product.userId != currentUserId,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -1182,7 +1183,8 @@ fun ReviewCard(
 @Composable
 fun ContactProducerButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Surface(
         color = MaterialTheme.colorScheme.background,
@@ -1204,6 +1206,7 @@ fun ContactProducerButton(
         ) {
             Button(
                 onClick = onClick,
+                enabled = enabled,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

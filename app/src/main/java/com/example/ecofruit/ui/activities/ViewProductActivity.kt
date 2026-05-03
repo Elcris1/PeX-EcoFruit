@@ -2,6 +2,7 @@ package com.example.ecofruit.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +26,7 @@ import com.example.ecofruit.ui.data.model.Review
 import com.example.ecofruit.ui.screens.ProductDetailScreen
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
+import com.example.ecofruit.ui.viewmodels.ChatViewModel
 import com.example.ecofruit.ui.viewmodels.ProductViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
@@ -34,6 +36,7 @@ class ViewProductActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels()
     private val productViewModel: ProductViewModel by viewModels { ViewModelFactory() }
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,12 +50,30 @@ class ViewProductActivity : ComponentActivity() {
             val reviewsState by productViewModel.reviews.collectAsState()
             val addReviewState by productViewModel.addReviewState.collectAsState()
             val deleteReviewState by productViewModel.deleteReviewState.collectAsState()
+            val contactState by chatViewModel.contactState.collectAsState()
+            
             val context = LocalContext.current
 
             LaunchedEffect(productId) {
                 if (productId.isNotEmpty()) {
                     productViewModel.getProductByIdRealtime(productId)
                     productViewModel.getReviewsByProductIdRealtime(productId)
+                }
+            }
+
+            LaunchedEffect(contactState) {
+                if (contactState is RequestUiState.Success) {
+                    val conversationId = (contactState as RequestUiState.Success<String>).data
+                    Log.d("VIEWPRODUCTACTIVITY", conversationId)
+                    Intent(context, ChatActivity::class.java).also {
+                        it.putExtra("conversation_id", conversationId)
+                        context.startActivity(it)
+                    }
+                    chatViewModel.resetContactState()
+                } else if (contactState is RequestUiState.Error) {
+                    val error = (contactState as RequestUiState.Error).message
+                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                    chatViewModel.resetContactState()
                 }
             }
 
@@ -90,7 +111,13 @@ class ViewProductActivity : ComponentActivity() {
                                     currentUserId = user?.id ?: "",
                                     onBackClick = { finish() },
                                     onContactProducer = {
-                                        // TODO: Navegar a ChatActivity con el productor
+                                        user?.let { currentUser ->
+                                            if (currentUser.id == product.userId) {
+                                                Toast.makeText(context, context.getString(R.string.product_detail_contact_self_error), Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                chatViewModel.contactProducer(currentUser.id, product.userId, product)
+                                            }
+                                        }
                                     },
                                     onProducerClick = {
                                         Intent(context, ViewProfileActivity::class.java).also {
@@ -134,6 +161,10 @@ class ViewProductActivity : ComponentActivity() {
                                 Text(stringResource(R.string.product_detail_id_missing), modifier = Modifier.align(Alignment.Center))
                             }
                         }
+                    }
+                    
+                    if (contactState is RequestUiState.Loading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     }
                 }
             }
