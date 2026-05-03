@@ -10,6 +10,7 @@ import com.example.ecofruit.ui.model.Conversation
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -24,6 +25,7 @@ class ChatRepository private constructor() {
         val subscription = conversationsCollection
             .whereArrayContains("participantsId", userId)
             .whereNotEqualTo("lastMessage", null )
+            .orderBy("lastMessage.timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e(TAG, "Error listening to conversations", error)
@@ -123,15 +125,22 @@ class ChatRepository private constructor() {
     suspend fun getOrCreateConversation(
         buyerId: String,
         sellerId: String,
-        product: Product
+        product: Product?
     ): String {
         if (buyerId == sellerId) throw Exception("Cannot contact yourself")
 
-        // Buscar conversación existente para este producto y participantes
-        val existingSnapshot = conversationsCollection
-            .whereEqualTo("productId", product.id)
-            .whereArrayContains("participantsId", buyerId)
-            .get().await()
+        var existingSnapshot: QuerySnapshot?
+        if (product != null) {
+            existingSnapshot = conversationsCollection
+                .whereEqualTo("productId", product.id)
+                .whereArrayContains("participantsId", buyerId)
+                .get().await()
+        } else {
+            existingSnapshot = conversationsCollection
+                .whereArrayContains("participantsId", buyerId)
+                .whereEqualTo("conversationTag.$sellerId", ConversationTag.CONSULTA)
+                .get().await()
+        }
 
         val existing = existingSnapshot.toObjects(Conversation::class.java)
             .find { it.participantsId.contains(sellerId) }
@@ -143,13 +152,13 @@ class ChatRepository private constructor() {
         val conversation = Conversation(
             id = newDoc.id,
             participantsId = listOf(buyerId, sellerId),
-            productId = product.id,
-            productName = product.name,
-            productEmoji = product.type.toEmoji(),
+             productId = product?.id ?: "",
+            productName = product?.name ?: "",
+            productEmoji = product?.type?.toEmoji() ?: "",
             createdAt = System.currentTimeMillis(),
             conversationTag = mapOf(
-                buyerId to ConversationTag.COMPRA,
-                sellerId to ConversationTag.VENTA
+                buyerId to if (product != null ) ConversationTag.COMPRA else ConversationTag.CONSULTA,
+                sellerId to if (product != null ) ConversationTag.VENTA else ConversationTag.CONSULTA
             ),
             unreadCount = mapOf(
                 buyerId to 0,

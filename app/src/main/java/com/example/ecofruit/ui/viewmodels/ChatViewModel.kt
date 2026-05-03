@@ -121,7 +121,7 @@ class ChatViewModel(
         }
     }
 
-    fun contactProducer(buyerId: String, sellerId: String, product: Product) {
+    fun contactProducer(buyerId: String, sellerId: String, product: Product?) {
         viewModelScope.launch {
             _contactState.value = RequestUiState.Loading()
             try {
