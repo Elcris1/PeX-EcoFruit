@@ -270,19 +270,17 @@ private fun ChatTopBar(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                // Rating del interlocutor si tiene reseñas
-                if (other.reviewCount > 0) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    ) {
-                        Text("⭐", fontSize = 10.sp)
-                        Text(
-                            text = "%.1f".format(other.rating) + " · ${other.reviewCount} " + stringResource(R.string.chat_reviews),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                // Rating del interlocutor
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
+                    Text("⭐", fontSize = 10.sp)
+                    Text(
+                        text = "%.1f".format(other.rating) + " · ${other.reviewCount} " + stringResource(R.string.chat_reviews),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
 
@@ -423,9 +421,9 @@ private fun DateDivider(label: String) {
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+                    )
+                }
+            }
 }
 
 // ── Input bar ──────────────────────────────────────────────────────────────

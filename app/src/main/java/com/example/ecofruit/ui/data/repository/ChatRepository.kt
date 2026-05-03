@@ -116,10 +116,25 @@ class ChatRepository private constructor() {
         }
     }
 
-    fun markConversationAsRead(conversationId: String, userId: String) {
-        conversationsCollection.document(conversationId)
-            .update("unreadCount.$userId", 0)
-            .addOnFailureListener { Log.e(TAG, "Error marking as read for user $userId", it) }
+    suspend fun markConversationAsRead(conversationId: String, userId: String) {
+        val batch = db.batch()
+
+        val conversationRef = conversationsCollection.document(conversationId)
+        batch.update(conversationRef, "unreadCount.$userId", 0)
+
+        val messagesRef = conversationRef.collection("messages")
+        val unreadMessages = messagesRef
+            .whereNotEqualTo("senderId", userId)
+            .whereEqualTo("status", MessageStatus.SENT)
+            .get().await()
+
+
+        unreadMessages.forEach { doc ->
+            batch.update(doc.reference, "status", MessageStatus.READ)
+        }
+
+        batch.commit().await()
+
     }
 
     suspend fun getOrCreateConversation(
