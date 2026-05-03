@@ -197,4 +197,5 @@
     <string name="product_detail_contact_producer">Contactar Productor</string>
     <string name="product_detail_add_review_dialog_title">Afegir ressenya</string>
     <string name="product_detail_comment_placeholder">El teu comentari</string>
+    <string name="product_detail_contact_self_error">No pots contactarte a tu mateix</string>
 </resources>

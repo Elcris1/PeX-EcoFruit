@@ -69,10 +69,12 @@ class UserRepository private constructor() {
 
     suspend fun getUserFromFirestore(userId: String): Result<User?> = runCatching {
         val snapshot = usersCollection.document(userId).get().await()
-        Log.d(TAG, snapshot.toString())
         val user = snapshot.toObject(User::class.java)
-        if (user != null) _user.value = user
-        Log.d(TAG, user.toString())
+        
+        // Only update the session user flow if the fetched user is the currently authenticated one
+        if (user != null && userId == auth.currentUser?.uid) {
+            _user.value = user
+        }
         user
     }
 

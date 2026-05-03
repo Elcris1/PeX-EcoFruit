@@ -6,7 +6,6 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,7 +21,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,7 +47,6 @@ import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import com.example.ecofruit.R
-import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.screens.EditProfileScreen
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import androidx.compose.ui.res.stringResource
@@ -80,9 +77,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        chatViewModel.getConversationsFromUser(authViweModel.currentAppUserModel?.id ?: "")
+        val userId = authViweModel.currentAppUserModel?.id
+        if (userId != null) {
+            chatViewModel.getConversationsFromUser(userId)
+        }
     }
 }
+
 private val permissions = arrayOf(
     Manifest.permission.ACCESS_FINE_LOCATION,
     Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -116,7 +117,6 @@ fun MainScreen(
     }
 
     val user = authViewModel.currentAppUserModel
-    val conversations by chatViewModel.conversations.collectAsState()
 
     val visibleTabs = bottomNavItems.filter { screen ->
         !screen.isSeller || user?.isProducer == true
@@ -126,7 +126,7 @@ fun MainScreen(
     val followedProducerProductsState by productsViewModel.followingProducts.collectAsStateWithLifecycle()
     val favouriteProductsState by productsViewModel.favouriteProducts.collectAsStateWithLifecycle()
 
-    val editProfileState by userViewModel.updateState.collectAsState()
+    val editProfileState by userViewModel.updateState.collectAsStateWithLifecycle()
 
     LaunchedEffect(user) {
         user?.let { it ->
@@ -214,7 +214,6 @@ fun MainScreen(
                 InboxScreen(
                     currentUser = user,
                     chatViewModel = chatViewModel,
-                    conversations = conversations,
                     onConversationClick = { conversation ->
                         Intent(context, ChatActivity::class.java).also {
                             it.putExtra("conversation_id", conversation.id)
@@ -224,7 +223,7 @@ fun MainScreen(
                 )
             }
             composable(Screen.Profile.route) {
-                val producerState by userViewModel.producerState.collectAsState()
+                val producerState by userViewModel.producerState.collectAsStateWithLifecycle()
                 ProfileScreen(
                     user = user,
                     uiState = producerState,
