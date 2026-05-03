@@ -47,7 +47,6 @@ import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.model.RequestUiState
 
-//TODO: add the possibility to create reaviews with a tab button on the reviw screen, we can use the modal from before
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
@@ -58,7 +57,9 @@ fun UserProfileScreen(
     onMessage: () -> Unit = {},
     onFollow: (Boolean) -> Unit = {},
     onListingClick: (String) -> Unit = {},
-    onFavouriteClick: (Product, String, Boolean) -> Unit
+    onFavouriteClick: (Product, String, Boolean) -> Unit,
+    onAddReview: (Int, String) -> Unit = { _, _ -> },
+    onDeleteReview: (Review) -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(stringResource(R.string.view_profile_products), stringResource(R.string.view_profile_reviews))
@@ -69,6 +70,7 @@ fun UserProfileScreen(
     }
 
     val colorScheme = MaterialTheme.colorScheme
+    var showAddReviewDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
 
@@ -76,7 +78,6 @@ fun UserProfileScreen(
             is RequestUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
-                    Text("Loading User Info")
                 }
             }
             is RequestUiState.Error -> {
@@ -209,7 +210,7 @@ fun UserProfileScreen(
                                             ) {
                                                 Icon(
                                                     Icons.Outlined.MailOutline,
-                                                    contentDescription = "Messaje",
+                                                    contentDescription = "Message",
                                                     modifier = Modifier.size(18.dp)
                                                 )
                                             }
@@ -363,11 +364,29 @@ fun UserProfileScreen(
                                     onListingClick = onListingClick,
                                     onFavouriteClick = onFavouriteClick
                                 )
-                                1 -> ReviewsList(reviews = profile.reviews)
+                                1 -> ProfileReviewsSection(
+                                    reviews = profile.reviews,
+                                    rating = profile.user.rating,
+                                    reviewCount = profile.user.reviewCount,
+                                    isOwnProfile = isOwnProfile,
+                                    currentUserId = currentUser.id,
+                                    onAddReview = { showAddReviewDialog = true },
+                                    onDeleteReview = onDeleteReview
+                                )
                             }
                         }
                     }
                     Spacer(modifier = Modifier.height(80.dp))
+                }
+
+                if (showAddReviewDialog) {
+                    AddReviewDialog(
+                        onDismiss = { showAddReviewDialog = false },
+                        onSubmit = { rating, comment ->
+                            onAddReview(rating, comment)
+                            showAddReviewDialog = false
+                        }
+                    )
                 }
             }
             else -> Unit
@@ -401,9 +420,88 @@ fun UserProfileScreen(
     }
 }
 
-// ─────────────────────────────────────────────
-//  Sub-composables
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// Sub-composables
+// ─────────────────────────────────────────────────────────────────
+
+@Composable
+private fun ProfileReviewsSection(
+    reviews: List<Review>,
+    rating: Double,
+    reviewCount: Int,
+    isOwnProfile: Boolean,
+    currentUserId: String,
+    onAddReview: () -> Unit,
+    onDeleteReview: (Review) -> Unit
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.product_detail_reviews_title),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            if (!isOwnProfile) {
+                OutlinedButton(
+                    onClick = onAddReview,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.product_detail_add_review_btn),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        if (reviewCount > 0) {
+            RatingSummaryCard(reviews = reviews, rating = rating, reviewCount = reviewCount)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (reviews.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.product_detail_be_first_review),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                reviews.forEach { review ->
+                    ReviewCard(
+                        review = review,
+                        currentUserId = currentUserId,
+                        onDeleteReview = onDeleteReview
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun AnimatedAlphaText(text: String, alpha: Float) {
@@ -414,31 +512,6 @@ private fun AnimatedAlphaText(text: String, alpha: Float) {
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
     )
 }
-
-@Composable
-private fun StatItem(value: String, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    val colorScheme = MaterialTheme.colorScheme
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Icon(icon, contentDescription = null, tint = colorScheme.primary, modifier = Modifier.size(18.dp))
-        Text(
-            value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.ExtraBold,
-            color = colorScheme.onSurface
-        )
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-
-
 
 @Composable
 private fun ListingsGrid(
@@ -481,171 +554,6 @@ private fun ListingsGrid(
                 }
                 // Fill empty slot if odd count
                 if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
-            }
-        }
-    }
-}
-
-@Composable
-private fun ListingCard(
-    userId: String,
-    listing: Product,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    var isFav by remember { mutableStateOf(listing.favouritesList.contains(userId)) }
-
-    Card(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = modifier
-    ) {
-        Box {
-            Column {
-                // Image placeholder
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(130.dp)
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    colorScheme.surfaceVariant,
-                                    colorScheme.primaryContainer.copy(alpha = 0.3f)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Outlined.Image,
-                        contentDescription = null,
-                        tint = colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
-
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Text(
-                        listing.name,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = listing.price.toString(),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = colorScheme.primary
-                    )
-                }
-            }
-
-            // Favorite button
-            IconButton(
-                onClick = { isFav = !isFav },
-                modifier = Modifier.align(Alignment.TopEnd).size(36.dp)
-            ) {
-                Icon(
-                    if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = "Favourite",
-                    tint = if (isFav) colorScheme.error else colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ReviewsList(reviews: List<Review>) {
-    val colorScheme = MaterialTheme.colorScheme
-
-    if (reviews.isEmpty()) {
-        EmptyState(
-            icon = Icons.Outlined.RateReview,
-            message = stringResource(R.string.view_profile_empty_reviews)
-        )
-        return
-    }
-
-    Column(
-        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        reviews.forEach { review ->
-            ProfileReviewCard(review = review)
-        }
-    }
-}
-
-@Composable
-private fun ProfileReviewCard(review: Review) {
-    val colorScheme = MaterialTheme.colorScheme
-
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                // Reviewer avatar
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    UserImage(review.authorAvatar, review.authorName)
-
-                }
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        review.authorName,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colorScheme.onSurface
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Row {
-                            for (i in 1..5) {
-                                Icon(
-                                    Icons.Filled.Star,
-                                    contentDescription = null,
-                                    tint = if (i <= review.rating) colorScheme.tertiary else colorScheme.outlineVariant,
-                                    modifier = Modifier.size(13.dp)
-                                )
-                            }
-                        }
-                        Text(
-                            "· ${getReadableData(review.createdAt)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            if (review.title.isNotBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    review.title,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colorScheme.onSurfaceVariant,
-                    lineHeight = 18.sp
-                )
             }
         }
     }
