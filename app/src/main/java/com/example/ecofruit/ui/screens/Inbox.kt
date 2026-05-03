@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -247,15 +248,44 @@ private fun ConversationItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = other.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = if (unreadCount > 0) FontWeight.Bold else FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                Row(
                     modifier = Modifier.weight(1f),
-                )
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = other.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = if (unreadCount > 0) FontWeight.Bold else FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    // Enhanced Badge for conversation type with better visibility in light mode
+                    val tag = conversation.base.conversationTag[currentUserId] ?: ConversationTag.CONSULTA
+                    
+                    val (containerColor, contentColor) = when (tag) {
+                        ConversationTag.COMPRA -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+                        ConversationTag.VENTA -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+                        ConversationTag.CONSULTA -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = containerColor,
+                        border = BorderStroke(1.dp, contentColor.copy(alpha = 0.12f))
+                    ) {
+                        Text(
+                            text = tag.displayName(),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = contentColor,
+                        )
+                    }
+                }
                 Text(
                     text = lastMsg?.timestamp?.toRelativeLabel() ?: "",
                     style = MaterialTheme.typography.labelSmall,
@@ -274,20 +304,24 @@ private fun ConversationItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(conversation.base.productEmoji, fontSize = 11.sp)
-                        Text(
-                            text = conversation.base.productName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                    if (conversation.base.productName.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            if (conversation.base.productEmoji.isNotBlank()) {
+                                Text(conversation.base.productEmoji, fontSize = 11.sp)
+                            }
+                            Text(
+                                text = conversation.base.productName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        Spacer(Modifier.height(2.dp))
                     }
-                    Spacer(Modifier.height(2.dp))
                     Text(
                         text = buildString {
                             if (isMine) append(stringResource(R.string.inbox_you) + " ")
