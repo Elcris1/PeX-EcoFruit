@@ -57,26 +57,27 @@ import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.text.SimpleDateFormat
+import java.util.Locale
 import com.example.ecofruit.R
+import com.example.ecofruit.ui.data.constants.ConversationTag
 import com.example.ecofruit.ui.screens.displayName
+import com.example.ecofruit.ui.viewmodels.AuthViewModel
 
 class ChatActivity : ComponentActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
-    private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
+    private val authViewModel : AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val conversationId = intent.getStringExtra("conversation_id") ?: ""
 
-
-
         enableEdgeToEdge()
         setContent {
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
-            val user by userViewModel.currentUser.collectAsState()
+            val user = authViewModel.currentAppUserModel
             val conversationUI by chatViewModel.conversation.collectAsState()
             val chatState by chatViewModel.chatState.collectAsState()
             val messages by chatViewModel.messages.collectAsState()
@@ -84,14 +85,17 @@ class ChatActivity : ComponentActivity() {
             val context = LocalContext.current
 
             LaunchedEffect(Unit) {
-                chatViewModel.getConversationUIFromId(conversationId, user!!.id)
-                chatViewModel.markConversationAsRead(conversationId)
-                chatViewModel.getMessagesFromConversation(conversationId)
+                user?.id?.let { uid ->
+                    chatViewModel.getConversationUIFromId(conversationId, uid)
+                    chatViewModel.markConversationAsRead(conversationId, uid)
+                    chatViewModel.getMessagesFromConversation(conversationId)
+                }
             }
 
             EcoFruitTheme (darkTheme = settings.darkTheme) {
+                user?.let { currentUser ->
                     ChatScreen (
-                        currentUser = user!!,
+                        currentUser = currentUser,
                         conversation = conversationUI,
                         messages = messages,
                         chatState = chatState,
@@ -106,8 +110,7 @@ class ChatActivity : ComponentActivity() {
                         },
                         onBackClick = { finish() }
                     )
-
-
+                }
             }
         }
     }
@@ -131,7 +134,6 @@ fun ChatScreen(
 
     var isLoading by remember { mutableStateOf(false) }
 
-
     when(chatState) {
         is RequestUiState.Loading -> isLoading = true
         is RequestUiState.Success -> {
@@ -150,14 +152,18 @@ fun ChatScreen(
             )
         }
 
+        // Auto-scroll when new messages arrive
         LaunchedEffect(messages.size) {
-            if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+            if (messages.isNotEmpty()) {
+                listState.animateScrollToItem(messages.lastIndex)
+            }
         }
 
         Scaffold(
             topBar = {
                 ChatTopBar(
                     conversation = conversation,
+                    currentUserId = currentUser.id,
                     onProfileClick = onProfileClick,
                     onBackClick = onBackClick,
                 )
@@ -173,12 +179,12 @@ fun ChatScreen(
                                 conversationId = conversation.base.id,
                                 senderId = currentUser.id,
                                 text = messageText.trim(),
-                                timestamp = LocalDateTime.now(),
+                                timestamp = System.currentTimeMillis(),
                                 status = MessageStatus.SENDING,
                             )
                             onSend(message)
                             messageText = ""
-                            scope.launch { listState.animateScrollToItem(messages.lastIndex) }
+                            // No need to scroll here, LaunchedEffect(messages.size) handles it
                         }
                     },
                 )
@@ -222,6 +228,7 @@ fun ChatScreen(
 @Composable
 private fun ChatTopBar(
     conversation: ConversationUI,
+    currentUserId: String,
     onProfileClick: (String) -> Unit,
     onBackClick: () -> Unit,
 ) {
@@ -281,12 +288,13 @@ private fun ChatTopBar(
 
             // Producto + tag
             Column(horizontalAlignment = Alignment.End) {
+                val tag = conversation.base.conversationTag[currentUserId] ?: ConversationTag.CONSULTA
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Text(
-                        text = conversation.base.tag.displayName(),
+                        text = tag.displayName(),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -360,8 +368,9 @@ private fun MessageBubble(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(3.dp),
             ) {
+                val timeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp))
                 Text(
-                    text = message.timestamp.format(DateTimeFormatter.ofPattern("HH:mm")),
+                    text = timeStr,
                     style = MaterialTheme.typography.labelSmall,
                     fontSize = 10.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
