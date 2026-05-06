@@ -21,11 +21,11 @@ set_global_options(max_instances=10)
 if not firebase_admin._apps:
     firebase_admin.initialize_app()
  
-db = firestore.client()
 logger = logging.getLogger(__name__)
 
 # utils
 def _get_active_tokens_for_user(user_id: str) -> list[str]:
+    db = firestore.client()
     """Devuelve todos los FCM tokens activos de un usuario."""
     document_ref = db.collection("users").document(user_id)
     if not document_ref.get().exists:
@@ -78,6 +78,8 @@ def _send_multicast(tokens: list[str], title: str, body: str, data: dict[str, An
     document="conversations/{conversation_id}/messages/{message_id}"
 )
 def on_conversation_updated(event: firestore_fn.Event[firestore_fn.Change[firestore.DocumentSnapshot]]) -> None:
+    logger.info("Conversation updated: %s", event.params)
+    db = firestore.client()
     message: dict[str, Any] = event.data.to_dict()
     sender_id: str = message.get("senderId", "")
     text: str = message.get("text", "Te ha enviado un mensaje.")
@@ -87,7 +89,7 @@ def on_conversation_updated(event: firestore_fn.Event[firestore_fn.Change[firest
         logger.warning("Message does not have a senderId.")
         return
     
-    converation_doc = db.collections("conversations").document(conversation_id).get()
+    converation_doc = db.collection("conversations").document(conversation_id).get()
     if not converation_doc.exists:
         logger.warning(f"Conversation {conversation_id} does not exist.")
         return
