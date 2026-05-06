@@ -113,6 +113,7 @@ class AuthViewModel (
                             reviewCount = 0,
                             rating = 0.0
                         )
+                        firebaseUser.sendEmailVerification()
                         viewModelScope.launch {
                             // createUserInFirestore ya actualiza el StateFlow en el repositorio
                             userRepo.createUserInFirestore(newUser).onSuccess {

@@ -5,12 +5,14 @@
       "codebase": "default",
       "disallowLegacyRuntimeConfig": true,
       "ignore": [
+        "__pycache__",
         ".venv",
         "venv",
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log",
-        "*.local"
+        "*.local",
+        "google-cloud-sdk/"
       ]
     }
   ],
