@@ -41,7 +41,7 @@ def _get_active_tokens_for_user(user_id: str) -> list[str]:
     )
     return [doc.to_dict().get("token") for doc in tokens_ref if doc.to_dict().get("token")]
 
-def _send_multicast(tokens: list[str], title: str, body: str, data: dict[str, Any]) -> None:
+def _send_multicast(tokens: list[str], title: str, body: str, data: dict[str, Any]) -> Any:
     if not tokens:
         logger.warning("No hay tokens FCM para enviar notificación.")
         return None
@@ -64,8 +64,10 @@ def _send_multicast(tokens: list[str], title: str, body: str, data: dict[str, An
             )
         ),
     )
+    logger.info("Trying to send FCM multicast message to %d tokens with title '%s'", len(tokens), title)
  
-    response = messaging.send_each_for_multicast(message)
+    # Use the correct Firebase Admin SDK function for sending multicast messages
+    response = messaging.send_multicast(message)
     logger.info(
         "FCM multicast: %d éxito, %d fallo",
         response.success_count,
@@ -74,52 +76,73 @@ def _send_multicast(tokens: list[str], title: str, body: str, data: dict[str, An
     return response
 
 # Listenners
-@firestore_fn.on_document_updated(
+@firestore_fn.on_document_created(
     document="conversations/{conversation_id}/messages/{message_id}"
 )
-def on_conversation_updated(event: firestore_fn.Event[firestore_fn.Change[firestore.DocumentSnapshot]]) -> None:
-    logger.info("Conversation updated: %s", event.params)
-    db = firestore.client()
-    message: dict[str, Any] = event.data.to_dict()
-    sender_id: str = message.get("senderId", "")
-    text: str = message.get("text", "Te ha enviado un mensaje.")
-    conversation_id: str = message.get("conversation_id", "")
+def on_message_created(event: firestore_fn.Event[firestore_fn.DocumentSnapshot | None]) -> None:
+    
+    # 1. Validar existencia de datos
+    if event.data is None:
+        logger.warning("No data found in the event.")
+        return
 
-    if not sender_id:
-        logger.warning("Message does not have a senderId.")
-        return
-    
-    converation_doc = db.collection("conversations").document(conversation_id).get()
-    if not converation_doc.exists:
-        logger.warning(f"Conversation {conversation_id} does not exist.")
-        return
-    
-    conversation: dict[str, Any] = converation_doc.to_dict()
-    participants: list[str] = conversation.get("participantsId", [])
-    receiverId = next((uid for uid in participants if uid != sender_id), None)
+    try:
+        logger.info("Conversation updated: %s", event.params)
+        db = firestore.client()
+        message: dict[str, Any] = event.data.to_dict()
+        sender_id: str = message.get("senderId", "")
+        text: str = message.get("text", "Te ha enviado un mensaje.")
+        conversation_id: str = event.params.get("conversation_id", "")
 
-    if not receiverId:
-        logger.warning(f"No receiver found in conversation {conversation_id} for sender {sender_id}.")
-        return
-    
-    tokens = _get_active_tokens_for_user(receiverId)
-    if not tokens:
-        logger.info(f"No active FCM tokens found for user {receiverId}.")
-        return
-    
-    sender_doc = db.collection("users").document(sender_id).get()
-    sender_name: str = sender_doc.to_dict().get("name", "UserName")
-    
-    _send_multicast(
-        tokens=tokens,
-        title=f"💬 {sender_name}",
-        body=text[:100], 
-        data={
-            "type": "new_message",
-            "chat_id": event.params["chatId"],
-            "screen": "chat",
-        },
-    )
+        db.collection("audit_logs").add({
+            "event": "message_created",
+            "additional_info": {
+                "conversation_id": conversation_id,
+                "sender_id": sender_id,
+                "text": text,
+            },
+            "timestamp": firestore.SERVER_TIMESTAMP,
+        })
+
+        if not sender_id:
+            logger.warning("Message does not have a senderId.")
+            return
+        
+        conversation_doc = db.collection("conversations").document(conversation_id).get()
+        if not conversation_doc.exists:
+            logger.warning(f"Conversation {conversation_id} does not exist.")
+            return
+        
+        conversation: dict[str, Any] = conversation_doc.to_dict() or {}
+        participants: list[str] = conversation.get("participantsId", [])
+        receiverId = next((uid for uid in participants if uid != sender_id), None)
+
+        if not receiverId:
+            logger.warning(f"No receiver found in conversation {conversation_id} for sender {sender_id}.")
+            return
+        
+        tokens = _get_active_tokens_for_user(receiverId)
+        if not tokens:
+            logger.info(f"No active FCM tokens found for user {receiverId}.")
+            return
+        
+        sender_doc = db.collection("users").document(sender_id).get()
+        sender_dict = sender_doc.to_dict() or {}
+        sender_name: str = sender_dict.get("name", "UserName")
+
+        _send_multicast(
+            tokens=tokens,
+            title=f"💬 {sender_name}",
+            body=text[:100], 
+            data={
+                "type": "new_message",
+                # event.params uses the path variable name 'conversation_id'
+                "chat_id": event.params.get("conversation_id", conversation_id),
+                "screen": "chat",
+            },
+        )
+    except Exception as e:
+        logger.error(f"Error processing notification: {str(e)}", exc_info=True)
 
 
 
