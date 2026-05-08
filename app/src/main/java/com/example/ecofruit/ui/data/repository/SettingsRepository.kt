@@ -33,6 +33,9 @@ object SettingsKeys {
     val DARK_THEME          = booleanPreferencesKey("dark_theme")
     val NOTIFICATIONS       = booleanPreferencesKey("notifications")
     val LANGUAGE            = stringPreferencesKey("language")         // "es" | "en" | "ca"
+
+    // Messaging
+    val FCM_TOKEN           = stringPreferencesKey("fcm_token")
 }
 
 
@@ -57,6 +60,7 @@ class SettingsRepository(private val context: Context) {
                 darkTheme = prefs[SettingsKeys.DARK_THEME]?: false,
                 notifications = prefs[SettingsKeys.NOTIFICATIONS] ?: true,
                 language = prefs[SettingsKeys.LANGUAGE] ?: "es",
+                fcmToken = prefs[SettingsKeys.FCM_TOKEN],
             )
         }
 
@@ -104,6 +108,14 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setLanguage(value: String) = context.settingsDataStore.edit {
         it[SettingsKeys.LANGUAGE] = value
+    }
+
+    suspend fun setFcmToken(value: String?) = context.settingsDataStore.edit {
+        if (value == null) {
+            it.remove(SettingsKeys.FCM_TOKEN)
+        } else {
+            it[SettingsKeys.FCM_TOKEN] = value
+        }
     }
 
     /** Wipe all preferences back to defaults */
