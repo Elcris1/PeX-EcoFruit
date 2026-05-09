@@ -9,6 +9,7 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.storage.storage
+import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -146,24 +147,26 @@ class UserRepository private constructor() {
         _user.value = null
     }
 
-    fun followUser(userId: String) {
-        if (_user.value?.following == null) {
-            _user.value?.following = listOf(userId)
-        } else {
-            _user.value?.following += userId
-        }
-
-        getUserById(userId)?.let {
-            it.followers += 1
-        }
+    suspend fun followUser(targetUserId: String): Result<Unit> = runCatching {
+        val currentUserId = auth.currentUser?.uid ?: throw Exception("No user logged in")
+        
+        val batch = db.batch()
+        batch.update(usersCollection.document(currentUserId), "following", FieldValue.arrayUnion(targetUserId))
+        batch.update(usersCollection.document(targetUserId), "followers", FieldValue.increment(1))
+        
+        batch.commit().await()
+        reloadUser().getOrThrow()
     }
 
-    fun unfollowUser(userId: String){
-        _user.value?.following -= userId
-
-        getUserById(userId)?.let {
-            it.followers -= 1
-        }
+    suspend fun unfollowUser(targetUserId: String): Result<Unit> = runCatching {
+        val currentUserId = auth.currentUser?.uid ?: throw Exception("No user logged in")
+        
+        val batch = db.batch()
+        batch.update(usersCollection.document(currentUserId), "following", FieldValue.arrayRemove(targetUserId))
+        batch.update(usersCollection.document(targetUserId), "followers", FieldValue.increment(-1))
+        
+        batch.commit().await()
+        reloadUser().getOrThrow()
     }
 
     companion object {
