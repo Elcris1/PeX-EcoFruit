@@ -107,7 +107,11 @@ class ViewProfileActivity : ComponentActivity() {
                             }
                         },
                         onEditProfile = {
-                            //TODO: Create edit profile
+                            val intent = Intent(context, MainActivity::class.java).apply {
+                                putExtra("navigate_to", "edit_profile")
+                                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                            }
+                            context.startActivity(intent)
                         },
                         onFollow = { following ->
                             if (!following) {

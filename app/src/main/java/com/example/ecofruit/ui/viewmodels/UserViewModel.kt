@@ -2,8 +2,6 @@ package com.example.ecofruit.ui.viewmodels
 
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ecofruit.ui.data.model.RequestUiState
@@ -61,11 +59,19 @@ class UserViewModel(
     }
 
     fun followUser(userId: String) {
-        userRepo.followUser(userId)
+        viewModelScope.launch {
+            userRepo.followUser(userId).onFailure {
+                Log.e("UserViewModel", "Error following user: ${it.message}")
+            }
+        }
     }
 
     fun unfollowUser(userId: String) {
-        userRepo.unfollowUser(userId)
+        viewModelScope.launch {
+            userRepo.unfollowUser(userId).onFailure {
+                Log.e("UserViewModel", "Error unfollowing user: ${it.message}")
+            }
+        }
     }
 
 }
