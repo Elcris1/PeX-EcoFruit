@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.example.ecofruit.ui.data.mock.MockData
 import com.example.ecofruit.ui.data.model.User
+import com.example.ecofruit.ui.data.model.fcm_token
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.Firebase
@@ -167,6 +168,29 @@ class UserRepository private constructor() {
         
         batch.commit().await()
         reloadUser().getOrThrow()
+    }
+
+    // ── FCM Token Management ──────────────────────────────────────────────────
+
+    suspend fun saveFcmToken( token: String): Result<Unit> = runCatching {
+        auth.currentUser?: throw Exception("No user logged in")
+
+        val tokenModel = fcm_token(userId = _user.value!!.id, token = token, active = true)
+        usersCollection.document(_user.value!!.id)
+            .collection("fcm_token")
+            .document(token)
+            .set(tokenModel)
+            .await()
+    }
+
+    suspend fun updateFcmTokenStatus( token: String, active: Boolean): Result<Unit> = runCatching {
+        auth.currentUser?: throw Exception("No user logged in")
+
+        usersCollection.document(_user.value!!.id)
+            .collection("fcm_token")
+            .document(token)
+            .update("active", active)
+            .await()
     }
 
     companion object {

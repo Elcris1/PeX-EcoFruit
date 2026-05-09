@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.data.repository.AuthRepository
+import com.example.ecofruit.ui.data.repository.SettingsRepository
 import com.example.ecofruit.ui.data.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -18,7 +19,8 @@ import kotlinx.coroutines.launch
 
 class AuthViewModel (
     private val authRepo: AuthRepository = AuthRepository(),
-    private val userRepo: UserRepository = UserRepository.getInstance()
+    private val userRepo: UserRepository = UserRepository.getInstance(),
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
@@ -113,6 +115,7 @@ class AuthViewModel (
                             reviewCount = 0,
                             rating = 0.0
                         )
+                        firebaseUser.sendEmailVerification()
                         viewModelScope.launch {
                             // createUserInFirestore ya actualiza el StateFlow en el repositorio
                             userRepo.createUserInFirestore(newUser).onSuccess {
@@ -179,9 +182,21 @@ class AuthViewModel (
     }
 
     fun logout() {
-        auth.signOut()
-        userRepo.logOut()
-        user = null
-        _uiState.value = RequestUiState.Idle()
+        viewModelScope.launch {
+            try {
+                settingsRepository.settingsFlow.collect { settings ->
+                    settings.fcmToken?.let {
+                        userRepo.updateFcmTokenStatus(settings.fcmToken, false)
+                    }
+                }
+            } catch (exception: Exception ) {
+                Log.d("AuthViewModel", "Error al actualizar estado del token FCM: ${exception.message}")
+            } finally {
+                userRepo.logOut()
+                user = null
+                _uiState.value = RequestUiState.Idle()
+            }
+        }
+
     }
 }
