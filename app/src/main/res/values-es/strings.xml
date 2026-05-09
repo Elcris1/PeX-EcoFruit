@@ -168,4 +168,35 @@
     <string name="edit_profile_saving">Guardando…</string>
     <string name="edit_profile_confirm_location">Confirmar Ubicación</string>
     <string name="edit_profile_location_selected">Ubicación seleccionada</string>
+
+    <string name="product_detail_added_success">Reseña añadida correctamente</string>
+    <string name="product_detail_added_error">Error al añadir reseña: %s</string>
+    <string name="product_detail_deleted_success">Reseña eliminada</string>
+    <string name="product_detail_deleted_error">Error al eliminar reseña: %s</string>
+    <string name="product_detail_not_found">Producto no encontrado</string>
+    <string name="product_detail_id_missing">ID de producto no proporcionado</string>
+
+    <string name="product_detail_eco_label">Ecológico</string>
+    <string name="product_detail_location_label">Ubicación</string>
+    <string name="product_detail_published_label">Publicado</string>
+    <string name="product_detail_unit_label">Unidad de venta</string>
+    <string name="product_detail_category_label">Categoría</string>
+    <string name="product_detail_description_label">Descripción</string>
+    <string name="product_detail_no_description">Sin descripción disponible.</string>
+    <string name="product_detail_show_more">Ver más</string>
+    <string name="product_detail_show_less">Ver menos</string>
+    <string name="product_detail_producer_label">Productor</string>
+    <string name="product_detail_member_since">Miembro desde %s</string>
+    <string name="product_detail_reviews_title">Reseñas</string>
+    <string name="product_detail_add_review_btn">Añadir reseña</string>
+    <string name="product_detail_reviews_count">(%d reseñas)</string>
+    <string name="product_detail_be_first_review">Sé el primero en opinar</string>
+    <string name="product_detail_show_less_reviews">Ver menos reseñas</string>
+    <string name="product_detail_show_all_reviews">Ver todas las reseñas (%d)</string>
+    <string name="product_detail_default_username">Usuario</string>
+    <string name="product_detail_delete_review_desc">Eliminar reseña</string>
+    <string name="product_detail_contact_producer">Contactar Productor</string>
+    <string name="product_detail_add_review_dialog_title">Añadir reseña</string>
+    <string name="product_detail_comment_placeholder">Tu comentario</string>
+    <string name="product_detail_contact_self_error">No puedes contactarte a ti mismo</string>
 </resources>

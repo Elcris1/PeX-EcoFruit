@@ -25,6 +25,10 @@ data class LocationData(
      */
     val country: String = "",
 ) {
+    val shortDisplayName: String
+        get() = listOf(city, country)
+            .filter { it.isNotBlank() }
+            .joinToString(", ")
     /**
      * Human-readable location string suitable for UI display.
      * Falls back gracefully when some fields are blank.

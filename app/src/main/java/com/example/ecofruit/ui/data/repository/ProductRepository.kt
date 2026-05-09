@@ -23,6 +23,25 @@ class ProductRepository {
         productsCollection.get().await().toObjects(Product::class.java)
     }
 
+    suspend fun getProduct(productId: String): Result<Product?> = runCatching {
+        productsCollection.document(productId).get().await().toObject(Product::class.java)
+    }
+
+    fun getProductRealtime(productId: String): Flow<Result<Product?>> = callbackFlow {
+        val subscription = productsCollection.document(productId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.failure(error))
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val product = snapshot.toObject(Product::class.java)
+                    trySend(Result.success(product))
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
     suspend fun getProductsFromUserId(userId: String): Result<List<Product>> = runCatching {
         productsCollection.whereEqualTo("userId", userId).get().await().toObjects(Product::class.java)
     }

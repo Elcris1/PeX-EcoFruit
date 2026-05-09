@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.data.model.Product
+import com.example.ecofruit.ui.data.model.Review
 import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.repository.ProductRepository
+import com.example.ecofruit.ui.data.repository.ReviewRepository
 import com.example.ecofruit.ui.data.repository.UserRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -22,7 +24,8 @@ data class ProductWithUser(
 
 class ProductViewModel(
     private val userRepo: UserRepository,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val reviewRepository: ReviewRepository = ReviewRepository.getInstance()
 ): ViewModel() {
 
     private val _recommendedProducts = MutableStateFlow<RequestUiState<List<Product>>>(RequestUiState.Idle())
@@ -36,6 +39,18 @@ class ProductViewModel(
 
     private val _addProductState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
     val addProductState: StateFlow<RequestUiState<Unit>> = _addProductState.asStateFlow()
+
+    private val _product = MutableStateFlow<RequestUiState<Product?>>(RequestUiState.Idle())
+    val product: StateFlow<RequestUiState<Product?>> = _product.asStateFlow()
+
+    private val _reviews = MutableStateFlow<RequestUiState<List<Review>>>(RequestUiState.Idle())
+    val reviews: StateFlow<RequestUiState<List<Review>>> = _reviews.asStateFlow()
+
+    private val _addReviewState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
+    val addReviewState: StateFlow<RequestUiState<Unit>> = _addReviewState.asStateFlow()
+
+    private val _deleteReviewState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
+    val deleteReviewState: StateFlow<RequestUiState<Unit>> = _deleteReviewState.asStateFlow()
 
     fun loadHomePage(user: User) {
         viewModelScope.launch {
@@ -162,6 +177,76 @@ class ProductViewModel(
         viewModelScope.launch {
             productRepository.setFavourite(productId, userId, isFavourite).onFailure {
                 // Opcional: manejar error, por ejemplo con un snackbar o revirtiendo el estado en la UI
+            }
+        }
+    }
+
+    fun getProductById(productId: String) {
+        viewModelScope.launch {
+            _product.value = RequestUiState.Loading()
+            productRepository.getProduct(productId).onSuccess {
+                _product.value = RequestUiState.Success(it)
+            }.onFailure {
+                _product.value = RequestUiState.Error(it.message ?: "Error loading product")
+            }
+        }
+    }
+
+    fun getProductByIdRealtime(productId: String) {
+        viewModelScope.launch {
+            _product.value = RequestUiState.Loading()
+            productRepository.getProductRealtime(productId).collect { result ->
+                result.onSuccess {
+                    _product.value = RequestUiState.Success(it)
+                }.onFailure {
+                    _product.value = RequestUiState.Error(it.message ?: "Error loading product")
+                }
+            }
+        }
+    }
+
+    fun getReviewsByProductId(productId: String) {
+        viewModelScope.launch {
+            _reviews.value = RequestUiState.Loading()
+            reviewRepository.getReviewsToProduct(productId).onSuccess {
+                _reviews.value = RequestUiState.Success(it)
+            }.onFailure {
+                _reviews.value = RequestUiState.Error(it.message ?: "Error loading reviews")
+            }
+        }
+    }
+
+    fun getReviewsByProductIdRealtime(productId: String) {
+        viewModelScope.launch {
+            _reviews.value = RequestUiState.Loading()
+            reviewRepository.getReviewsToProductRealtime(productId).collect { result ->
+                result.onSuccess {
+                    _reviews.value = RequestUiState.Success(it)
+                }.onFailure {
+                    _reviews.value = RequestUiState.Error(it.message ?: "Error loading reviews")
+                }
+            }
+        }
+    }
+
+    fun addReview(review: Review) {
+        viewModelScope.launch {
+            _addReviewState.value = RequestUiState.Loading()
+            reviewRepository.addReview(review).onSuccess {
+                _addReviewState.value = RequestUiState.Success(Unit)
+            }.onFailure {
+                _addReviewState.value = RequestUiState.Error(it.message ?: "Error adding review")
+            }
+        }
+    }
+
+    fun deleteReview(review: Review) {
+        viewModelScope.launch {
+            _deleteReviewState.value = RequestUiState.Loading()
+            reviewRepository.deleteReview(review).onSuccess {
+                _deleteReviewState.value = RequestUiState.Success(Unit)
+            }.onFailure {
+                _deleteReviewState.value = RequestUiState.Error(it.message ?: "Error deleting review")
             }
         }
     }

@@ -19,3 +19,15 @@ fun ProductType.toDisplayNameRes(): Int {
         ProductType.OTHER -> R.string.product_type_other
     }
 }
+
+fun ProductType.toEmoji(): String {
+    return when (this) {
+        ProductType.FRUITS     -> "🍎"
+        ProductType.VEGETABLES -> "🥦"
+        ProductType.CEREAL     -> "🌾"
+        ProductType.TRADITIONAL -> "🫙"
+        ProductType.PLANTS     -> "🪴"
+        ProductType.FROM_ANIMAL -> "🥚"
+        ProductType.OTHER      -> "🌱"
+    }
+}

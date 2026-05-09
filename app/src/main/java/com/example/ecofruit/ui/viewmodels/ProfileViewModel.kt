@@ -27,6 +27,12 @@ class ProfileViewModel (
     private val _profileState = MutableStateFlow<RequestUiState<FullUserInfo>>(RequestUiState.Idle())
     val profileState: StateFlow<RequestUiState<FullUserInfo>> = _profileState.asStateFlow()
 
+    private val _addReviewState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
+    val addReviewState: StateFlow<RequestUiState<Unit>> = _addReviewState.asStateFlow()
+
+    private val _deleteReviewState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
+    val deleteReviewState: StateFlow<RequestUiState<Unit>> = _deleteReviewState.asStateFlow()
+
     fun getUserProfile(userId: String) {
         viewModelScope.launch {
             _profileState.value = RequestUiState.Loading()
@@ -63,6 +69,32 @@ class ProfileViewModel (
                 }
             } catch (e: Exception) {
                 _profileState.value = RequestUiState.Error(e.message ?: "Error loading profile")
+            }
+        }
+    }
+
+    fun addReview(review: Review) {
+        viewModelScope.launch {
+            _addReviewState.value = RequestUiState.Loading()
+            reviewRepository.addReview(review).onSuccess {
+                _addReviewState.value = RequestUiState.Success(Unit)
+                // Refresh profile to show new review and updated rating
+                getUserProfile(review.dstId)
+            }.onFailure {
+                _addReviewState.value = RequestUiState.Error(it.message ?: "Error adding review")
+            }
+        }
+    }
+
+    fun deleteReview(review: Review) {
+        viewModelScope.launch {
+            _deleteReviewState.value = RequestUiState.Loading()
+            reviewRepository.deleteReview(review).onSuccess {
+                _deleteReviewState.value = RequestUiState.Success(Unit)
+                // Refresh profile
+                getUserProfile(review.dstId)
+            }.onFailure {
+                _deleteReviewState.value = RequestUiState.Error(it.message ?: "Error deleting review")
             }
         }
     }
