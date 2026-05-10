@@ -4,9 +4,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
 import android.media.RingtoneManager
-import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.ecofruit.R
@@ -17,41 +15,42 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 
 class MessagingService: FirebaseMessagingService() {
+    private val channelId = "ecofruit_channel"
     private val userRepo = UserRepository.getInstance()
-    private lateinit var settingsRepo: SettingsRepository
+    private val settingsRepo by lazy { SettingsRepository.getInstance(applicationContext) }
 
     override fun onCreate() {
+        Log.d(TAG, "  FCM SERVICE INICIALIZADO          ")
         super.onCreate()
-        settingsRepo = SettingsRepository(applicationContext)
     }
 
     // [START receive_message]
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        // TODO(developer): Handle FCM messages here.
-        // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
+
+        Log.d(TAG, "    MENSAJE FCM RECIBIDO             ")
         Log.d(TAG, "From: ${remoteMessage.from}")
 
-        // Check if message contains a data payload.
+        // Verificar si contiene datos
         if (remoteMessage.data.isNotEmpty()) {
-            Log.d(TAG, "Message data payload: ${remoteMessage.data}")
+            Log.d(TAG, "Data payload: ${remoteMessage.data}")
         }
 
-        // Check if message contains a notification payload.
+        // Verificar si contiene notificación
         remoteMessage.notification?.let {
-            Log.d(TAG, "Message Notification Body: ${it.body}")
-            sendNotification(it.body ?: "")
+            Log.d(TAG, "Notification title: ${it.title}")
+            Log.d(TAG, "Notification body: ${it.body}")
+            sendNotification(messageBody = it.body ?: "", title = it.title ?: getString(R.string.app_name) )
         }
 
-        // Also if you intend on generating your own notifications as a result of a received FCM
-        // message, here is where that should be initiated. See sendNotification method below.
+        Log.d(TAG, "╚════════════════════════════════════╝")
     }
     // [END receive_message]
 
-    private fun needsToBeScheduled() = true
 
     // [START on_new_token]
     /**
@@ -60,26 +59,36 @@ class MessagingService: FirebaseMessagingService() {
      * FCM registration token is initially generated so this is where you would retrieve the token.
      */
     override fun onNewToken(token: String) {
-        Log.d(TAG, "Refreshed token: $token")
+        Log.d(TAG, "    NUEVO TOKEN FCM GENERADO          ")
+        Log.d(TAG, "Token: $token")
 
-        // If you want to send messages to this application instance or
-        // manage this apps subscriptions on the server side, send the
-        // FCM registration token to your app server.
+
+        // Guardar el token de forma segura
         CoroutineScope(Dispatchers.IO).launch {
-            settingsRepo.settingsFlow.collect { settings ->
-                settings.fcmToken?.let {
-                    userRepo.updateFcmTokenStatus(settings.fcmToken, false)
+            try {
+                // Obtener el token anterior (sin usar collect que es infinito)
+                settingsRepo.settingsFlow.firstOrNull()?.fcmToken?.let { oldToken ->
+                    Log.d(TAG, "Token anterior encontrado: $oldToken")
+                    userRepo.updateFcmTokenStatus(oldToken, false)
+                    Log.d(TAG, "Token anterior marcado como inactivo")
                 }
+
+                // Guardar el nuevo token localmente
+                settingsRepo.setFcmToken(token)
+                Log.d(TAG, "Token guardado localmente")
+
+                // Guardar el token en el servidor
+                userRepo.saveFcmToken(token)
+                Log.d(TAG, "Token guardado en servidor")
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error actualizando token FCM", e)
             }
-            // Persist the token locally
-            settingsRepo.setFcmToken(token)
-            
-            userRepo.saveFcmToken(token)
         }
     }
     // [END on_new_token]
 
-    private fun sendNotification(messageBody: String) {
+    private fun sendNotification(messageBody: String, title: String) {
         val intent = Intent(this, LauncherActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val requestCode = 0
@@ -90,30 +99,30 @@ class MessagingService: FirebaseMessagingService() {
             PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val channelId = "fcm_default_channel"
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(getString(R.string.app_name))
+            .setContentTitle(title)
             .setContentText(messageBody)
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(NotificationManager::class.java)
 
-        // Since android Oreo notification channel is needed.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (notificationManager.getNotificationChannel(channelId) == null) {
             val channel = NotificationChannel(
                 channelId,
                 "EcoFruit Notifications",
                 NotificationManager.IMPORTANCE_DEFAULT,
             )
             notificationManager.createNotificationChannel(channel)
+            Log.d(TAG, "Canal creado desde sendNotification(): $channelId")
         }
 
         val notificationId = System.currentTimeMillis().toInt()
         notificationManager.notify(notificationId, notificationBuilder.build())
+        Log.d(TAG, "Notificación publicada con ID: $notificationId")
     }
 
     companion object {
