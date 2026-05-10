@@ -25,7 +25,15 @@ if not firebase_admin._apps:
 
 
 # utils
-def _get_active_tokens_for_user(user_id: str, db: firestore.Client) -> list[str]:
+
+def _create_audit_log(db: firestore.Client, event_name: str, additional_info: dict[str, Any]) -> None:
+    db.collection("audit_logs").add({
+        "event": event_name,
+        "additional_info": additional_info,
+        "timestamp": firestore.SERVER_TIMESTAMP,
+    })
+
+def _get_active_tokens_for_user(db: firestore.Client, user_id: str, check_producers_notifications: bool = False) -> list[str]:
     print(f"Fetching active FCM tokens for user: {user_id}")
     """Devuelve todos los FCM tokens activos de un usuario."""
     document_ref = db.collection("users").document(user_id)
@@ -34,13 +42,16 @@ def _get_active_tokens_for_user(user_id: str, db: firestore.Client) -> list[str]
         return []
     
     
-    tokens_ref = (
+    ref = (
         document_ref
         .collection("fcm_token")
         .where("active", "==", True)
-        .stream()
     )
-    return [doc.to_dict().get("token") for doc in tokens_ref]
+    
+    if check_producers_notifications:
+        ref = (ref.where("producersNotifications", "==", True))
+
+    return [doc.to_dict().get("token") for doc in ref.stream()]
 
 def _send_multicast(tokens: list[str], title: str, body: str, data: dict[str, Any]) -> Any:
     if not tokens:
@@ -92,15 +103,11 @@ def on_message_created(event: firestore_fn.Event[firestore_fn.DocumentSnapshot |
         text: str = message.get("text", "Te ha enviado un mensaje.")
         conversation_id: str = event.params.get("conversation_id", "")
 
-        db.collection("audit_logs").add({
-            "event": "message_created",
-            "additional_info": {
+        _create_audit_log(db, "message_created", {
                 "conversation_id": conversation_id,
                 "sender_id": sender_id,
                 "text": text,
-            },
-            "timestamp": firestore.SERVER_TIMESTAMP,
-        })
+            })
 
         if not sender_id:
             logger.warning("Message does not have a senderId.")
@@ -122,7 +129,7 @@ def on_message_created(event: firestore_fn.Event[firestore_fn.DocumentSnapshot |
             logger.warning(f"No receiver found in conversation {conversation_id} for sender {sender_id}.")
             return
         
-        tokens = _get_active_tokens_for_user(receiverId, db)
+        tokens = _get_active_tokens_for_user(db, receiverId)
         print(f"Active FCM tokens for user {receiverId}: {tokens}")
         if len(tokens) == 0:
             print(f"No active FCM tokens found for user {receiverId}.")
