@@ -172,12 +172,12 @@ class UserRepository private constructor() {
 
     // ── FCM Token Management ──────────────────────────────────────────────────
 
-    suspend fun saveFcmToken( token: String): Result<Unit> = runCatching {
+    suspend fun saveFcmToken( token: String, producersNotification: Boolean = true): Result<Unit> = runCatching {
         Log.d(TAG, "Saving FCM token: $token")
 
         auth.currentUser?.let {
             val userId = it.uid
-            val tokenModel = fcm_token(userId = userId, token = token, active = true, createdAt = System.currentTimeMillis()/1000)
+            val tokenModel = fcm_token(userId = userId, token = token, active = true, producersNotification= producersNotification, createdAt = System.currentTimeMillis()/1000)
             usersCollection.document(userId)
                 .collection("fcm_token")
                 .document(token)
@@ -203,7 +203,20 @@ class UserRepository private constructor() {
             Log.d(TAG, "No user logged in")
             throw Exception("No user logged in")
         }
+    }
 
+    suspend fun updateFcmTokenProducerPreference(token: String, producersNotification: Boolean): Result<Unit> = runCatching {
+        Log.d(TAG, "Updating FCM token producer preference: $token, producersNotification: $producersNotification")
+        auth.currentUser?.let {
+            usersCollection.document(it.uid)
+                .collection("fcm_token")
+                .document(token)
+                .update("producersNotification", producersNotification)
+                .await()
+        } ?: {
+            Log.d(TAG, "No user logged in")
+            throw Exception("No user logged in")
+        }
     }
 
     companion object {

@@ -4,6 +4,7 @@ data class fcm_token(
     var userId: String = "",
     var token: String = "",
     var active: Boolean = false,
-    var createdAt: Long = 0
+    var createdAt: Long = 0,
+    var producersNotification: Boolean = true
 ) {
 }

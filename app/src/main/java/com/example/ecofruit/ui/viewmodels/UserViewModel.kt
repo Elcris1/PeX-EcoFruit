@@ -54,6 +54,12 @@ class UserViewModel(
         }
     }
 
+    fun setProducerNotificationPreference(token: String, producersNotification: Boolean) {
+        viewModelScope.launch {
+            userRepo.updateFcmTokenProducerPreference(token, producersNotification)
+        }
+    }
+
     fun resetUpdateState() {
         _updateState.value = RequestUiState.Idle()
     }
