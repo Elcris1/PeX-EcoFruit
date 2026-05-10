@@ -137,7 +137,7 @@ def on_message_created(event: firestore_fn.Event[firestore_fn.DocumentSnapshot |
 
         _send_multicast(
             tokens=tokens,
-            title=f"💬 {sender_name}",
+            title=f"{sender_name}",
             body=text[:100], 
             data={
                 "type": "new_message",
