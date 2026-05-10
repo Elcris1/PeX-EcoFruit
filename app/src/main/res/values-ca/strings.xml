@@ -139,6 +139,8 @@
     <string name="dark_theme_subtitle">Activar el tema fosc a l\'aplicacció</string>
     <string name="notifications">Notificacions</string>
     <string name="notifications_subtitle">Activar les notifiacions de l\'applicació</string>
+    <string name="producers_notifications">Notificacions de productors</string>
+    <string name="producers_notifications_subtitle">Rebre alertes dels productors que segueixes</string>
     <string name="notifications_permission_denied">Permís de notificacions denegat</string>
     <string name="language">Idioma</string>
     <string name="network">Xarxa</string>

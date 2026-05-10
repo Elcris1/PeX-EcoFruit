@@ -141,6 +141,8 @@
     <string name="dark_theme_subtitle">Activate the dark theme in the application</string>
     <string name="notifications">Notifications</string>
     <string name="notifications_subtitle">Enable the notifications for the app</string>
+    <string name="producers_notifications">Producer notifications</string>
+    <string name="producers_notifications_subtitle">Receive alerts from producers you follow</string>
     <string name="notifications_permission_denied">Notification permission denied</string>
     <string name="language">Language</string>
     <string name="language_spanish" translatable="false">Español</string>

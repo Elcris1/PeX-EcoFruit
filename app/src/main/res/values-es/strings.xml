@@ -138,6 +138,8 @@
     <string name="dark_theme_subtitle">Activar el modo oscuro en la aplicación</string>
     <string name="notifications">Notificaciones</string>
     <string name="notifications_subtitle">Activar las notificaciones de la aplicacion</string>
+    <string name="producers_notifications">Notificaciones de productores</string>
+    <string name="producers_notifications_subtitle">Recibir alertas de los productores que sigues</string>
     <string name="notifications_permission_denied">Permiso de notificaciones denegado</string>
     <string name="language">Idioma</string>
     <string name="network">Red</string>

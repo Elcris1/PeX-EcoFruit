@@ -16,12 +16,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,9 +35,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecofruit.ui.data.model.Settings
 import com.example.ecofruit.R
+import com.example.ecofruit.ui.viewmodels.UserViewModel
+import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 
 class SettingsActivity : ComponentActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +52,7 @@ class SettingsActivity : ComponentActivity() {
                 SettingsScreen(
                     settings  = settings,
                     viewModel = settingsViewModel,
+                    onProducersNotificationChange = userViewModel::setProducerNotificationPreference,
                     onBack    = { finish() }
                 )
 
@@ -68,6 +68,7 @@ class SettingsActivity : ComponentActivity() {
 fun SettingsScreen(
     settings: Settings,
     viewModel: SettingsViewModel = viewModel() ,
+    onProducersNotificationChange: (String, Boolean) -> Unit = { _, _ -> },
     onBack: () -> Unit,
 ) {
     var showResetDialog by remember { mutableStateOf(false) }
@@ -127,6 +128,19 @@ fun SettingsScreen(
                         subtitle    = stringResource(R.string.notifications_subtitle),
                         checked     = settings.notifications,
                         onCheckedChange = viewModel::setNotifications,
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SwitchPreferenceRow(
+                        icon        = Icons.Outlined.NotificationsActive,
+                        title       = stringResource(R.string.producers_notifications),
+                        subtitle    = stringResource(R.string.producers_notifications_subtitle),
+                        checked     = settings.producersNotification,
+                        onCheckedChange = { newValue ->
+                            viewModel.setProducersNotification(newValue)
+                            settings.fcmToken?.let {
+                                onProducersNotificationChange(it, newValue)
+                            }
+                        },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     DropdownPreferenceRow(
