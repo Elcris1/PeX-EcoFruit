@@ -1,10 +1,11 @@
 package com.example.ecofruit.ui.viewmodels
 
+import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.model.User
@@ -15,13 +16,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class AuthViewModel (
-    private val authRepo: AuthRepository = AuthRepository(),
-    private val userRepo: UserRepository = UserRepository.getInstance(),
-    private val settingsRepository: SettingsRepository
-) : ViewModel() {
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val authRepo = AuthRepository()
+    private val userRepo = UserRepository.getInstance()
+    private val settingsRepository = SettingsRepository.getInstance(application)
 
     private val auth = FirebaseAuth.getInstance()
 
@@ -184,10 +186,9 @@ class AuthViewModel (
     fun logout() {
         viewModelScope.launch {
             try {
-                settingsRepository.settingsFlow.collect { settings ->
-                    settings.fcmToken?.let {
-                        userRepo.updateFcmTokenStatus(settings.fcmToken, false)
-                    }
+                val settings = settingsRepository.settingsFlow.first()
+                settings.fcmToken?.let {
+                    userRepo.updateFcmTokenStatus(it, false)
                 }
             } catch (exception: Exception ) {
                 Log.d("AuthViewModel", "Error al actualizar estado del token FCM: ${exception.message}")

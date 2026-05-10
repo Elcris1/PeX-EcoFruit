@@ -40,7 +40,7 @@ object SettingsKeys {
 
 
 
-class SettingsRepository(private val context: Context) {
+class SettingsRepository (private val context: Context) {
 
     val settingsFlow: Flow<Settings> = context.settingsDataStore.data
         .catch { e ->
@@ -120,4 +120,15 @@ class SettingsRepository(private val context: Context) {
 
     /** Wipe all preferences back to defaults */
     suspend fun resetAll() = context.settingsDataStore.edit { it.clear() }
+
+    companion object {
+        @Volatile
+        private var INSTANCE: SettingsRepository? = null
+
+        fun getInstance(context: Context): SettingsRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: SettingsRepository(context.applicationContext).also { INSTANCE = it }
+            }
+        }
+    }
 }

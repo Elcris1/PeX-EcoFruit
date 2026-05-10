@@ -173,24 +173,37 @@ class UserRepository private constructor() {
     // ── FCM Token Management ──────────────────────────────────────────────────
 
     suspend fun saveFcmToken( token: String): Result<Unit> = runCatching {
-        auth.currentUser?: throw Exception("No user logged in")
+        Log.d(TAG, "Saving FCM token: $token")
 
-        val tokenModel = fcm_token(userId = _user.value!!.id, token = token, active = true)
-        usersCollection.document(_user.value!!.id)
-            .collection("fcm_token")
-            .document(token)
-            .set(tokenModel)
-            .await()
+        auth.currentUser?.let {
+            val userId = it.uid
+            val tokenModel = fcm_token(userId = userId, token = token, active = true, createdAt = System.currentTimeMillis()/1000)
+            usersCollection.document(userId)
+                .collection("fcm_token")
+                .document(token)
+                .set(tokenModel)
+                .await()
+        } ?: {
+            Log.d(TAG, "No user logged in")
+            throw Exception("No user logged in")
+        }
+
+
     }
 
     suspend fun updateFcmTokenStatus( token: String, active: Boolean): Result<Unit> = runCatching {
-        auth.currentUser?: throw Exception("No user logged in")
+        Log.d(TAG, "Updating FCM token status: $token, active: $active")
+        auth.currentUser?.let {
+            usersCollection.document(it.uid)
+                .collection("fcm_token")
+                .document(token)
+                .update("active", active)
+                .await()
+        } ?: {
+            Log.d(TAG, "No user logged in")
+            throw Exception("No user logged in")
+        }
 
-        usersCollection.document(_user.value!!.id)
-            .collection("fcm_token")
-            .document(token)
-            .update("active", active)
-            .await()
     }
 
     companion object {
