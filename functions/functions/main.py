@@ -19,13 +19,14 @@ set_global_options(max_instances=10)
 
 # Initialization
 if not firebase_admin._apps:
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
     firebase_admin.initialize_app()
- 
-logger = logging.getLogger(__name__)
+
 
 # utils
-def _get_active_tokens_for_user(user_id: str) -> list[str]:
-    db = firestore.client()
+def _get_active_tokens_for_user(user_id: str, db: firestore.Client) -> list[str]:
+    print(f"Fetching active FCM tokens for user: {user_id}")
     """Devuelve todos los FCM tokens activos de un usuario."""
     document_ref = db.collection("users").document(user_id)
     if not document_ref.get().exists:
@@ -35,11 +36,11 @@ def _get_active_tokens_for_user(user_id: str) -> list[str]:
     
     tokens_ref = (
         document_ref
-        .collection("fcm_tokens")
+        .collection("fcm_token")
         .where("active", "==", True)
         .stream()
     )
-    return [doc.to_dict().get("token") for doc in tokens_ref if doc.to_dict().get("token")]
+    return [doc.to_dict().get("token") for doc in tokens_ref]
 
 def _send_multicast(tokens: list[str], title: str, body: str, data: dict[str, Any]) -> Any:
     if not tokens:
@@ -67,12 +68,8 @@ def _send_multicast(tokens: list[str], title: str, body: str, data: dict[str, An
     logger.info("Trying to send FCM multicast message to %d tokens with title '%s'", len(tokens), title)
  
     # Use the correct Firebase Admin SDK function for sending multicast messages
-    response = messaging.send_multicast(message)
-    logger.info(
-        "FCM multicast: %d éxito, %d fallo",
-        response.success_count,
-        response.failure_count,
-    )
+    response = messaging.send_each_for_multicast(message)
+    print(f"FCM multicast exito: {response.success_count}, fallo: {response.failure_count}")
     return response
 
 # Listenners
@@ -87,7 +84,8 @@ def on_message_created(event: firestore_fn.Event[firestore_fn.DocumentSnapshot |
         return
 
     try:
-        logger.info("Conversation updated: %s", event.params)
+        logger.info(f"Conversation created: %s", event.params)
+        print(f"Conversation created: {event.params}, {event.data.to_dict()}")
         db = firestore.client()
         message: dict[str, Any] = event.data.to_dict()
         sender_id: str = message.get("senderId", "")
@@ -110,25 +108,32 @@ def on_message_created(event: firestore_fn.Event[firestore_fn.DocumentSnapshot |
         
         conversation_doc = db.collection("conversations").document(conversation_id).get()
         if not conversation_doc.exists:
+            print(f"Conversation {conversation_id} does not exist.")
             logger.warning(f"Conversation {conversation_id} does not exist.")
             return
         
         conversation: dict[str, Any] = conversation_doc.to_dict() or {}
         participants: list[str] = conversation.get("participantsId", [])
         receiverId = next((uid for uid in participants if uid != sender_id), None)
+        print(f"Participants in conversation: {participants}, sender: {sender_id}, receiver: {receiverId}\n{conversation}")
 
         if not receiverId:
+            print(f"No receiver found in conversation {conversation_id} for sender {sender_id}.")
             logger.warning(f"No receiver found in conversation {conversation_id} for sender {sender_id}.")
             return
         
-        tokens = _get_active_tokens_for_user(receiverId)
-        if not tokens:
+        tokens = _get_active_tokens_for_user(receiverId, db)
+        print(f"Active FCM tokens for user {receiverId}: {tokens}")
+        if len(tokens) == 0:
+            print(f"No active FCM tokens found for user {receiverId}.")
             logger.info(f"No active FCM tokens found for user {receiverId}.")
             return
         
         sender_doc = db.collection("users").document(sender_id).get()
         sender_dict = sender_doc.to_dict() or {}
         sender_name: str = sender_dict.get("name", "UserName")
+
+        print(f"Sending notification to user {receiverId} from {sender_name} with text: {text}")
 
         _send_multicast(
             tokens=tokens,
@@ -141,7 +146,9 @@ def on_message_created(event: firestore_fn.Event[firestore_fn.DocumentSnapshot |
                 "screen": "chat",
             },
         )
+        print(f"Notification sent to user {receiverId} with tokens: {tokens}")
     except Exception as e:
+        print(f"Error processing notifications: {str(e)}")
         logger.error(f"Error processing notification: {str(e)}", exc_info=True)
 
 
