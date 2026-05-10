@@ -62,6 +62,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
             EcoFruitTheme (darkTheme = settings.darkTheme) {
@@ -102,6 +103,29 @@ fun MainScreen(
     val currentDestination = navBackStackEntry?.destination
     val context = LocalContext.current
 
+    val requestNotificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (!granted) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.notifications_permission_denied),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     val launchMultiplePermissions = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissionMaps ->
@@ -129,7 +153,7 @@ fun MainScreen(
     val editProfileState by userViewModel.updateState.collectAsStateWithLifecycle()
 
     LaunchedEffect(user) {
-        user?.let { it ->
+        user?.let {
             chatViewModel.getConversationsFromUser(it.id)
             productsViewModel.loadHomePageRealtime(it)
         }

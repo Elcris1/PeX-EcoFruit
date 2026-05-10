@@ -138,6 +138,7 @@
     <string name="dark_theme_subtitle">Activar el modo oscuro en la aplicación</string>
     <string name="notifications">Notificaciones</string>
     <string name="notifications_subtitle">Activar las notificaciones de la aplicacion</string>
+    <string name="notifications_permission_denied">Permiso de notificaciones denegado</string>
     <string name="language">Idioma</string>
     <string name="network">Red</string>
     <string name="only_wifi">Solo Wi-Fi</string>
