@@ -15,6 +15,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -41,13 +42,20 @@ class MessagingService: FirebaseMessagingService() {
         }
 
         // Verificar si contiene notificación
-        remoteMessage.notification?.let {
-            Log.d(TAG, "Notification title: ${it.title}")
-            Log.d(TAG, "Notification body: ${it.body}")
-            sendNotification(messageBody = it.body ?: "", title = it.title ?: getString(R.string.app_name) )
-        }
+        remoteMessage.notification?.let { msg ->
+            Log.d(TAG, "Notification title: ${msg.title}")
+            Log.d(TAG, "Notification body: ${msg.body}")
+            CoroutineScope(Dispatchers.IO).launch {
+                settingsRepo.settingsFlow.firstOrNull()?.let { settings ->
+                    if (settings.notifications) {
+                        sendNotification(messageBody = msg.body ?: "", title = msg.title ?: getString(R.string.app_name) )
+                    } else {
+                        Log.d(TAG, "Notificaciones desactivadas")
+                    }
+                }
 
-        Log.d(TAG, "╚════════════════════════════════════╝")
+            }
+        }
     }
     // [END receive_message]
 
@@ -66,11 +74,15 @@ class MessagingService: FirebaseMessagingService() {
         // Guardar el token de forma segura
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                var producerNotifications = false
                 // Obtener el token anterior (sin usar collect que es infinito)
-                settingsRepo.settingsFlow.firstOrNull()?.fcmToken?.let { oldToken ->
-                    Log.d(TAG, "Token anterior encontrado: $oldToken")
-                    userRepo.updateFcmTokenStatus(oldToken, false)
-                    Log.d(TAG, "Token anterior marcado como inactivo")
+                settingsRepo.settingsFlow.firstOrNull()?.let {
+                    it.fcmToken?.let { oldToken ->
+                        Log.d(TAG, "Token anterior encontrado: $oldToken")
+                        userRepo.updateFcmTokenStatus(oldToken, false)
+                        Log.d(TAG, "Token anterior marcado como inactivo")
+                    }
+                    producerNotifications = it.producersNotification
                 }
 
                 // Guardar el nuevo token localmente
@@ -78,7 +90,7 @@ class MessagingService: FirebaseMessagingService() {
                 Log.d(TAG, "Token guardado localmente")
 
                 // Guardar el token en el servidor
-                userRepo.saveFcmToken(token)
+                userRepo.saveFcmToken(token, producerNotifications)
                 Log.d(TAG, "Token guardado en servidor")
 
             } catch (e: Exception) {
