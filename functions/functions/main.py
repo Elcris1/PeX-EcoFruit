@@ -49,7 +49,7 @@ def _get_active_tokens_for_user(db: firestore.Client, user_id: str, check_produc
     )
     
     if check_producers_notifications:
-        ref = (ref.where("producersNotifications", "==", True))
+        ref = (ref.where("producersNotification", "==", True))
 
     return [doc.to_dict().get("token") for doc in ref.stream()]
 
@@ -103,11 +103,7 @@ def on_message_created(event: firestore_fn.Event[firestore_fn.DocumentSnapshot |
         text: str = message.get("text", "Te ha enviado un mensaje.")
         conversation_id: str = event.params.get("conversation_id", "")
 
-        _create_audit_log(db, "message_created", {
-                "conversation_id": conversation_id,
-                "sender_id": sender_id,
-                "text": text,
-            })
+       
 
         if not sender_id:
             logger.warning("Message does not have a senderId.")
@@ -153,6 +149,11 @@ def on_message_created(event: firestore_fn.Event[firestore_fn.DocumentSnapshot |
                 "screen": "chat",
             },
         )
+        _create_audit_log(db, "message_created", {
+                "conversation_id": conversation_id,
+                "sender_id": sender_id,
+                "text": text,
+            })
         print(f"Notification sent to user {receiverId} with tokens: {tokens}")
     except Exception as e:
         print(f"Error processing notifications: {str(e)}")
@@ -171,15 +172,41 @@ def on_product_created(event: firestore_fn.Event[firestore.DocumentSnapshot]) ->
     price: float = product.get("price", 0.0)
     timestamp: int = product.get("timestamp", 0)
     user_id: str = product.get("userId", "")
+    user_name: str = product.get("userName", "Un productor")
 
     db = firestore.client()
-    data = db.collection("users").where("following", "array_contains", user_id).recursive().stream()
-    for vl in data: 
-        print(vl.to_dict())
+    print(f"Looking for users following {user_id} to notify about new product {product_id}")
+    users_collection_group = db.collection_group("users").where(field_path="following", op_string="array_contains", value=user_id).select(["id"])
+    users_collection_group._all_descendants = True
 
-# initialize_app()
-#
-#
-# @https_fn.on_request()
-# def on_request_example(req: https_fn.Request) -> https_fn.Response:
-#     return https_fn.Response("Hello world!")
+    tokens = []
+    for doc in users_collection_group.stream(): 
+        tokens.extend(_get_active_tokens_for_user(db, doc.to_dict().get("id"), check_producers_notifications=True))
+
+    print(f"Active FCM tokens to notify about new product {product_id}: {tokens}")
+    if len(tokens) == 0:
+        print(f"No active FCM tokens found for followers of user {user_id}.")
+        logger.info(f"No active FCM tokens found for followers of user {user_id}.")
+        return
+    
+    print(f"Sending notification about new product {product_id} from {user_name} to followers with tokens: {tokens}")
+    _send_multicast(
+        tokens=tokens,
+        title=f"New product from {user_name}",
+        body=f"{name} from {user_name} is now available!"[:100], 
+        data={
+            "type": "new_product",
+            # event.params uses the path variable name 'conversation_id'
+            "product_id": product_id,
+            "screen": "view_product",
+        },
+    )
+    print(f"Notification sent about new product {product_id} from {user_name} to followers")
+
+    _create_audit_log(db, "product_created", {
+        "product_id": product_id,
+        "name": name,
+        "price": price,
+        "user_id": user_id,
+    })
+
