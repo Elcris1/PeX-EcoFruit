@@ -1,7 +1,6 @@
 package com.example.ecofruit.ui.viewmodels
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
@@ -17,7 +16,7 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(
     app: Application
 ): AndroidViewModel(app) {
-    private val repo = SettingsRepository(app)
+    private val repo = SettingsRepository.getInstance(app)
 
     val settings: StateFlow<Settings> = repo.settingsFlow
         .stateIn(
@@ -50,6 +49,7 @@ class SettingsViewModel(
     // ── General ───────────────────────────────────────────────────────────────
     fun setDarkTheme(v: Boolean)         = viewModelScope.launch { repo.setDarkTheme(v) }
     fun setNotifications(v: Boolean)     = viewModelScope.launch { repo.setNotifications(v) }
+    fun setProducersNotification(v: Boolean) = viewModelScope.launch { repo.setProducersNotification(v) }
     fun setLanguage(v: String)           = viewModelScope.launch { repo.setLanguage(v) }
 
     fun resetAll()                       = viewModelScope.launch { repo.resetAll() }

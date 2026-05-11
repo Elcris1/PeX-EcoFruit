@@ -1,7 +1,6 @@
 package com.example.ecofruit.ui.data.repository
 
 import android.content.Context
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
@@ -32,14 +31,18 @@ object SettingsKeys {
     // General
     val DARK_THEME          = booleanPreferencesKey("dark_theme")
     val NOTIFICATIONS       = booleanPreferencesKey("notifications")
+    val PRODUCERS_NOTIFICATION = booleanPreferencesKey("producers_notification")
     val LANGUAGE            = stringPreferencesKey("language")         // "es" | "en" | "ca"
+
+    // Messaging
+    val FCM_TOKEN           = stringPreferencesKey("fcm_token")
 }
 
 
 
-class SettingsRepository(private val context: Context) {
+class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
-    val settingsFlow: Flow<Settings> = context.settingsDataStore.data
+    val settingsFlow: Flow<Settings> = dataStore.data
         .catch { e ->
             if (e is IOException) emit(emptyPreferences())
             else throw e
@@ -56,56 +59,81 @@ class SettingsRepository(private val context: Context) {
                 preloadImages = prefs[SettingsKeys.PRELOAD_IMAGES] ?: true,
                 darkTheme = prefs[SettingsKeys.DARK_THEME]?: false,
                 notifications = prefs[SettingsKeys.NOTIFICATIONS] ?: true,
+                producersNotification = prefs[SettingsKeys.PRODUCERS_NOTIFICATION] ?: true,
                 language = prefs[SettingsKeys.LANGUAGE] ?: "es",
+                fcmToken = prefs[SettingsKeys.FCM_TOKEN],
             )
         }
 
     // ── Individual update helpers ──────────────────────────────────────────────
 
-    suspend fun setWifiOnlyMode(value: Boolean) = context.settingsDataStore.edit {
+    suspend fun setWifiOnlyMode(value: Boolean) = dataStore.edit {
         it[SettingsKeys.WIFI_ONLY_MODE] = value
     }
 
-    suspend fun setDataSaver(value: Boolean) = context.settingsDataStore.edit {
+    suspend fun setDataSaver(value: Boolean) = dataStore.edit {
         it[SettingsKeys.DATA_SAVER] = value
     }
 
-    suspend fun setAutoSync(value: Boolean) = context.settingsDataStore.edit {
+    suspend fun setAutoSync(value: Boolean) = dataStore.edit {
         it[SettingsKeys.AUTO_SYNC] = value
     }
 
-    suspend fun setSyncFrequency(value: String) = context.settingsDataStore.edit {
+    suspend fun setSyncFrequency(value: String) = dataStore.edit {
         it[SettingsKeys.SYNC_FREQUENCY] = value
     }
 
-    suspend fun setConnectionTimeout(value: Int) = context.settingsDataStore.edit {
+    suspend fun setConnectionTimeout(value: Int) = dataStore.edit {
         it[SettingsKeys.CONNECTION_TIMEOUT] = value
     }
 
-    suspend fun setMaxCacheSizeMb(value: Int) = context.settingsDataStore.edit {
+    suspend fun setMaxCacheSizeMb(value: Int) = dataStore.edit {
         it[SettingsKeys.MAX_CACHE_SIZE_MB] = value
     }
 
-    suspend fun setOfflineMode(value: Boolean) = context.settingsDataStore.edit {
+    suspend fun setOfflineMode(value: Boolean) = dataStore.edit {
         it[SettingsKeys.OFFLINE_MODE] = value
     }
 
-    suspend fun setPreloadImages(value: Boolean) = context.settingsDataStore.edit {
+    suspend fun setPreloadImages(value: Boolean) = dataStore.edit {
         it[SettingsKeys.PRELOAD_IMAGES] = value
     }
 
-    suspend fun setDarkTheme(value: Boolean) = context.settingsDataStore.edit {
+    suspend fun setDarkTheme(value: Boolean) = dataStore.edit {
         it[SettingsKeys.DARK_THEME] = value
     }
 
-    suspend fun setNotifications(value: Boolean) = context.settingsDataStore.edit {
+    suspend fun setNotifications(value: Boolean) = dataStore.edit {
         it[SettingsKeys.NOTIFICATIONS] = value
     }
 
-    suspend fun setLanguage(value: String) = context.settingsDataStore.edit {
+    suspend fun setProducersNotification(value: Boolean) = dataStore.edit {
+        it[SettingsKeys.PRODUCERS_NOTIFICATION] = value
+    }
+
+    suspend fun setLanguage(value: String) = dataStore.edit {
         it[SettingsKeys.LANGUAGE] = value
     }
 
+    suspend fun setFcmToken(value: String?) = dataStore.edit {
+        if (value == null) {
+            it.remove(SettingsKeys.FCM_TOKEN)
+        } else {
+            it[SettingsKeys.FCM_TOKEN] = value
+        }
+    }
+
     /** Wipe all preferences back to defaults */
-    suspend fun resetAll() = context.settingsDataStore.edit { it.clear() }
+    suspend fun resetAll() = dataStore.edit { it.clear() }
+
+    companion object {
+        @Volatile
+        private var INSTANCE: SettingsRepository? = null
+
+        fun getInstance(context: Context): SettingsRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: SettingsRepository(context.applicationContext.settingsDataStore).also { INSTANCE = it }
+            }
+        }
+    }
 }

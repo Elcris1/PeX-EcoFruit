@@ -20,28 +20,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -54,18 +45,18 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,14 +69,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.example.ecofruit.R
-import com.example.ecofruit.ui.activities.MainScreen
 import com.example.ecofruit.ui.components.AnimatedCard
 import com.example.ecofruit.ui.components.AnimatedCheck
 import com.example.ecofruit.ui.components.CustomTextField
@@ -95,29 +80,28 @@ import com.example.ecofruit.ui.components.OutlinedGeneralButton
 import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
 import com.example.ecofruit.ui.data.constants.toDisplayNameRes
+import com.example.ecofruit.ui.data.model.LocationData
 import com.example.ecofruit.ui.data.model.Product
+import com.example.ecofruit.ui.data.model.RequestUiState
+import com.example.ecofruit.ui.managers.LocationHelper
 import com.example.ecofruit.ui.theme.EcoFruitTheme
-import org.maplibre.android.MapLibre
-import org.maplibre.android.camera.CameraPosition
+import com.example.ecofruit.ui.viewmodels.ProductViewModel
+import kotlinx.coroutines.launch
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
-import org.maplibre.android.maps.MapView
-import org.maplibre.android.maps.Style
-import org.maplibre.android.style.layers.CircleLayer
-import org.maplibre.android.style.layers.PropertyFactory
-import org.maplibre.android.style.layers.SymbolLayer
-import org.maplibre.android.style.sources.GeoJsonSource
-import org.maplibre.geojson.Feature
-import org.maplibre.geojson.Point
 
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun SellScreen(
-    onPublish: (Product) -> Unit = {}
+    productViewModel: ProductViewModel,
+    onPublish: (Product, List<Uri>) -> Unit = { _, _ -> }
 ) {
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val addProductState by productViewModel.addProductState.collectAsState()
+
     //TAB BAR VARIABLES
     var page by mutableIntStateOf(0)
 
@@ -158,14 +142,14 @@ fun SellScreen(
     var images by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
     //Screen 2:
-    var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
+    var selectedLocation by remember { mutableStateOf<LocationData?>(null) }
 
     fun createProduct(): Product {
         return Product(
             name = name,
             description = description,
             imagesUrl = emptyList(),
-            price = price.toDouble(),
+            price = try { price.toDouble() } catch (e: Exception) { 0.0 },
             unit = selectedUnit,
             isOrganic = isOrganic,
             type = selectedCategory,
@@ -198,6 +182,12 @@ fun SellScreen(
 
     }
 
+    LaunchedEffect(addProductState) {
+        if (addProductState is RequestUiState.Success) {
+            page = 3
+        }
+    }
+
 
     Scaffold(
         topBar = {
@@ -215,8 +205,7 @@ fun SellScreen(
                     }
                 },
                 onPublish = {
-                    onPublish(createProduct())
-                    page += 1
+                    onPublish(createProduct(), images)
                 }
             )
         },
@@ -226,56 +215,88 @@ fun SellScreen(
             modifier = Modifier.padding(innerPadding).padding(horizontal = 10.dp),
             color = MaterialTheme.colorScheme.background
         ) {
-            when (page) {
-                0 -> InitialSellingScreen(
-                    name = name,
-                    onNameChange = {
-                        name = it
-                        nameError = null
-                                   },
-                    nameError = nameError,
-
-                    description = description,
-                    onDescriptionChange = {
-                        description = it
-                        descriptionError = null
-                                          },
-                    descriptionError = descriptionError,
-
-                    selectedCategory = selectedCategory,
-                    onCategoryChange = { selectedCategory = it },
-                    categoryExpanded = categoryExpanded,
-                    onCategoryExpandedChange = { categoryExpanded = it },
-
-                    isOrganic = isOrganic,
-                    onOrganicChange = { isOrganic = it },
-
-                    price = price,
-                    onPriceChange = {
-                        price = it
-                        priceError= null
-                                    },
-                    priceError = priceError,
-
-                    selectedUnit = selectedUnit,
-                    onUnitChange = { selectedUnit = it },
-                    unitExpanded = unitExpanded,
-                    onUnitExpandedChange = { unitExpanded = it }
-                )
-                1 -> SelectImagesScreen(
-                    images = images,
-                    onImageChange = {images = it}
-                )
-                2 -> PublishSellingScreen(
-                    selectedLocation = selectedLocation,
-                    onLocationSelected = {selectedLocation = it}
-                )
-                3 -> SuccessScreen(
-                    onNewProduct = {
-                        page = 0
-                        clearValues()
+            when (addProductState) {
+                is RequestUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(Modifier.height(16.dp))
+                            Text(text = stringResource(R.string.sell_publishing_product))
+                        }
                     }
-                )
+                }
+                is RequestUiState.Error -> {
+                    val errorMessage = (addProductState as RequestUiState.Error).message
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = errorMessage, color = colorScheme.error)
+                            Spacer(Modifier.height(16.dp))
+                            GeneralButton(text = stringResource(R.string.retry), modifier=Modifier.fillMaxSize(0.8f), onClick = {
+                                onPublish(createProduct(), images)
+                            })
+                        }
+                    }
+                }
+                else -> {
+                    when (page) {
+                        0 -> InitialSellingScreen(
+                            name = name,
+                            onNameChange = {
+                                name = it
+                                nameError = null
+                            },
+                            nameError = nameError,
+
+                            description = description,
+                            onDescriptionChange = {
+                                description = it
+                                descriptionError = null
+                            },
+                            descriptionError = descriptionError,
+
+                            selectedCategory = selectedCategory,
+                            onCategoryChange = { selectedCategory = it },
+                            categoryExpanded = categoryExpanded,
+                            onCategoryExpandedChange = { categoryExpanded = it },
+
+                            isOrganic = isOrganic,
+                            onOrganicChange = { isOrganic = it },
+
+                            price = price,
+                            onPriceChange = {
+                                price = it
+                                priceError= null
+                            },
+                            priceError = priceError,
+
+                            selectedUnit = selectedUnit,
+                            onUnitChange = { selectedUnit = it },
+                            unitExpanded = unitExpanded,
+                            onUnitExpandedChange = { unitExpanded = it }
+                        )
+                        1 -> SelectImagesScreen(
+                            images = images,
+                            onImageChange = {images = it}
+                        )
+                        2 -> PublishSellingScreen(
+                            selectedLocation = selectedLocation,
+                            onLocationSelected = { latLng ->
+                                scope.launch {
+                                    val locData = LocationHelper.reverseGeocode(context, latLng.latitude, latLng.longitude)
+                                    selectedLocation = locData ?: LocationData(latitude = latLng.latitude, longitude = latLng.longitude)
+                                }
+                            }
+                        )
+                        3 -> SuccessScreen(
+                            onNewProduct = {
+                                page = 0
+                                clearValues()
+                                // No necesitamos hacer nada especial para resetear el estado del VM aquí 
+                                // ya que volver a Idle se suele manejar al iniciar una nueva operación.
+                            }
+                        )
+                    }
+                }
             }
         }
 
@@ -423,7 +444,7 @@ private fun InitialSellingScreen(
                     expanded = categoryExpanded,
                     onDismissRequest = { onCategoryExpandedChange(false)}
                 ) {
-                    ProductType.values().forEach { type ->
+                    ProductType.entries.forEach { type ->
                         DropdownMenuItem(
                             text = { Text(stringResource(type.toDisplayNameRes())) },
                             onClick = {
@@ -479,7 +500,7 @@ private fun InitialSellingScreen(
                     expanded = unitExpanded,
                     onDismissRequest = { onUnitExpandedChange(false) }
                 ) {
-                    ProductUnit.values().forEach {
+                    ProductUnit.entries.forEach {
                         DropdownMenuItem(
                             text = { Text(stringResource(it.toDisplayNameRes())) },
                             onClick = {
@@ -604,7 +625,7 @@ private fun SelectImagesScreen(
 
 @Composable
 private fun PublishSellingScreen(
-    selectedLocation: LatLng? = null,
+    selectedLocation: LocationData? = null,
     onLocationSelected: (LatLng) -> Unit = {}
 ) {
 
@@ -619,7 +640,7 @@ private fun PublishSellingScreen(
             mapLibreMap = mapLibreMap,
             onMapLibreMapChange = {mapLibreMap = it},
 
-            selectedLocation = selectedLocation,
+            selectedLocation = selectedLocation?.let { LatLng(it.latitude, it.longitude) },
             onLocationSelected = onLocationSelected,
 
         )
@@ -662,21 +683,5 @@ private fun SuccessScreen(
             )
             Spacer(Modifier.height(10.dp))
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LightSell() {
-    EcoFruitTheme(darkTheme = false) {
-        SellScreen()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DarkSell() {
-    EcoFruitTheme(darkTheme = true) {
-        SellScreen()
     }
 }

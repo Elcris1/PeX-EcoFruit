@@ -14,5 +14,9 @@ data class Settings(
     // General
     val darkTheme:          Boolean = false,
     val notifications:      Boolean = true,
+    val producersNotification: Boolean = true,
     val language:           String  = "es",
+
+    // Messaging
+    val fcmToken:           String? = null,
 )

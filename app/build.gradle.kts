@@ -1,15 +1,12 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.ecofruit"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.ecofruit"
@@ -43,6 +40,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation(libs.ui)
+    implementation(libs.androidx.tv.material)
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
     implementation(composeBom)
     implementation(libs.androidx.core.ktx)
@@ -66,8 +64,28 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation("androidx.compose.foundation:foundation") // HorizontalPager
 
     //mapLibre
     implementation(libs.maplibre.compose)
     implementation("com.google.accompanist:accompanist-permissions:0.36.0")
+
+    // Location
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    //Firebase:
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation(libs.firebase.storage)
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
+
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+
+    // Credential Manager (API moderna, recomendada)
+    implementation("androidx.credentials:credentials:1.2.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.2.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
 }

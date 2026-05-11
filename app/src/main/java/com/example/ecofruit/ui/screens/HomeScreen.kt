@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,112 +46,229 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.ecofruit.ui.components.UserImage
-import com.example.ecofruit.ui.data.mock.ChatMockData
-import com.example.ecofruit.ui.data.mock.MockData
-import com.example.ecofruit.ui.data.mock.ProductsMockData.allProducts
 import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.constants.toDisplayNameRes
-
-
+import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.theme.EcoFruitTheme
-//TODO: Cambiar el unit mostrado en el producto por los valores locales
-//TODO: poder clicar al perfil del usuario para visitarlo
-//TODO: poder clicar al producto para verlo
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     currentUser: User?,
-    recommendedProducts: List<Product> = emptyList(),
-    followedProducerProducts: List<Product> = emptyList(),
-    favouriteProducts: List<Product> = emptyList(),
-    onProductClick: (Product) -> Unit = {},
-    onCartClick: () -> Unit = {},
-    onNotificationsClick: () -> Unit = {},
+    recommendedProductsState: RequestUiState<List<Product>>,
+    followedProducerProductsState: RequestUiState<List<Product>>,
+    favouriteProductsState: RequestUiState<List<Product>>,
+    onProductClick: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
+    onFavouriteClick: (Product, String, Boolean) -> Unit = {_, _, _ ->},
 ) {
-        Scaffold(
-            topBar = {
-                HomeTopBar(
-                    onCartClick = onCartClick,
-                    onNotificationsClick = onNotificationsClick,
-                )
-            },
-            containerColor = MaterialTheme.colorScheme.background,
-        ) { innerPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(0.dp),
-            ) {
-                // ── Search bar ──
+    Scaffold(
+        topBar = {
+            HomeTopBar(
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentPadding = PaddingValues(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+        ) {
+            item {
+                SearchBar(onClick = onSearchClick)
+            }
+
+            if (currentUser != null) {
+                // ── Sección: Productos Recomendados ──
                 item {
-                    SearchBar(onClick = onSearchClick)
+                    ProductSectionStateWrapper(
+                        title = stringResource(R.string.home_recommended_header),
+                        subtitle = stringResource(R.string.home_recomended_subheader),
+                        icon = Icons.Outlined.Star,
+                        state = recommendedProductsState,
+                        onProductClick = onProductClick,
+                        onFavouriteClick = onFavouriteClick,
+                        currentUser = currentUser
+                    )
                 }
 
-                // ── Banner / hero ──
-                //item {
-                  //  SeasonBanner()
-                //}
-                if (currentUser!= null) {
-                    // ── Sección: Productos Recomendados ──
-                    item {
-                        ProductSection(
-                            title = stringResource(R.string.home_recommended_header),
-                            subtitle = stringResource(R.string.home_recomended_subheader),
-                            icon = Icons.Outlined.Star,
-                            products = recommendedProducts,
-                            onProductClick = onProductClick,
-                            currentUser = currentUser
-                        )
-                    }
+                item { SectionDivider() }
 
-                    // ── Divider ──
-                    item { SectionDivider() }
-
-                    // ── Sección: Productores Seguidos ──
-                    item {
-                        FollowedProducersSection(
-                            producerProducts = followedProducerProducts,
-                            onProductClick = onProductClick,
-                            currentUser = currentUser
-                        )
-                    }
-
-                    // ── Divider ──
-                    item { SectionDivider() }
-
-                    // ── Sección: Favoritos ──
-                    item {
-                        ProductSection(
-                            title = stringResource(R.string.home_favourite_header),
-                            subtitle = stringResource(R.string.home_favourite_subheader),
-                            icon = Icons.Filled.Favorite,
-                            iconTint = MaterialTheme.colorScheme.error,
-                            products = favouriteProducts,
-                            onProductClick = onProductClick,
-                            currentUser = currentUser
-                        )
-                    }
+                // ── Sección: Productores Seguidos ──
+                item {
+                    FollowedProducersSectionStateWrapper(
+                        state = followedProducerProductsState,
+                        onProductClick = onProductClick,
+                        onFavouriteClick = onFavouriteClick,
+                        currentUser = currentUser
+                    )
                 }
 
+                item { SectionDivider() }
+
+                // ── Sección: Favoritos ──
+                item {
+                    ProductSectionStateWrapper(
+                        title = stringResource(R.string.home_favourite_header),
+                        subtitle = stringResource(R.string.home_favourite_subheader),
+                        icon = Icons.Filled.Favorite,
+                        iconTint = MaterialTheme.colorScheme.error,
+                        state = favouriteProductsState,
+                        onProductClick = onProductClick,
+                        onFavouriteClick = onFavouriteClick,
+                        currentUser = currentUser
+                    )
+                }
             }
         }
-
+    }
 }
 
-// ─────────────────────────────────────────────
-//  Top Bar
-// ─────────────────────────────────────────────
+@Composable
+private fun ProductSectionStateWrapper(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    currentUser: User,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
+    state: RequestUiState<List<Product>>,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit
+) {
+    when (state) {
+        is RequestUiState.Loading -> {
+            LoadingSection(title, subtitle, icon, iconTint)
+        }
+        is RequestUiState.Success -> {
+            ProductSection(
+                title = title,
+                subtitle = subtitle,
+                icon = icon,
+                currentUser = currentUser,
+                iconTint = iconTint,
+                products = state.data,
+                onProductClick = onProductClick,
+                onFavouriteClick = onFavouriteClick
+            )
+        }
+        is RequestUiState.Error -> {
+            // Mostramos el header incluso con error
+            SectionHeader(
+                title = title,
+                subtitle = subtitle,
+                icon = icon,
+                iconTint = iconTint,
+                itemCount = 0,
+                expanded = false,
+                onToggle = {}
+            )
+            Text(
+                text = state.message,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+        else -> {
+             SectionHeader(
+                title = title,
+                subtitle = subtitle,
+                icon = icon,
+                iconTint = iconTint,
+                itemCount = 0,
+                expanded = false,
+                onToggle = {}
+            )
+        }
+    }
+}
+
+@Composable
+private fun FollowedProducersSectionStateWrapper(
+    state: RequestUiState<List<Product>>,
+    currentUser: User,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit
+) {
+    val title = stringResource(R.string.home_your_producers)
+    val subtitle = stringResource(R.string.home_producers_news)
+    val icon = Icons.Outlined.Person
+
+    when (state) {
+        is RequestUiState.Loading -> {
+            LoadingSection(
+                title,
+                subtitle,
+                icon,
+                MaterialTheme.colorScheme.primary
+            )
+        }
+        is RequestUiState.Success -> {
+            FollowedProducersSection(
+                producerProducts = state.data,
+                onProductClick = onProductClick,
+                currentUser = currentUser,
+                onFavouriteClick = onFavouriteClick
+            )
+        }
+        is RequestUiState.Error -> {
+            SectionHeader(
+                title = title,
+                subtitle = subtitle,
+                icon = icon,
+                itemCount = 0,
+                expanded = false,
+                onToggle = {}
+            )
+            Text(
+                text = state.message,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+        else -> {
+            SectionHeader(
+                title = title,
+                subtitle = subtitle,
+                icon = icon,
+                itemCount = 0,
+                expanded = false,
+                onToggle = {}
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoadingSection(title: String, subtitle: String, icon: ImageVector, iconTint: Color) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 10.dp)) {
+        SectionHeader(
+            title = title,
+            subtitle = subtitle,
+            icon = icon,
+            iconTint = iconTint,
+            itemCount = 0,
+            expanded = false,
+            onToggle = {}
+        )
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(modifier = Modifier.size(30.dp), strokeWidth = 2.dp)
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeTopBar(
-    onCartClick: () -> Unit,
-    onNotificationsClick: () -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -173,10 +291,6 @@ private fun HomeTopBar(
         ),
     )
 }
-
-// ─────────────────────────────────────────────
-//  Search Bar
-// ─────────────────────────────────────────────
 
 @Composable
 private fun SearchBar(onClick: () -> Unit) {
@@ -210,66 +324,6 @@ private fun SearchBar(onClick: () -> Unit) {
     }
 }
 
-// ─────────────────────────────────────────────
-//  Season Banner
-// ─────────────────────────────────────────────
-
-@Composable
-private fun SeasonBanner() {
-    val gradient = Brush.horizontalGradient(
-        listOf(
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.secondary,
-        )
-    )
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(gradient)
-            .padding(horizontal = 20.dp, vertical = 18.dp),
-    ) {
-        Column {
-            Text(
-                text = "Temporada de primavera 🌸",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "Frutas y verduras frescas\nrecién cosechadas",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary,
-            )
-            Spacer(Modifier.height(12.dp))
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.18f),
-            ) {
-                Text(
-                    text = "Ver novedades →",
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-        }
-        // Decorative emoji, top-right
-        Text(
-            text = "🥦🍓🥕",
-            fontSize = 36.sp,
-            modifier = Modifier.align(Alignment.CenterEnd),
-        )
-    }
-}
-
-// ─────────────────────────────────────────────
-//  Generic product section
-// ─────────────────────────────────────────────
-
 private const val COLLAPSED_ITEM_COUNT = 4
 
 @Composable
@@ -280,7 +334,8 @@ private fun ProductSection(
     currentUser: User,
     iconTint: Color = MaterialTheme.colorScheme.primary,
     products: List<Product>,
-    onProductClick: (Product) -> Unit,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -305,20 +360,28 @@ private fun ProductSection(
             label = "product_section_$title",
         ) { isExpanded ->
             if (isExpanded) {
-                // Grid layout when expanded
                 ExpandedProductGrid(
                     products = products,
                     onProductClick = onProductClick,
                     currentUser = currentUser,
+                    onFavouriteClick = onFavouriteClick
                 )
             } else {
-                // Horizontal scroll when collapsed
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(items = displayed, key = { it.id }) { product ->
-                        ProductCard(product = product, onClick = { onProductClick(product) }, currentUserId = currentUser.id)
+                if (products.isNotEmpty()) {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(items = displayed, key = { it.id }) { product ->
+                            ProductCard(
+                                product = product, 
+                                onProductClick = { onProductClick(product.id) }, 
+                                currentUserId = currentUser.id, 
+                                onFavouriteClick = { isFavourite ->
+                                    onFavouriteClick(product, currentUser.id, isFavourite)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -326,15 +389,12 @@ private fun ProductSection(
     }
 }
 
-// ─────────────────────────────────────────────
-//  Followed producers section
-// ─────────────────────────────────────────────
-
 @Composable
 private fun FollowedProducersSection(
     producerProducts: List<Product>,
     currentUser: User,
-    onProductClick: (Product) -> Unit,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -364,29 +424,31 @@ private fun FollowedProducersSection(
                     onProductClick = onProductClick,
                     showProducerBadge = true,
                     currentUser = currentUser,
-                    isFollowing = true
+                    isFollowing = true,
+                    onFavouriteClick = onFavouriteClick
                 )
             } else {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(items = displayed, key = { it.id }) { pp ->
-                        ProducerProductCard(
-                            producerProduct = pp,
-                            onClick = { onProductClick(pp) },
-                            currentUser = currentUser
-                        )
+                if (producerProducts.isNotEmpty()) {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(items = displayed, key = { it.id }) { pp ->
+                            ProducerProductCard(
+                                producerProduct = pp,
+                                onClick = { onProductClick(pp.id) },
+                                currentUser = currentUser,
+                                onFavouriteClick = { isFavourite ->
+                                    onFavouriteClick(pp, currentUser.id, isFavourite)
+                                }
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
-
-// ─────────────────────────────────────────────
-//  Section header with "ver más" button
-// ─────────────────────────────────────────────
 
 @Composable
 private fun SectionHeader(
@@ -404,7 +466,6 @@ private fun SectionHeader(
             .padding(start = 16.dp, end = 8.dp, top = 20.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Icon bubble
         Box(
             modifier = Modifier
                 .size(38.dp)
@@ -436,48 +497,48 @@ private fun SectionHeader(
             )
         }
 
-        // "Ver más" / "Ver menos" toggle button
-        AnimatedContent(
-            targetState = expanded,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = stringResource(R.string.toggle_btn_label),
-        ) { isExpanded ->
-            TextButton(
-                onClick = onToggle,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
-            ) {
-                Text(
-                    text = if (isExpanded) stringResource(R.string.home_show_less) else stringResource(R.string.home_show_more, itemCount),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Spacer(Modifier.width(2.dp))
-                Icon(
-                    imageVector = if (isExpanded) Icons.Outlined.KeyboardArrowUp
-                    else Icons.Outlined.KeyboardArrowDown,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                )
+        if (itemCount > 0) {
+            AnimatedContent(
+                targetState = expanded,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                label = stringResource(R.string.toggle_btn_label),
+            ) { isExpanded ->
+                TextButton(
+                    onClick = onToggle,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                ) {
+                    Text(
+                        text = if (isExpanded) stringResource(R.string.home_show_less) else stringResource(R.string.home_show_more, itemCount),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.width(2.dp))
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Outlined.KeyboardArrowUp
+                        else Icons.Outlined.KeyboardArrowDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
             }
         }
     }
 }
-
-// ─────────────────────────────────────────────
-//  Expanded grid layout
-// ─────────────────────────────────────────────
 
 @Composable
 private fun ExpandedProductGrid(
     products: List<Product>,
     currentUser: User,
     isFollowing: Boolean = false,
-    onProductClick: (Product) -> Unit,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit,
     showProducerBadge: Boolean = false,
     producerAvatars: Map<Int, String> = emptyMap(),
 ) {
+    if (products.isEmpty()) return
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -494,20 +555,25 @@ private fun ExpandedProductGrid(
                         ProducerProductCard(
                             producerProduct = product,
                             currentUser = currentUser,
-                            onClick = {onProductClick(product)},
-                            modifier = Modifier.weight(1f)
+                            onClick = {onProductClick(product.id)},
+                            modifier = Modifier.weight(1f),
+                            onFavouriteClick = { isFavourite ->
+                                onFavouriteClick(product, currentUser.id, isFavourite)
+                            }
                         )
                     } else {
                         ProductCard(
                             product = product,
-                            onClick = { onProductClick(product) },
+                            onProductClick = { onProductClick(product.id) },
                             modifier = Modifier.weight(1f),
-                            currentUserId = currentUser.id
+                            currentUserId = currentUser.id,
+                            onFavouriteClick = { isFavourite ->
+                                onFavouriteClick(product, currentUser.id, isFavourite)
+                            }
                         )
                     }
 
                 }
-                // If odd number of items, fill space
                 if (rowProducts.size == 1) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -517,22 +583,18 @@ private fun ExpandedProductGrid(
     }
 }
 
-// ─────────────────────────────────────────────
-//  Product Card
-// ─────────────────────────────────────────────
-
 @Composable
 fun ProductCard(
     product: Product,
     currentUserId: String,
     isFollowing: Boolean = false,
-    onClick: () -> Unit,
+    onProductClick: (String) -> Unit,
+    onFavouriteClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isFavorite by remember { mutableStateOf(currentUserId in product.favouritesList) }
 
     val cardWidth = if (modifier == Modifier) 158.dp else Dp.Unspecified
-    //val rounded = product.userId in currentUser.following
     val shape: Shape = if (!isFollowing) {
         RoundedCornerShape(18.dp)
     } else {
@@ -543,12 +605,11 @@ fun ProductCard(
             .then(if (cardWidth != Dp.Unspecified) Modifier.width(cardWidth) else Modifier)
             .shadow(elevation = 2.dp, shape = shape)
             .clip(shape)
-            .clickable(onClick = onClick),
+            .clickable(onClick = { onProductClick(product.id) }),
         color = MaterialTheme.colorScheme.surface,
         shape = shape,
     ) {
         Column {
-            // Image area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -564,12 +625,10 @@ fun ProductCard(
                         .build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    placeholder =  rememberVectorPainter(Icons.Default.Image),
-                    error = rememberVectorPainter(Icons.Default.Image),
+                    placeholder = painterResource(R.drawable.ecofruit_background_logo),
+                    error = painterResource(R.drawable.ecofruit_background_logo),
                     modifier = Modifier.fillMaxSize()
                 )
-
-                // Organic badgeproduct.isOrganic
 
                 if (product.isOrganic) {
                     Surface(
@@ -589,11 +648,12 @@ fun ProductCard(
                     }
                 }
 
-
-
-                // Favorite button
                 IconButton(
-                    onClick = { isFavorite = !isFavorite },
+                    onClick =
+                        {
+                            isFavorite = !isFavorite
+                            onFavouriteClick(isFavorite)
+                        },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .size(36.dp),
@@ -607,28 +667,8 @@ fun ProductCard(
                         modifier = Modifier.size(18.dp),
                     )
                 }
-
-
-                // Producer avatar (for "followed" section)
-                /*
-                if (product.userAvatar.isNotBlank()) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(6.dp)
-                            .size(26.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(text = producerAvatar, fontSize = 14.sp)
-                    }
-                }
-
-                 */
             }
 
-            // Content area
             Column(modifier = Modifier.padding(10.dp)) {
                 Text(
                     text = product.name,
@@ -671,22 +711,18 @@ fun ProductCard(
     }
 }
 
-// ─────────────────────────────────────────────
-//  Producer Product Card (with producer strip)
-// ─────────────────────────────────────────────
-
 @Composable
 private fun ProducerProductCard(
     producerProduct: Product,
     currentUser: User,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
+    onFavouriteClick: (Boolean) -> Unit,
+    onClick: (String) -> Unit,
 ) {
     val cardWidth = if (modifier == Modifier) 158.dp else Dp.Unspecified
 
     Column(modifier = modifier
         .then(if (cardWidth != Dp.Unspecified) Modifier.width(cardWidth) else Modifier)) {
-        // Producer strip header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -695,8 +731,6 @@ private fun ProducerProductCard(
                 .padding(horizontal = 10.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            //Text(text = producerProduct.userAvatar, fontSize = 14.sp)
-            //TODO: add userclick to redirec to profile
             Box(
                 modifier = Modifier
                     .size(20.dp)
@@ -704,7 +738,9 @@ private fun ProducerProductCard(
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                UserImage(producerProduct.userAvatar, producerProduct.userName, modifier = Modifier.size(20.dp).clip(CircleShape))
+                UserImage(producerProduct.userAvatar, producerProduct.userName, modifier = Modifier
+                    .size(20.dp)
+                    .clip(CircleShape))
             }
             Spacer(Modifier.width(5.dp))
             Text(
@@ -718,17 +754,14 @@ private fun ProducerProductCard(
         }
         ProductCard(
             product = producerProduct,
-            onClick = onClick,
+            onProductClick = onClick,
             modifier = Modifier.fillMaxWidth(),
             currentUserId = currentUser.id,
+            onFavouriteClick = onFavouriteClick,
             isFollowing = true
         )
     }
 }
-
-// ─────────────────────────────────────────────
-//  Star rating
-// ─────────────────────────────────────────────
 
 @Composable
 private fun StarRating(rating: Float) {
@@ -748,10 +781,6 @@ private fun StarRating(rating: Float) {
     }
 }
 
-// ─────────────────────────────────────────────
-//  Section divider
-// ─────────────────────────────────────────────
-
 @Composable
 private fun SectionDivider() {
     HorizontalDivider(
@@ -761,46 +790,16 @@ private fun SectionDivider() {
     )
 }
 
-// ─────────────────────────────────────────────
-//  Preview
-// ─────────────────────────────────────────────
-private val currentUser = MockData.users[0]
-private val recommendedProducts = listOf(
-    allProducts[0], // Manzanas
-    allProducts[5], // Pan
-    allProducts[6], // Queso
-    allProducts[1]  // Tomates
-)
-private val followedProducerProducts = allProducts.filter {
-    it.userId == "u1" || it.userId == "u3"
-}
-private val favouriteProducts = allProducts.filter {
-    it.favouritesList.contains(currentUser.id)
-}
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     EcoFruitTheme() {
         HomeScreen(
-            currentUser = currentUser,
-            recommendedProducts = recommendedProducts,
-            followedProducerProducts = followedProducerProducts,
-            favouriteProducts = favouriteProducts
+            currentUser = User(name = "Test User"),
+            recommendedProductsState = RequestUiState.Success(emptyList()),
+            followedProducerProductsState = RequestUiState.Success(emptyList()),
+            favouriteProductsState = RequestUiState.Success(emptyList())
         )
     }
 
-}
-
-@Preview(showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun HomeScreenDarkPreview() {
-    EcoFruitTheme(darkTheme = true) {
-        HomeScreen(
-            currentUser = currentUser,
-            recommendedProducts = recommendedProducts,
-            followedProducerProducts = followedProducerProducts,
-            favouriteProducts = favouriteProducts
-        )
-    }
 }

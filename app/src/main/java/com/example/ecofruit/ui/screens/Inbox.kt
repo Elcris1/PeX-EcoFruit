@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,15 +31,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.ecofruit.ui.data.constants.ConversationTag
@@ -50,51 +47,36 @@ import com.example.ecofruit.ui.model.Conversation
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.viewmodels.ChatViewModel
 import com.example.ecofruit.ui.viewmodels.ConversationUI
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
+import java.util.Date
+import java.text.SimpleDateFormat
+import java.util.Locale
 import com.example.ecofruit.R
-
-
 
 // ── Screen ─────────────────────────────────────────────────────────────────
 private val TAG = "InboxScreen"
+
 @Composable
 fun InboxScreen(
-    currentUser: User? = ChatMockData.currentUser,
-    conversations: List<ConversationUI> = listOf(ConversationUI(base = ChatMockData.conversations.first(), otherUser = ChatMockData.marta)),
-    chatViewModel: ChatViewModel = viewModel(),
+    currentUser: User?,
+    chatViewModel: ChatViewModel,
     onConversationClick: (Conversation) -> Unit = {},
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf<ConversationTag?>(null) }
-    var conversations by remember { mutableStateOf(conversations)}
-    var isLoading       by remember { mutableStateOf(false) }
-
-
-
-
-
+    
+    val conversations by chatViewModel.conversations.collectAsState()
     val conversationState by chatViewModel.conversationsState.collectAsState()
-    when (conversationState) {
-        is RequestUiState.Success -> {
-            isLoading = false
-            conversations = (conversationState as RequestUiState.Success).data
-            Log.d(TAG, "${conversations}")
+    
+    val isLoading = conversationState is RequestUiState.Loading
+    val currentUserId = currentUser?.id ?: ""
 
-        }
-        is RequestUiState.Loading -> isLoading = true
-        is RequestUiState.Error -> {
-            isLoading = false
-        }
-        else -> Unit
-    }
     val filtered = conversations.filter { conv ->
         val matchesSearch = searchQuery.isBlank() ||
                 conv.otherUser.name.contains(searchQuery, ignoreCase = true) ||
                 conv.base.productName.contains(searchQuery, ignoreCase = true) ||
                 conv.base.lastMessage?.text?.contains(searchQuery, ignoreCase = true) == true
-        val matchesTag = selectedFilter == null || conv.base.tag == selectedFilter
+        val tag = conv.base.conversationTag[currentUserId]
+        val matchesTag = selectedFilter == null || tag == selectedFilter
         matchesSearch && matchesTag
     }
 
@@ -118,7 +100,7 @@ fun InboxScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
-                    val totalUnread = conversations.sumOf { it.base.unreadCount }
+                    val totalUnread = conversations.sumOf { it.base.unreadCount[currentUserId] ?: 0 }
                     if (totalUnread > 0) {
                         Badge(containerColor = MaterialTheme.colorScheme.primary) {
                             Text(
@@ -185,7 +167,11 @@ fun InboxScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
-        if (filtered.isEmpty()) {
+        if (isLoading && conversations.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (filtered.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -216,7 +202,7 @@ fun InboxScreen(
                     ) {
                         ConversationItem(
                             conversation = conversation,
-                            currentUserId = currentUser?.id ?: "",
+                            currentUserId = currentUserId,
                             onClick = { onConversationClick(conversation.base) },
                         )
                     }
@@ -244,6 +230,7 @@ private fun ConversationItem(
     val other = conversation.otherUser
     val lastMsg = conversation.base.lastMessage
     val isMine = lastMsg?.isFromCurrentUser(currentUserId) == true
+    val unreadCount = conversation.base.unreadCount[currentUserId] ?: 0
 
     Row(
         modifier = Modifier
@@ -261,19 +248,48 @@ private fun ConversationItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = other.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = if (conversation.base.unreadCount > 0) FontWeight.Bold else FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                Row(
                     modifier = Modifier.weight(1f),
-                )
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = other.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = if (unreadCount > 0) FontWeight.Bold else FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    // Enhanced Badge for conversation type with better visibility in light mode
+                    val tag = conversation.base.conversationTag[currentUserId] ?: ConversationTag.CONSULTA
+                    
+                    val (containerColor, contentColor) = when (tag) {
+                        ConversationTag.COMPRA -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+                        ConversationTag.VENTA -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+                        ConversationTag.CONSULTA -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = containerColor,
+                        border = BorderStroke(1.dp, contentColor.copy(alpha = 0.12f))
+                    ) {
+                        Text(
+                            text = tag.displayName(),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = contentColor,
+                        )
+                    }
+                }
                 Text(
                     text = lastMsg?.timestamp?.toRelativeLabel() ?: "",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (conversation.base.unreadCount > 0)
+                    color = if (unreadCount > 0)
                         MaterialTheme.colorScheme.primary
                     else
                         MaterialTheme.colorScheme.onSurfaceVariant,
@@ -288,37 +304,41 @@ private fun ConversationItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(conversation.base.productEmoji, fontSize = 11.sp)
-                        Text(
-                            text = conversation.base.productName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                    if (conversation.base.productName.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            if (conversation.base.productEmoji.isNotBlank()) {
+                                Text(conversation.base.productEmoji, fontSize = 11.sp)
+                            }
+                            Text(
+                                text = conversation.base.productName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        Spacer(Modifier.height(2.dp))
                     }
-                    Spacer(Modifier.height(2.dp))
                     Text(
                         text = buildString {
                             if (isMine) append(stringResource(R.string.inbox_you) + " ")
                             append(lastMsg?.text ?: "")
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (conversation.base.unreadCount > 0)
+                        color = if (unreadCount > 0)
                             MaterialTheme.colorScheme.onSurface
                         else
                             MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        fontWeight = if (conversation.base.unreadCount > 0) FontWeight.Medium else FontWeight.Normal,
+                        fontWeight = if (unreadCount > 0) FontWeight.Medium else FontWeight.Normal,
                     )
                 }
 
-                if (conversation.base.unreadCount > 0) {
+                if (unreadCount > 0) {
                     Spacer(Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
@@ -328,7 +348,7 @@ private fun ConversationItem(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = conversation.base.unreadCount.toString(),
+                            text = unreadCount.toString(),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontSize = 10.sp,
@@ -407,13 +427,22 @@ fun ConversationTag.displayName() = when (this) {
     ConversationTag.CONSULTA -> stringResource(R.string.inbox_consultation)
 }
 
-private fun LocalDateTime.toRelativeLabel(): String {
-    val now = LocalDateTime.now()
+private fun Long.toRelativeLabel(): String {
+    val now = System.currentTimeMillis()
+    val diff = now - this
+    val seconds = diff / 1000
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    val days = hours / 24
+
     return when {
-        ChronoUnit.MINUTES.between(this, now) < 60 -> "${ChronoUnit.MINUTES.between(this, now)}m"
-        ChronoUnit.HOURS.between(this, now) < 24   -> "${ChronoUnit.HOURS.between(this, now)}h"
-        ChronoUnit.DAYS.between(this, now) < 7     -> "${ChronoUnit.DAYS.between(this, now)}d"
-        else -> format(DateTimeFormatter.ofPattern("dd/MM"))
+        minutes < 60 -> "${minutes}m"
+        hours < 24 -> "${hours}h"
+        days < 7 -> "${days}d"
+        else -> {
+            val sdf = SimpleDateFormat("dd/MM", Locale.getDefault())
+            sdf.format(Date(this))
+        }
     }
 }
 
@@ -422,5 +451,11 @@ private fun LocalDateTime.toRelativeLabel(): String {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun ConversationsScreenPreview() {
-    EcoFruitTheme { InboxScreen () }
+    EcoFruitTheme { 
+        // Solo para preview
+        InboxScreen(
+            currentUser = ChatMockData.currentUser,
+            chatViewModel = viewModel(), 
+        )
+    }
 }

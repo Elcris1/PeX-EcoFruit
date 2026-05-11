@@ -1,5 +1,5 @@
 package com.example.ecofruit.ui.screens
-import android.location.Location
+
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
@@ -46,23 +45,21 @@ import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.model.Review
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.R
+import com.example.ecofruit.ui.data.model.RequestUiState
 
-
-
-//TODO: fix imagen/placeholder (usar el del ownprofile)
-//TODO: fix top app bar
-//TODO: mostrar followers
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
     currentUser: User,
-    profile: FullUserInfo?,
-    isOwnProfile: Boolean = false,
+    profileState: RequestUiState<FullUserInfo>,
     onBack: () -> Unit = {},
     onEditProfile: () -> Unit = {},
     onMessage: () -> Unit = {},
     onFollow: (Boolean) -> Unit = {},
-    onListingClick: (String) -> Unit = {}
+    onListingClick: (String) -> Unit = {},
+    onFavouriteClick: (Product, String, Boolean) -> Unit,
+    onAddReview: (Int, String) -> Unit = { _, _ -> },
+    onDeleteReview: (Review) -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(stringResource(R.string.view_profile_products), stringResource(R.string.view_profile_reviews))
@@ -73,348 +70,333 @@ fun UserProfileScreen(
     }
 
     val colorScheme = MaterialTheme.colorScheme
+    var showAddReviewDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
 
-        // ── Scrollable content ──
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-        ) {
-
-            // ── Hero header with gradient ──
-            Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawRect(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                colorScheme.primaryContainer,
-                                colorScheme.secondaryContainer,
-                                colorScheme.tertiaryContainer
-                            ),
-                            start = Offset(0f, 0f),
-                            end = Offset(size.width, size.height)
-                        )
-                    )
-                    // Decorative circles
-                    drawCircle(
-                        color = colorScheme.primary.copy(alpha = 0.12f),
-                        radius = 160f,
-                        center = Offset(size.width * 0.85f, size.height * 0.2f)
-                    )
-                    drawCircle(
-                        color = colorScheme.secondary.copy(alpha = 0.10f),
-                        radius = 100f,
-                        center = Offset(size.width * 0.1f, size.height * 0.9f)
-                    )
+        when (profileState) {
+            is RequestUiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
-            if (profile != null) {
-                // ── Profile card ──
-                Box(
+            is RequestUiState.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = profileState.message, color = colorScheme.error)
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = onBack) {
+                            Text(stringResource(R.string.back))
+                        }
+                    }
+                }
+            }
+            is RequestUiState.Success -> {
+                val profile = profileState.data
+                val isOwnProfile = currentUser.id == profile.user.id
+
+                // ── Scrollable content ──
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .offset(y = (-56).dp)
-                        .padding(horizontal = 16.dp)
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
                 ) {
-                    Card(
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        modifier = Modifier.fillMaxWidth()
+
+                    // ── Hero header with gradient ──
+                    Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            drawRect(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        colorScheme.primaryContainer,
+                                        colorScheme.secondaryContainer,
+                                        colorScheme.tertiaryContainer
+                                    ),
+                                    start = Offset(0f, 0f),
+                                    end = Offset(size.width, size.height)
+                                )
+                            )
+                            // Decorative circles
+                            drawCircle(
+                                color = colorScheme.primary.copy(alpha = 0.12f),
+                                radius = 160f,
+                                center = Offset(size.width * 0.85f, size.height * 0.2f)
+                            )
+                            drawCircle(
+                                color = colorScheme.secondary.copy(alpha = 0.10f),
+                                radius = 100f,
+                                center = Offset(size.width * 0.1f, size.height * 0.9f)
+                            )
+                        }
+                    }
+
+                    // ── Profile card ──
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(y = (-56).dp)
+                            .padding(horizontal = 16.dp)
                     ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
+                        Card(
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(20.dp)) {
 
-                            // Avatar row
-                            Row(
-                                verticalAlignment = Alignment.Bottom,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                // Avatar
+                                // Avatar row
+                                Row(
+                                    verticalAlignment = Alignment.Bottom,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    // Avatar
 
-                                Box {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(80.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                Brush.linearGradient(
-                                                    listOf(
-                                                        colorScheme.primary,
-                                                        colorScheme.secondary
-                                                    )
-                                                )
-                                            ),
-
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        UserImage(profile.user.profileImageUrl, profile.user.name)
-
-                                    }
-                                    /*
-                                    if (profile.isVerified) {
+                                    Box {
                                         Box(
                                             modifier = Modifier
-                                                .size(22.dp)
+                                                .size(80.dp)
                                                 .clip(CircleShape)
-                                                .background(colorScheme.primary)
-                                                .align(Alignment.BottomEnd)
-                                                .offset(y = (-40).dp),
+                                                .background(
+                                                    Brush.linearGradient(
+                                                        listOf(
+                                                            colorScheme.primary,
+                                                            colorScheme.secondary
+                                                        )
+                                                    )
+                                                ),
+
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Filled.Check,
-                                                contentDescription = "Verificado",
-                                                tint = colorScheme.onPrimary,
-                                                modifier = Modifier.size(14.dp)
-                                            )
+                                            UserImage(profile.user.profileImageUrl, profile.user.name)
+
                                         }
                                     }
-                                    */
-                                }
 
-                                Spacer(modifier = Modifier.weight(1f))
+                                    Spacer(modifier = Modifier.weight(1f))
 
-                                // Action buttons
-                                if (isOwnProfile) {
-                                    OutlinedButton(
-                                        onClick = onEditProfile,
-                                        shape = RoundedCornerShape(12.dp),
-                                        border = BorderStroke(1.5.dp, colorScheme.primary),
-                                        colors = ButtonDefaults.outlinedButtonColors(
-                                            contentColor = colorScheme.primary
-                                        ),
-                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Outlined.Edit,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            stringResource(R.string.edit),
-                                            style = MaterialTheme.typography.labelLarge
-                                        )
-                                    }
-                                } else {
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        OutlinedIconButton(
-                                            onClick = onMessage,
+                                    // Action buttons
+                                    if (isOwnProfile) {
+                                        OutlinedButton(
+                                            onClick = onEditProfile,
                                             shape = RoundedCornerShape(12.dp),
                                             border = BorderStroke(1.5.dp, colorScheme.primary),
-                                            colors = IconButtonDefaults.outlinedIconButtonColors(
+                                            colors = ButtonDefaults.outlinedButtonColors(
                                                 contentColor = colorScheme.primary
-                                            ),
-                                            modifier = Modifier.size(40.dp)
-                                        ) {
-                                            Icon(
-                                                Icons.Outlined.MailOutline,
-                                                contentDescription = "Messaje",
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                        var following by remember {mutableStateOf(currentUser.following.contains(profile.user.id))}
-
-                                        Button(
-                                            onClick =
-                                                {
-                                                    onFollow(following)
-                                                    following = !following
-                                                },
-                                            shape = RoundedCornerShape(12.dp),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = colorScheme.primary
                                             ),
                                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                                         ) {
-
-                                            var followingText = stringResource(R.string.view_profile_follow)
-                                            if(following) {
-                                                followingText = stringResource(R.string.view_profile_following)
-                                            } else {
-                                                followingText = stringResource(R.string.view_profile_follow)
-                                                Icon(
-                                                    Icons.Outlined.PersonAdd,
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(16.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(6.dp))
-
-                                            }
+                                            Icon(
+                                                Icons.Outlined.Edit,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
                                             Text(
-                                                followingText,
+                                                stringResource(R.string.edit),
                                                 style = MaterialTheme.typography.labelLarge
                                             )
                                         }
+                                    } else {
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            OutlinedIconButton(
+                                                onClick = onMessage,
+                                                shape = RoundedCornerShape(12.dp),
+                                                border = BorderStroke(1.5.dp, colorScheme.primary),
+                                                colors = IconButtonDefaults.outlinedIconButtonColors(
+                                                    contentColor = colorScheme.primary
+                                                ),
+                                                modifier = Modifier.size(40.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Outlined.MailOutline,
+                                                    contentDescription = "Message",
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                            var following by remember {mutableStateOf(currentUser.following.contains(profile.user.id))}
+
+                                            Button(
+                                                onClick =
+                                                    {
+                                                        onFollow(following)
+                                                        following = !following
+                                                    },
+                                                shape = RoundedCornerShape(12.dp),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = colorScheme.primary
+                                                ),
+                                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                                            ) {
+
+                                                var followingText = stringResource(R.string.view_profile_follow)
+                                                if(following) {
+                                                    followingText = stringResource(R.string.view_profile_following)
+                                                } else {
+                                                    followingText = stringResource(R.string.view_profile_follow)
+                                                    Icon(
+                                                        Icons.Outlined.PersonAdd,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(6.dp))
+
+                                                }
+                                                Text(
+                                                    followingText,
+                                                    style = MaterialTheme.typography.labelLarge
+                                                )
+                                            }
+                                        }
                                     }
                                 }
-                            }
 
-                            Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
 
-                            // Name & username
-                            Text(
-                                text = profile.user.name,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = colorScheme.onSurface
-                            )
+                                // Name & username
+                                Text(
+                                    text = profile.user.name,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = colorScheme.onSurface
+                                )
 
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
 
-                            // Bio
-                            Text(
-                                text = profile.user.bio.ifBlank { stringResource(R.string.view_profile_bio_not_defined)},
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = colorScheme.onSurfaceVariant,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
+                                // Bio
+                                Text(
+                                    text = profile.user.bio.ifBlank { stringResource(R.string.view_profile_bio_not_defined)},
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colorScheme.onSurfaceVariant,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
 
-                            // Location + member since
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
+                                // Location + member since
                                 Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
-                                    Icon(
-                                        Icons.Outlined.LocationOn,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp),
-                                        tint = colorScheme.onSurfaceVariant
-                                    )
-                                        //TODO: finish this
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Outlined.LocationOn,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = colorScheme.onSurfaceVariant
+                                        )
+                                            Text(
+                                                if (profile.user.location != null) profile.user.location.shortDisplayName else stringResource(R.string.not_defined),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = colorScheme.onSurfaceVariant
+                                            )
+
+
+                                    }
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Outlined.CalendarMonth,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = colorScheme.onSurfaceVariant
+                                        )
                                         Text(
-                                            if (profile.user.location != null) "Barcelona - Mocked" else stringResource(R.string.not_defined),
+                                            stringResource(R.string.from) + " ${getYear(profile.user.createdAt)}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = colorScheme.onSurfaceVariant
                                         )
-
-
+                                    }
                                 }
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Outlined.CalendarMonth,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp),
-                                        tint = colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        stringResource(R.string.from) + " ${getYear(profile.user.createdAt)}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = colorScheme.onSurfaceVariant
-                                    )
-                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Rating stars
+                                RatingRow(rating = profile.user.rating.toFloat(), count = profile.user.reviewCount)
+
                             }
+                        }
+                    }
 
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            /*
-                            // Stats row
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(colorScheme.surfaceVariant)
-                                    .padding(vertical = 12.dp),
-                                horizontalArrangement = Arrangement.SpaceEvenly
-                            ) {
-                                StatItem(
-                                    value = profile.salesCount.toString(),
-                                    label = "Ventas",
-                                    icon = Icons.Outlined.Sell
+                    // ── Tabs ──
+                    Box(modifier = Modifier.offset(y = (-44).dp)) {
+                        TabRow(
+                            selectedTabIndex = selectedTab,
+                            containerColor = colorScheme.surface,
+                            contentColor = colorScheme.primary,
+                            indicator = { tabPositions ->
+                                TabRowDefaults.SecondaryIndicator(
+                                    modifier = Modifier
+                                        .tabIndicatorOffset(tabPositions[selectedTab])
+                                        .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)),
+                                    color = colorScheme.primary,
+                                    height = 3.dp
                                 )
-                                VerticalDivider(
-                                    modifier = Modifier.height(40.dp),
-                                    color = colorScheme.outline
-                                )
-                                StatItem(
-                                    value = profile.purchasesCount.toString(),
-                                    label = "Compras",
-                                    icon = Icons.Outlined.ShoppingBag
-                                )
-                                VerticalDivider(
-                                    modifier = Modifier.height(40.dp),
-                                    color = colorScheme.outline
-                                )
-                                StatItem(
-                                    value = profile.reviewCount.toString(),
-                                    label = "Valoraciones",
-                                    icon = Icons.Outlined.StarOutline
+                            },
+                            divider = {}
+                        ) {
+                            tabs.forEachIndexed { index, title ->
+                                Tab(
+                                    selected = selectedTab == index,
+                                    onClick = { selectedTab = index },
+                                    text = {
+                                        Text(
+                                            title,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    }
                                 )
                             }
-                            */
+                        }
 
-                            // Rating stars
-                            RatingRow(rating = profile.user.rating.toFloat(), count = profile.user.reviewCount)
-
+                        // ── Tab content ──
+                        Box(modifier = Modifier.padding(top = 48.dp)) {
+                            when (selectedTab) {
+                                0 -> ListingsGrid(
+                                    userId = currentUser.id,
+                                    listings = profile.products,
+                                    onListingClick = onListingClick,
+                                    onFavouriteClick = onFavouriteClick
+                                )
+                                1 -> ProfileReviewsSection(
+                                    reviews = profile.reviews,
+                                    rating = profile.user.rating,
+                                    reviewCount = profile.user.reviewCount,
+                                    isOwnProfile = isOwnProfile,
+                                    currentUserId = currentUser.id,
+                                    onAddReview = { showAddReviewDialog = true },
+                                    onDeleteReview = onDeleteReview
+                                )
+                            }
                         }
                     }
+                    Spacer(modifier = Modifier.height(80.dp))
                 }
 
-                // ── Tabs ──
-                Box(modifier = Modifier.offset(y = (-44).dp)) {
-                    TabRow(
-                        selectedTabIndex = selectedTab,
-                        containerColor = colorScheme.surface,
-                        contentColor = colorScheme.primary,
-                        indicator = { tabPositions ->
-                            TabRowDefaults.SecondaryIndicator(
-                                modifier = Modifier
-                                    .tabIndicatorOffset(tabPositions[selectedTab])
-                                    .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)),
-                                color = colorScheme.primary,
-                                height = 3.dp
-                            )
-                        },
-                        divider = {}
-                    ) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(
-                                selected = selectedTab == index,
-                                onClick = { selectedTab = index },
-                                text = {
-                                    Text(
-                                        title,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            )
+                if (showAddReviewDialog) {
+                    AddReviewDialog(
+                        onDismiss = { showAddReviewDialog = false },
+                        onSubmit = { rating, comment ->
+                            onAddReview(rating, comment)
+                            showAddReviewDialog = false
                         }
-                    }
-
-                    // ── Tab content ──
-                    Box(modifier = Modifier.padding(top = 48.dp)) {
-                        when (selectedTab) {
-                            0 -> ListingsGrid(
-                                userId = currentUser.id,
-                                listings = profile.products,
-                                onListingClick = onListingClick
-                            )
-                            1 -> ReviewsList(reviews = profile.reviews)
-                        }
-                    }
+                    )
                 }
-                Spacer(modifier = Modifier.height(80.dp))
-                // ── Top app bar (fades in on scroll) ──
-
             }
-
+            else -> Unit
         }
+
         TopAppBar(
             title = {
+                val profile = (profileState as? RequestUiState.Success)?.data
                 AnimatedAlphaText(
-                    text = profile?.user?.name?: "",
+                    text = profile?.user?.name ?: "",
                     alpha = headerAlpha
                 )
             },
@@ -438,9 +420,88 @@ fun UserProfileScreen(
     }
 }
 
-// ─────────────────────────────────────────────
-//  Sub-composables
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// Sub-composables
+// ─────────────────────────────────────────────────────────────────
+
+@Composable
+private fun ProfileReviewsSection(
+    reviews: List<Review>,
+    rating: Double,
+    reviewCount: Int,
+    isOwnProfile: Boolean,
+    currentUserId: String,
+    onAddReview: () -> Unit,
+    onDeleteReview: (Review) -> Unit
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.product_detail_reviews_title),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            if (!isOwnProfile) {
+                OutlinedButton(
+                    onClick = onAddReview,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.product_detail_add_review_btn),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        if (reviewCount > 0) {
+            RatingSummaryCard(reviews = reviews, rating = rating, reviewCount = reviewCount)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (reviews.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.product_detail_be_first_review),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                reviews.forEach { review ->
+                    ReviewCard(
+                        review = review,
+                        currentUserId = currentUserId,
+                        onDeleteReview = onDeleteReview
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun AnimatedAlphaText(text: String, alpha: Float) {
@@ -453,35 +514,11 @@ private fun AnimatedAlphaText(text: String, alpha: Float) {
 }
 
 @Composable
-private fun StatItem(value: String, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    val colorScheme = MaterialTheme.colorScheme
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Icon(icon, contentDescription = null, tint = colorScheme.primary, modifier = Modifier.size(18.dp))
-        Text(
-            value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.ExtraBold,
-            color = colorScheme.onSurface
-        )
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-
-
-
-@Composable
 private fun ListingsGrid(
     userId: String,
     listings: List<Product>,
-    onListingClick: (String) -> Unit
+    onListingClick: (String) -> Unit,
+    onFavouriteClick: (Product, String, Boolean) -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
 
@@ -506,216 +543,17 @@ private fun ListingsGrid(
                     ProductCard(
                         product = listing,
                         isFollowing = false,
-                        onClick = {onListingClick(listing.id)},
+                        onProductClick = {onListingClick(listing.id)},
                         modifier = Modifier.weight(1f),
+                        onFavouriteClick = {isFavorite ->
+                            onFavouriteClick(listing, userId, isFavorite)
+                        },
                         currentUserId = userId
                     )
 
                 }
                 // Fill empty slot if odd count
                 if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
-            }
-        }
-    }
-}
-
-@Composable
-private fun ListingCard(
-    userId: String,
-    listing: Product,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    var isFav by remember { mutableStateOf(listing.favouritesList.contains(userId)) }
-
-    Card(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = modifier
-    ) {
-        Box {
-            Column {
-                // Image placeholder
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(130.dp)
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    colorScheme.surfaceVariant,
-                                    colorScheme.primaryContainer.copy(alpha = 0.3f)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Outlined.Image,
-                        contentDescription = null,
-                        tint = colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                        modifier = Modifier.size(36.dp)
-                    )
-
-                    /*
-                    if (listing.isSold) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.45f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "VENDIDO",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White,
-                                letterSpacing = 1.5.sp
-                            )
-                        }
-                    }
-
-                     */
-                }
-
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Text(
-                        listing.name,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = listing.price.toString(),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = colorScheme.primary
-                    )
-                }
-            }
-
-            // Favorite button
-            IconButton(
-                onClick = { isFav = !isFav },
-                modifier = Modifier.align(Alignment.TopEnd).size(36.dp)
-            ) {
-                Icon(
-                    if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = "Favourite",
-                    tint = if (isFav) colorScheme.error else colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ReviewsList(reviews: List<Review>) {
-    val colorScheme = MaterialTheme.colorScheme
-
-    if (reviews.isEmpty()) {
-        EmptyState(
-            icon = Icons.Outlined.RateReview,
-            message = stringResource(R.string.view_profile_empty_reviews)
-        )
-        return
-    }
-
-    Column(
-        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        reviews.forEach { review ->
-            ReviewCard(review = review)
-        }
-    }
-}
-
-@Composable
-private fun ReviewCard(review: Review) {
-    val colorScheme = MaterialTheme.colorScheme
-
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                // Reviewer avatar
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    UserImage(review.authorAvatar, review.authorName)
-
-                }
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        review.authorName,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colorScheme.onSurface
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Row {
-                            for (i in 1..5) {
-                                Icon(
-                                    Icons.Filled.Star,
-                                    contentDescription = null,
-                                    tint = if (i <= review.rating) colorScheme.tertiary else colorScheme.outlineVariant,
-                                    modifier = Modifier.size(13.dp)
-                                )
-                            }
-                        }
-                        Text(
-                            "· ${getReadableData(review.createdAt)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                /*
-                // Buyer/Seller chip
-                val (chipColor, chipTextColor, chipLabel) = when (review.reviewType) {
-                    ReviewType.BUYER -> Triple(colorScheme.primaryContainer, colorScheme.onPrimaryContainer, "Como vendedor")
-                    ReviewType.SELLER -> Triple(colorScheme.secondaryContainer, colorScheme.onSecondaryContainer, "Como comprador")
-                }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(chipColor)
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                ) {
-                    Text(chipLabel, style = MaterialTheme.typography.labelSmall, color = chipTextColor)
-                }
-                */
-
-            }
-
-            if (review.title.isNotBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    review.title,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colorScheme.onSurfaceVariant,
-                    lineHeight = 18.sp
-                )
             }
         }
     }
@@ -790,7 +628,7 @@ private var profile = FullUserInfo(
         email = "laura@ecofruit.com",
         rating = 4.7,
         reviewCount = 58,
-        profileImageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHRh730XAA9_DpBhSC9yF-DlqiKXC_xtzU3A&s",
+        profileImageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHRh730XAA9_DpBhSC9_DlqiKXC_xtzU3A&s",
         location = null,
         followers = 10,
         following = listOf("u2"),
@@ -812,22 +650,8 @@ fun UserProfileScreenPreview() {
     EcoFruitTheme {
         UserProfileScreen(
             currentUser = currentUser,
-            profile = profile,
-            isOwnProfile = currentUser.id == profile.user.id
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun NoProductsPreview() {
-    // Replace AppTheme with your actual theme composable
-    EcoFruitTheme {
-        profile.products = emptyList()
-        UserProfileScreen(
-            currentUser = currentUser,
-            profile = profile,
-            isOwnProfile = currentUser.id == profile.user.id
+            profileState = RequestUiState.Success(profile),
+            onFavouriteClick =    { _, _, _ -> },
         )
     }
 }

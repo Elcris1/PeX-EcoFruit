@@ -72,6 +72,7 @@ import com.example.ecofruit.ui.components.PasswordTextField
 import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.ui.theme.EcoFruitTheme
+import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
@@ -106,11 +107,11 @@ class RegisterActivity : ComponentActivity() {
     @Composable
     fun RegisterScreen(
         modifier: Modifier = Modifier,
-        onRegisterClick: (name: String, email: String, password: String) -> Unit = { _, _, _ -> },
-        userViewModel: UserViewModel = viewModel()
+        userViewModel: UserViewModel = viewModel(),
+        authViewModel: AuthViewModel = viewModel()
     ) {
         val context = LocalContext.current
-        val uiState by userViewModel.registerUiState.collectAsState()
+        val uiState by authViewModel.registerUiState.collectAsState()
 
         var isLoading       by remember { mutableStateOf(false) }
         var name          by remember { mutableStateOf("") }
@@ -240,7 +241,7 @@ class RegisterActivity : ComponentActivity() {
                         ) {
                             if (validate()) {
                                 scope.launch {
-                                    userViewModel.registerUser(name, email, password)
+                                    authViewModel.register(name, email, password)
                                 }
                             }
                         }

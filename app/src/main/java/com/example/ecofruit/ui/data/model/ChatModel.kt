@@ -3,25 +3,20 @@ package com.example.ecofruit.ui.model
 import com.example.ecofruit.ui.data.constants.ConversationTag
 import com.example.ecofruit.ui.data.model.ChatMessage
 
-
 data class Conversation(
-    val id: String,
-    val participantsId: List<String>,           // incluye al usuario actual
+    val id: String = "",
+    val participantsId: List<String> = emptyList(),           // incluye al usuario actual
     var lastMessage: ChatMessage? = null,
-    var unreadCount: Int = 0,
-    val tag: ConversationTag,
-    val productId: String,
-    val productName: String,
-    val productEmoji: String,
-    //val messages: List<ChatMessage> = emptyList(),
+    val unreadCount: Map<String, Int> = emptyMap(),           // map of user id and its unread count
+    val conversationTag: Map<String, ConversationTag> = emptyMap(), // map of user id and its tag, ej: user1 is buying user2, user2 is selling user 1
+    val productId: String = "",
+    val productName: String = "",
+    val productEmoji: String = "",
+    val createdAt: Long = 0,
 ) {
     fun otherParticipants(currentUserId: String): List<String> =
-        participantsId.filter { id != currentUserId }
+        participantsId.filter { it != currentUserId }
 
-    /*
-    fun displayName(currentUserId: String): String =
-        otherParticipants(currentUserId).joinToString(", ") { it.name }
-*/
     fun primaryOtherUser(currentUserId: String): String? =
-        participantsId.firstOrNull {it != currentUserId}
+        participantsId.firstOrNull { it != currentUserId }
 }
