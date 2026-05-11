@@ -164,11 +164,18 @@ def on_message_created(event: firestore_fn.Event[firestore_fn.DocumentSnapshot |
     document="products/{product_id}"
 )
 def on_product_created(event: firestore_fn.Event[firestore.DocumentSnapshot]) -> None:
+    print(f"Product created: {event.params}, {event.data.to_dict()}")
     product: dict[str, Any] = event.data.to_dict()
     product_id: str = event.data.id
     name: str = product.get("name", "")
     price: float = product.get("price", 0.0)
     timestamp: int = product.get("timestamp", 0)
+    user_id: str = product.get("userId", "")
+
+    db = firestore.client()
+    data = db.collection("users").where("following", "array_contains", user_id).recursive().stream()
+    for vl in data: 
+        print(vl.to_dict())
 
 # initialize_app()
 #
