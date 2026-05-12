@@ -68,7 +68,9 @@ fun ProductDetailScreen(
     onProducerClick: () -> Unit,
     onToggleFavourite: (Boolean) -> Unit = {},
     onAddReview: (Int, String) -> Unit = { _, _ -> },
-    onDeleteReview: (Review) -> Unit = {}
+    onDeleteReview: (Review) -> Unit = {},
+    onEditProduct: () -> Unit = {},
+    onDeleteProduct: () -> Unit = {}
 ) {
     var isFavourite by remember(product.favouritesList, currentUserId) {
         mutableStateOf(product.favouritesList.contains(currentUserId))
@@ -211,7 +213,11 @@ fun ProductDetailScreen(
         FloatingTopBar(
             title = if (imageCollapsed) product.name else "",
             onBackClick = onBackClick,
-            isCollapsed = imageCollapsed
+            isCollapsed = imageCollapsed,
+            currentUserId = currentUserId,
+            producerId = product.userId,
+            onEditProduct = onEditProduct,
+            onDeleteProduct = onDeleteProduct
         )
 
         // ── Bottom CTA ──
@@ -457,8 +463,15 @@ fun ImagePager(
 fun FloatingTopBar(
     title: String,
     onBackClick: () -> Unit,
-    isCollapsed: Boolean
+    isCollapsed: Boolean,
+    currentUserId: String = "",
+    producerId: String = "",
+    onEditProduct: () -> Unit = {},
+    onDeleteProduct: () -> Unit = {}
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+    val isOwnProduct = currentUserId.isNotEmpty() && currentUserId == producerId
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -499,6 +512,68 @@ fun FloatingTopBar(
             )
         }
 
+        // Menu button (only show if current user is the product owner)
+        if (isOwnProduct) {
+            Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+                IconButton(
+                    onClick = { showMenu = !showMenu },
+                    modifier = Modifier.size(42.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = if (isCollapsed) MaterialTheme.colorScheme.surface
+                        else Color.Black.copy(alpha = 0.35f),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = stringResource(R.string.product_detail_menu),
+                                tint = if (isCollapsed) MaterialTheme.colorScheme.onSurface else Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Dropdown menu
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.product_detail_edit_product)) },
+                        onClick = {
+                            showMenu = false
+                            onEditProduct()
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.product_detail_delete_product)) },
+                        onClick = {
+                            showMenu = false
+                            onDeleteProduct()
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -123,6 +123,24 @@ class ProductRepository {
         docRef.set(product).await()
     }
 
+    suspend fun deleteProduct(productId: String): Result<Unit> = runCatching {
+        // First try to read the product to obtain stored image URLs (if any)
+        val snapshot = productsCollection.document(productId).get().await()
+        val product = snapshot.toObject(Product::class.java)
+
+        // Delete images from Firebase Storage if any URLs are present
+        product?.imagesUrl?.forEach { url ->
+            if (url.isNotBlank()) {
+                // getReferenceFromUrl accepts the full download URL
+                val imgRef = storage.getReferenceFromUrl(url)
+                imgRef.delete().await()
+            }
+        }
+
+        // Finally delete the Firestore document
+        productsCollection.document(productId).delete().await()
+    }
+
     suspend fun uploadProductImage(uri: Uri): Result<String> = runCatching {
         val fileName = "product_${System.currentTimeMillis()}_${uri.lastPathSegment}"
         val ref = storageRef.child(fileName)

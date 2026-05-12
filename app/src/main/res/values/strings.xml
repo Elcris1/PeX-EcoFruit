@@ -208,4 +208,8 @@
     <string name="product_detail_add_review_dialog_title">Add review</string>
     <string name="product_detail_comment_placeholder">Your comment</string>
     <string name="product_detail_contact_self_error">You cannot contact yourself</string>
+    <string name="product_detail_menu">Menu</string>
+    <string name="product_detail_edit_product">Edit product</string>
+    <string name="product_detail_delete_product">Delete product</string>
+    <string name="product_detail_delete_product_error">Error deleting product: %s</string>
 </resources>
