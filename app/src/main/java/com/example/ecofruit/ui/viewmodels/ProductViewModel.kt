@@ -55,6 +55,9 @@ class ProductViewModel(
     private val _deleteProductState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
     val deleteProductState: StateFlow<RequestUiState<Unit>> = _deleteProductState.asStateFlow()
 
+    private val _updateProductState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
+    val updateProductState: StateFlow<RequestUiState<Unit>> = _updateProductState.asStateFlow()
+
     fun loadHomePage(user: User) {
         viewModelScope.launch {
             // Ponemos todos los estados en Loading primero
@@ -261,6 +264,17 @@ class ProductViewModel(
                 _deleteProductState.value = RequestUiState.Success(Unit)
             }.onFailure {
                 _deleteProductState.value = RequestUiState.Error(it.message ?: "Error deleting product")
+            }
+        }
+    }
+
+    fun updateProduct(product: Product) {
+        viewModelScope.launch {
+            _updateProductState.value = RequestUiState.Loading()
+            productRepository.updateProduct(product).onSuccess {
+                _updateProductState.value = RequestUiState.Success(Unit)
+            }.onFailure {
+                _updateProductState.value = RequestUiState.Error(it.message ?: "Error updating product")
             }
         }
     }

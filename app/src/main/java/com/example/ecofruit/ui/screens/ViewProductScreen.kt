@@ -70,13 +70,37 @@ fun ProductDetailScreen(
     onAddReview: (Int, String) -> Unit = { _, _ -> },
     onDeleteReview: (Review) -> Unit = {},
     onEditProduct: () -> Unit = {},
-    onDeleteProduct: () -> Unit = {}
+    onDeleteProduct: () -> Unit = {},
+    onSaveProduct: (Product) -> Unit = {}
 ) {
     var isFavourite by remember(product.favouritesList, currentUserId) {
         mutableStateOf(product.favouritesList.contains(currentUserId))
     }
 
     var showAddReviewDialog by remember { mutableStateOf(false) }
+    var isEditing by remember { mutableStateOf(false) }
+    var editableName by remember { mutableStateOf(product.name) }
+    var editableDescription by remember { mutableStateOf(product.description) }
+    var editablePrice by remember { mutableStateOf(product.price.toString()) }
+
+    fun cancelEdit() {
+        editableName = product.name
+        editableDescription = product.description
+        editablePrice = product.price.toString()
+        isEditing = false
+    }
+
+    LaunchedEffect(product.id, product.name, product.description, product.price, product.unit, isEditing) {
+        if (!isEditing) {
+            editableName = product.name
+            editableDescription = product.description
+            editablePrice = product.price.toString()
+        }
+    }
+
+    LaunchedEffect(product.id) {
+        isEditing = false
+    }
 
     val scrollState = rememberScrollState()
     val imageCollapsed by remember {
@@ -136,15 +160,24 @@ fun ProductDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Top
                     ) {
-                        Text(
-                            text = product.name,
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 32.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.weight(1f)
-                        )
+                        if (isEditing) {
+                            OutlinedTextField(
+                                value = editableName,
+                                onValueChange = { editableName = it },
+                                label = { Text(stringResource(R.string.sell_product_name_label)) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        } else {
+                            Text(
+                                text = product.name,
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 32.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                         Spacer(modifier = Modifier.width(12.dp))
                         FavouriteButton(
                             isFavourite = isFavourite,
@@ -159,7 +192,15 @@ fun ProductDetailScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // ── Price ──
-                    PriceRow(price = product.price, unit = product.unit)
+                    if (isEditing) {
+                        EditablePriceRow(
+                            priceText = editablePrice,
+                            unit = product.unit,
+                            onPriceChange = { editablePrice = it }
+                        )
+                    } else {
+                        PriceRow(price = product.price, unit = product.unit)
+                    }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -178,7 +219,14 @@ fun ProductDetailScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // ── Description ──
-                    ExpandableDescription(description = product.description)
+                    if (isEditing) {
+                        EditableDescriptionField(
+                            value = editableDescription,
+                            onValueChange = { editableDescription = it }
+                        )
+                    } else {
+                        ExpandableDescription(description = product.description)
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -214,16 +262,39 @@ fun ProductDetailScreen(
             title = if (imageCollapsed) product.name else "",
             onBackClick = onBackClick,
             isCollapsed = imageCollapsed,
+            isEditing = isEditing,
             currentUserId = currentUserId,
             producerId = product.userId,
-            onEditProduct = onEditProduct,
+            onToggleEditProduct = {
+                if (isEditing) {
+                    cancelEdit()
+                } else {
+                    isEditing = true
+                    onEditProduct()
+                }
+            },
             onDeleteProduct = onDeleteProduct
         )
 
         // ── Bottom CTA ──
         ContactProducerButton(
-            onClick = onContactProducer,
-            enabled = product.userId != currentUserId,
+            onClick = {
+                if (isEditing) {
+                    val parsedPrice = editablePrice.replace(',', '.').toDoubleOrNull() ?: product.price
+                    onSaveProduct(
+                        product.copy(
+                            name = editableName,
+                            description = editableDescription,
+                            price = parsedPrice
+                        )
+                    )
+                    isEditing = false
+                } else {
+                    onContactProducer()
+                }
+            },
+            enabled = if (isEditing) true else product.userId != currentUserId,
+            textRes = if (isEditing) R.string.product_detail_save_product else R.string.product_detail_contact_producer,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -464,9 +535,10 @@ fun FloatingTopBar(
     title: String,
     onBackClick: () -> Unit,
     isCollapsed: Boolean,
+    isEditing: Boolean,
     currentUserId: String = "",
     producerId: String = "",
-    onEditProduct: () -> Unit = {},
+    onToggleEditProduct: () -> Unit = {},
     onDeleteProduct: () -> Unit = {}
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -543,14 +615,14 @@ fun FloatingTopBar(
                     modifier = Modifier.align(Alignment.BottomEnd)
                 ) {
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.product_detail_edit_product)) },
+                        text = { Text(stringResource(if (isEditing) R.string.product_detail_cancel_edit_product else R.string.product_detail_edit_product)) },
                         onClick = {
                             showMenu = false
-                            onEditProduct()
+                            onToggleEditProduct()
                         },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.Edit,
+                                imageVector = if (isEditing) Icons.Default.Close else Icons.Default.Edit,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -644,6 +716,30 @@ fun PriceRow(price: Double, unit: ProductUnit) {
             )
         )
         Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = "/ " + stringResource(unit.toDisplayNameRes()),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 2.dp)
+        )
+    }
+}
+
+@Composable
+fun EditablePriceRow(
+    priceText: String,
+    unit: ProductUnit,
+    onPriceChange: (String) -> Unit
+) {
+    Row(verticalAlignment = Alignment.Bottom) {
+        OutlinedTextField(
+            value = priceText,
+            onValueChange = onPriceChange,
+            label = { Text(stringResource(R.string.label_price)) },
+            singleLine = true,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "/ " + stringResource(unit.toDisplayNameRes()),
             style = MaterialTheme.typography.bodyLarge,
@@ -761,14 +857,12 @@ fun MetaInfoGrid(product: Product) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            product.location?.let { loc ->
-                MetaChip(
-                    icon = Icons.Default.LocationOn,
-                    label = stringResource(R.string.product_detail_location_label),
-                    value = loc.shortDisplayName,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            MetaChip(
+                icon = Icons.Default.LocationOn,
+                label = stringResource(R.string.product_detail_location_label),
+                value = product.location?.shortDisplayName ?: stringResource(R.string.product_detail_no_location),
+                modifier = Modifier.weight(1f)
+            )
             MetaChip(
                 icon = Icons.Default.CalendarToday,
                 label = stringResource(R.string.product_detail_published_label),
@@ -882,6 +976,30 @@ fun ExpandableDescription(description: String) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun EditableDescriptionField(
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    Column {
+        Text(
+            text = stringResource(R.string.product_detail_description_label),
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(stringResource(R.string.product_detail_description_label)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 120.dp),
+            minLines = 4
+        )
     }
 }
 
@@ -1259,7 +1377,8 @@ fun ReviewCard(
 fun ContactProducerButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    textRes: Int = R.string.product_detail_contact_producer
 ) {
     Surface(
         color = MaterialTheme.colorScheme.background,
@@ -1302,7 +1421,7 @@ fun ContactProducerButton(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = stringResource(R.string.product_detail_contact_producer),
+                    text = stringResource(textRes),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.3.sp

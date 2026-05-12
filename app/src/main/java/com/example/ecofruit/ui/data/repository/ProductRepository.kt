@@ -123,6 +123,11 @@ class ProductRepository {
         docRef.set(product).await()
     }
 
+    suspend fun updateProduct(product: Product): Result<Unit> = runCatching {
+        require(product.id.isNotBlank()) { "Product id is required" }
+        productsCollection.document(product.id).set(product).await()
+    }
+
     suspend fun deleteProduct(productId: String): Result<Unit> = runCatching {
         // First try to read the product to obtain stored image URLs (if any)
         val snapshot = productsCollection.document(productId).get().await()

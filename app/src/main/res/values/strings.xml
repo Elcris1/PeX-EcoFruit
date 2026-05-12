@@ -212,4 +212,9 @@
     <string name="product_detail_edit_product">Edit product</string>
     <string name="product_detail_delete_product">Delete product</string>
     <string name="product_detail_delete_product_error">Error deleting product: %s</string>
+    <string name="product_detail_save_product">Save product</string>
+    <string name="product_detail_updated_success">Product updated successfully</string>
+    <string name="product_detail_updated_error">Error updating product: %s</string>
+    <string name="product_detail_cancel_edit_product">Cancel edit</string>
+    <string name="product_detail_no_location">No location selected </string>
 </resources>

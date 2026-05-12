@@ -52,7 +52,8 @@ class ViewProductActivity : ComponentActivity() {
             val deleteReviewState by productViewModel.deleteReviewState.collectAsState()
             val contactState by chatViewModel.contactState.collectAsState()
             val deleteProductState by productViewModel.deleteProductState.collectAsState()
-            
+            val updateProductState by productViewModel.updateProductState.collectAsState()
+
             val context = LocalContext.current
 
             LaunchedEffect(productId) {
@@ -160,6 +161,9 @@ class ViewProductActivity : ComponentActivity() {
                                     },
                                     onDeleteProduct = {
                                         productViewModel.deleteProduct(product.id)
+                                    },
+                                    onSaveProduct = { updatedProduct ->
+                                        productViewModel.updateProduct(updatedProduct.copy(id = product.id))
                                     }
                                 )
                             } else {

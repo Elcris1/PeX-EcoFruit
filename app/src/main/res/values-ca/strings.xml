@@ -205,4 +205,9 @@
     <string name="product_detail_edit_product">Editar producte</string>
     <string name="product_detail_delete_product">Eliminar producte</string>
     <string name="product_detail_delete_product_error">Error en eliminar el producte: %s</string>
+    <string name="product_detail_save_product">Guardar producte</string>
+    <string name="product_detail_updated_success">Producte actualitzat correctament</string>
+    <string name="product_detail_updated_error">Error actualitzant el producte: %s</string>
+    <string name="product_detail_cancel_edit_product">Cancel·lar edició</string>
+    <string name="product_detail_no_location">Ubicació no seleccionada</string>
 </resources>
