@@ -46,6 +46,7 @@ import com.example.ecofruit.ui.viewmodels.ProductViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
+import com.example.ecofruit.ui.viewmodels.NavigationIntentViewModel
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.screens.EditProfileScreen
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
@@ -58,10 +59,15 @@ class MainActivity : ComponentActivity() {
     private val authViweModel: AuthViewModel by viewModels()
 
     private val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
+    private val navigationIntentViewModel: NavigationIntentViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // read optional navigation target from the launching intent
+        val navigateTo = intent?.getStringExtra("navigate_to")
+        // forward initial value to the NavigationIntentViewModel so UI can react
+        navigationIntentViewModel.send(navigateTo)
 
         setContent {
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
@@ -70,10 +76,20 @@ class MainActivity : ComponentActivity() {
                     productsViewModel = productsViewModel,
                     authViewModel = authViweModel,
                     userViewModel = userViewModel,
-                    chatViewModel = chatViewModel
+                    chatViewModel = chatViewModel,
+                    navigationIntentViewModel = navigationIntentViewModel
                 )
             }
         }
+    }
+
+    // update the Activity intent when a new intent is delivered (e.g., Activity already running)
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // replace the Activity's intent so composables reading (context as Activity).intent will see the new extras
+        setIntent(intent)
+        // forward new navigation request to the view model so the UI can react while activity is alive
+        navigationIntentViewModel.send(intent.getStringExtra("navigate_to"))
     }
 
     override fun onResume() {
@@ -96,9 +112,36 @@ fun MainScreen(
     productsViewModel: ProductViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
-    chatViewModel: ChatViewModel = viewModel()
+    chatViewModel: ChatViewModel = viewModel(),
+    navigationIntentViewModel: NavigationIntentViewModel = viewModel()
 ) {
     val navController = rememberNavController()
+    // observe navigation requests coming from the Activity (NavigationIntentViewModel)
+    val requestedNavigateTo by navigationIntentViewModel.navigateTo.collectAsStateWithLifecycle()
+
+    LaunchedEffect(requestedNavigateTo) {
+        requestedNavigateTo?.let { target ->
+            val route = when (target) {
+                "home" -> Screen.Home.route
+                "profile" -> Screen.Profile.route
+                "inbox" -> Screen.Inbox.route
+                "sell" -> Screen.Sell.route
+                "search" -> Screen.Search.route
+                "edit_profile" -> "edit_profile"
+                else -> null
+            }
+
+            route?.let { r ->
+                navController.navigate(r) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+        }
+    }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val context = LocalContext.current
