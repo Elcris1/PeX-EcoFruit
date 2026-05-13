@@ -58,40 +58,6 @@ class ProductViewModel(
     private val _updateProductState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
     val updateProductState: StateFlow<RequestUiState<Unit>> = _updateProductState.asStateFlow()
 
-    fun loadHomePage(user: User) {
-        viewModelScope.launch {
-            // Ponemos todos los estados en Loading primero
-            _recommendedProducts.value = RequestUiState.Loading()
-            _followingProducts.value = RequestUiState.Loading()
-            _favouriteProducts.value = RequestUiState.Loading()
-
-            // Lanzamos las peticiones de forma concurrente
-            launch {
-                productRepository.getRecommendedProducts().onSuccess {
-                    _recommendedProducts.value = RequestUiState.Success(it)
-                }.onFailure {
-                    _recommendedProducts.value = RequestUiState.Error(it.message ?: "Error loading recommended products")
-                }
-            }
-
-            launch {
-                productRepository.getProductsFromFollowingUsers(user).onSuccess {
-                    _followingProducts.value = RequestUiState.Success(it)
-                }.onFailure {
-                    _followingProducts.value = RequestUiState.Error(it.message ?: "Error loading following products")
-                }
-            }
-
-            launch {
-                productRepository.getFavouriteProducts(user.id).onSuccess {
-                    _favouriteProducts.value = RequestUiState.Success(it)
-                }.onFailure {
-                    _favouriteProducts.value = RequestUiState.Error(it.message ?: "Error loading favourite products")
-                }
-            }
-        }
-    }
-
     fun loadHomePageRealtime(user: User) {
         viewModelScope.launch {
             _recommendedProducts.value = RequestUiState.Loading()
@@ -126,17 +92,6 @@ class ProductViewModel(
                         _favouriteProducts.value = RequestUiState.Error(it.message ?: "Error loading favourite products")
                     }
                 }
-            }
-        }
-    }
-
-    fun addProduct(product: Product) {
-        viewModelScope.launch {
-            _addProductState.value = RequestUiState.Loading()
-            productRepository.addProduct(product).onSuccess {
-                _addProductState.value = RequestUiState.Success(Unit)
-            }.onFailure {
-                _addProductState.value = RequestUiState.Error(it.message ?: "Error adding product")
             }
         }
     }
@@ -187,16 +142,6 @@ class ProductViewModel(
         }
     }
 
-    fun getProductById(productId: String) {
-        viewModelScope.launch {
-            _product.value = RequestUiState.Loading()
-            productRepository.getProduct(productId).onSuccess {
-                _product.value = RequestUiState.Success(it)
-            }.onFailure {
-                _product.value = RequestUiState.Error(it.message ?: "Error loading product")
-            }
-        }
-    }
 
     fun getProductByIdRealtime(productId: String) {
         viewModelScope.launch {
@@ -207,17 +152,6 @@ class ProductViewModel(
                 }.onFailure {
                     _product.value = RequestUiState.Error(it.message ?: "Error loading product")
                 }
-            }
-        }
-    }
-
-    fun getReviewsByProductId(productId: String) {
-        viewModelScope.launch {
-            _reviews.value = RequestUiState.Loading()
-            reviewRepository.getReviewsToProduct(productId).onSuccess {
-                _reviews.value = RequestUiState.Success(it)
-            }.onFailure {
-                _reviews.value = RequestUiState.Error(it.message ?: "Error loading reviews")
             }
         }
     }

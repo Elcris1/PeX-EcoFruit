@@ -5,6 +5,7 @@ import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.model.User
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.channels.awaitClose
@@ -18,14 +19,6 @@ class ProductRepository {
     private val productsCollection = db.collection("products")
     private val storage = Firebase.storage
     private val storageRef = storage.reference.child("products")
-
-    suspend fun getProducts(): Result<List<Product>> = runCatching {
-        productsCollection.get().await().toObjects(Product::class.java)
-    }
-
-    suspend fun getProduct(productId: String): Result<Product?> = runCatching {
-        productsCollection.document(productId).get().await().toObject(Product::class.java)
-    }
 
     fun getProductRealtime(productId: String): Flow<Result<Product?>> = callbackFlow {
         val subscription = productsCollection.document(productId)
@@ -46,14 +39,10 @@ class ProductRepository {
         productsCollection.whereEqualTo("userId", userId).get().await().toObjects(Product::class.java)
     }
 
-    suspend fun getFavouriteProducts(userId: String): Result<List<Product>> = runCatching {
-        productsCollection.whereArrayContains("favouritesList", userId).get().await()
-            .toObjects(Product::class.java).sortedByDescending { it.rating }
-    }
-
     fun getFavouriteProductsRealtime(userId: String): Flow<Result<List<Product>>> = callbackFlow {
         val subscription = productsCollection
             .whereArrayContains("favouritesList", userId)
+            .orderBy("recommendationScore",Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(Result.failure(error))
@@ -67,12 +56,6 @@ class ProductRepository {
         awaitClose { subscription.remove() }
     }
 
-    suspend fun getProductsFromFollowingUsers(user: User): Result<List<Product>> = runCatching {
-        if (user.following.isEmpty()) return@runCatching emptyList()
-        productsCollection.whereIn("userId", user.following).get().await()
-            .toObjects(Product::class.java).sortedByDescending { it.createdAt }
-    }
-
     fun getProductsFromFollowingUsersRealtime(user: User): Flow<Result<List<Product>>> = callbackFlow {
         if (user.following.isEmpty()) {
             trySend(Result.success(emptyList()))
@@ -82,6 +65,7 @@ class ProductRepository {
 
         val subscription = productsCollection
             .whereIn("userId", user.following)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(Result.failure(error))
@@ -95,13 +79,9 @@ class ProductRepository {
         awaitClose { subscription.remove() }
     }
 
-    suspend fun getRecommendedProducts(): Result<List<Product>> = runCatching {
-        productsCollection.get().await().toObjects(Product::class.java)
-            .sortedByDescending { it.recommendationScore() }
-    }
-
     fun getRecommendedProductsRealtime(): Flow<Result<List<Product>>> = callbackFlow {
         val subscription = productsCollection
+            .orderBy("recommendationScore", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(Result.failure(error))
@@ -109,7 +89,6 @@ class ProductRepository {
                 }
                 if (snapshot != null) {
                     val products = snapshot.toObjects(Product::class.java)
-                        .sortedByDescending { it.recommendationScore() }
                     trySend(Result.success(products))
                 }
             }
