@@ -2,6 +2,7 @@ package com.example.ecofruit.ui.data.model
 
 import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
+import com.google.firebase.firestore.PropertyName
 
 data class Product (
     var id: String = "",
@@ -12,6 +13,8 @@ data class Product (
     var location: LocationData? = null,
     val price: Double = 0.0,
     val unit: ProductUnit = ProductUnit.KG,
+    @get:PropertyName("isOrganic")
+    @get:JvmName("isOrganic")
     val isOrganic: Boolean = false,
     val type: ProductType = ProductType.FRUITS,
     var userId: String = "",
