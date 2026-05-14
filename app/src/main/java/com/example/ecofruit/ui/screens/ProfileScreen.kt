@@ -42,9 +42,6 @@ import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.model.RequestUiState
 
-
-//TODO: añadir my products en caso de ser prodcutor para poder ver y editar tus productos
-
 data class ProfileMenuItem(
     val icon: ImageVector,
     val label: String,
