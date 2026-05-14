@@ -231,4 +231,5 @@
     <string name="profile_view_shop_title">Veure tenda</string>
     <string name="profile_view_shop_desc">Veure la teva tenda publica</string>
     <string name="app_session">Sessió app</string>
+    <string name="no_internet_connection">Sense connexió a internet</string>
 </resources>

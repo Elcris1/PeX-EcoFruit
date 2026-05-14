@@ -61,6 +61,7 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import java.util.Locale
 import com.example.ecofruit.R
+import com.example.ecofruit.ui.components.NetworkStatusNotification
 import com.example.ecofruit.ui.data.constants.ConversationTag
 import com.example.ecofruit.ui.screens.displayName
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
@@ -81,6 +82,7 @@ class ChatActivity : ComponentActivity() {
             val conversationUI by chatViewModel.conversation.collectAsState()
             val chatState by chatViewModel.chatState.collectAsState()
             val messages by chatViewModel.messages.collectAsState()
+            val isConnected by settingsViewModel.isConnectionSatisfied.collectAsStateWithLifecycle()
 
             val context = LocalContext.current
 
@@ -108,7 +110,8 @@ class ChatActivity : ComponentActivity() {
                         onSend = { message ->
                             chatViewModel.addMessage(message)
                         },
-                        onBackClick = { finish() }
+                        onBackClick = { finish() },
+                        isConnected = isConnected
                     )
                 }
             }
@@ -126,6 +129,7 @@ fun ChatScreen(
     onProfileClick: (String) -> Unit = {},
     onSend: (ChatMessage) -> Unit = {},
     onBackClick: () -> Unit = {},
+    isConnected: Boolean = true
 ) {
     var messageText by remember { mutableStateOf("") }
 
@@ -217,6 +221,9 @@ fun ChatScreen(
                         )
                     }
                 }
+
+                item{ NetworkStatusNotification(isConnected = isConnected) }
+
             }
         }
     }
@@ -232,7 +239,6 @@ private fun ChatTopBar(
     onProfileClick: (String) -> Unit,
     onBackClick: () -> Unit,
 ) {
-
     val other = conversation.otherUser
     Surface(
         shadowElevation = 2.dp,
@@ -495,7 +501,8 @@ private fun ChatInputBar(
 private fun LightPreview() {
     EcoFruitTheme (darkTheme = false) {
         ChatScreen(
-            chatState = RequestUiState.Idle()
+            chatState = RequestUiState.Idle(),
+            isConnected = false
         )
     }
 }

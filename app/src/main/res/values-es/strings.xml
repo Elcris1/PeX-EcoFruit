@@ -232,4 +232,5 @@
     <string name="profile_view_shop_title">Ver tienda</string>
     <string name="profile_view_shop_desc">Ver tu tienda publica</string>
     <string name="app_session">Sesión de la app</string>
+    <string name="no_internet_connection">Sin conexión a internet</string>
 </resources>

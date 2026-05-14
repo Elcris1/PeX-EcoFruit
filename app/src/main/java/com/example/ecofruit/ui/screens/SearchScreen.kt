@@ -671,7 +671,7 @@ private fun SearchFiltersDialog(
                         onLocationSelected = onLocationChange,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(250.dp)
+                            .height(300.dp)
                     )
 
                     Text(

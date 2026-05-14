@@ -25,7 +25,9 @@ class SettingsViewModel(
             initialValue = Settings()
         )
 
-    private val networkManager = NetworkPreferenceManager(application)
+    private val networkManager = NetworkPreferenceManager(app)
+
+    val isConnectionSatisfied: StateFlow<Boolean> = networkManager.isConnectionSatisfied
 
     init {
         viewModelScope.launch {

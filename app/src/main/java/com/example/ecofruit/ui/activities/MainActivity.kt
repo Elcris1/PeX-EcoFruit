@@ -3,7 +3,6 @@ package com.example.ecofruit.ui.activities
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -14,6 +13,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -52,13 +52,13 @@ import com.example.ecofruit.R
 import com.example.ecofruit.ui.screens.EditProfileScreen
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import androidx.compose.ui.res.stringResource
-import com.example.ecofruit.ui.activities.ViewProfileActivity
+import com.example.ecofruit.ui.components.NetworkStatusNotification
 
 class MainActivity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
     private val productsViewModel: ProductViewModel by viewModels { ViewModelFactory() }
     private val settingsViewModel: SettingsViewModel by viewModels()
-    private val authViweModel: AuthViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
 
     private val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
     private val navigationIntentViewModel: NavigationIntentViewModel by viewModels()
@@ -76,10 +76,11 @@ class MainActivity : ComponentActivity() {
             EcoFruitTheme (darkTheme = settings.darkTheme) {
                 MainScreen(
                     productsViewModel = productsViewModel,
-                    authViewModel = authViweModel,
+                    authViewModel = authViewModel,
                     userViewModel = userViewModel,
                     chatViewModel = chatViewModel,
-                    navigationIntentViewModel = navigationIntentViewModel
+                    navigationIntentViewModel = navigationIntentViewModel,
+                    settingsViewModel = settingsViewModel
                 )
             }
         }
@@ -96,7 +97,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        val userId = authViweModel.currentAppUserModel?.id
+        val userId = authViewModel.currentAppUserModel?.id
         if (userId != null) {
             chatViewModel.getConversationsFromUser(userId)
         }
@@ -115,11 +116,13 @@ fun MainScreen(
     authViewModel: AuthViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     chatViewModel: ChatViewModel = viewModel(),
-    navigationIntentViewModel: NavigationIntentViewModel = viewModel()
+    navigationIntentViewModel: NavigationIntentViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel = viewModel()
 ) {
     val navController = rememberNavController()
     // observe navigation requests coming from the Activity (NavigationIntentViewModel)
     val requestedNavigateTo by navigationIntentViewModel.navigateTo.collectAsStateWithLifecycle()
+    val isConnected by settingsViewModel.isConnectionSatisfied.collectAsStateWithLifecycle()
 
     LaunchedEffect(requestedNavigateTo) {
         requestedNavigateTo?.let { target ->
@@ -242,121 +245,124 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Home.route,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(Screen.Home.route) {
-                HomeScreen(
-                    currentUser = user,
-                    recommendedProductsState = recommendedProductsState,
-                    followedProducerProductsState = followedProducerProductsState,
-                    favouriteProductsState = favouriteProductsState,
-                    onProductClick = { productId ->
-                       Intent(context, ViewProductActivity::class.java).also {
-                            it.putExtra("product_id", productId)
-                            context.startActivity(it)
+        Column(modifier = Modifier.padding(innerPadding)) {
+            NetworkStatusNotification(isConnected = isConnected)
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Home.route,
+                modifier = Modifier.weight(1f)
+            ) {
+                composable(Screen.Home.route) {
+                    HomeScreen(
+                        currentUser = user,
+                        recommendedProductsState = recommendedProductsState,
+                        followedProducerProductsState = followedProducerProductsState,
+                        favouriteProductsState = favouriteProductsState,
+                        onProductClick = { productId ->
+                           Intent(context, ViewProductActivity::class.java).also {
+                                it.putExtra("product_id", productId)
+                                context.startActivity(it)
+                            }
+                        },
+                        onSearchClick = {
+                            navigationIntentViewModel.send("search")
+                        },
+                        onFavouriteClick = { product, userId, isFavourite ->
+                            productsViewModel.toggleFavourite(product.id, userId, isFavourite)
                         }
-                    },
-                    onSearchClick = {
-                        navigationIntentViewModel.send("search")
-                    },
-                    onFavouriteClick = { product, userId, isFavourite ->
-                        productsViewModel.toggleFavourite(product.id, userId, isFavourite)
-                    }
-                )
-            }
-            composable(Screen.Search.route) { SearchScreen(
-                searchState = searchPagingState,
-                users = searchedUsers,
-                onSearch = { query, category, location, radiusKm ->
-                    productsViewModel.startSearchPaging(query, category, location, radiusKm)
-                },
-                onUserSearch = { query ->
-                    userViewModel.searchUsersByName(query)
-                },
-                onLoadMore = {
-                    productsViewModel.loadNextSearchPage()
-                },
-            ) }
-            composable(Screen.Sell.route) {
-                SellScreen(
-                    productsViewModel,
-                    onPublish = { product, images ->
-                        user?.let {
-                            product.userId = it.id
-                            product.userName = it.name
-                            product.userAvatar = it.profileImageUrl
-                            productsViewModel.publishProduct(product, images)
-                        }
-                    }
-                )
-            }
-            composable(Screen.Inbox.route) {
-                InboxScreen(
-                    currentUser = user,
-                    chatViewModel = chatViewModel,
-                    onConversationClick = { conversation ->
-                        Intent(context, ChatActivity::class.java).also {
-                            it.putExtra("conversation_id", conversation.id)
-                            context.startActivity(it)
-                        }
-                    }
-                )
-            }
-            composable(Screen.Profile.route) {
-                val producerState by userViewModel.producerState.collectAsStateWithLifecycle()
-                ProfileScreen(
-                    user = user,
-                    uiState = producerState,
-                    onEditProfile = {navController.navigate("edit_profile") },
-                    onConvertToProducer = { userViewModel.changeProducerState() },
-                    onSettings = {
-                        Intent(context, SettingsActivity::class.java).also {
-                            context.startActivity(it)
-                        }
-                    },
-                    onLogout = {
-                        authViewModel.logout()
-                        Intent(context, LoginActvity::class.java).also {
-                            it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            context.startActivity(it)
-                            (context as Activity).finish()
-                        }
-                    },
-                    onViewShop = { userId ->
-                        Intent(context, ViewProfileActivity::class.java).also {
-                            it.putExtra("user_id", userId)
-                            context.startActivity(it)
-                        }
-                    },
-                )
-            }
-            composable("edit_profile") {
-                if (user == null) {
-                    LaunchedEffect(Unit) { navController.popBackStack() }
-                    return@composable
+                    )
                 }
-                EditProfileScreen(
-                    user     = user,
-                    editProfileState = editProfileState,
-                    onSave   = { name, bio, avatarUri, location ->
-                        userViewModel.updateUser(
-                            updatedUser = user.copy(
-                                name = name,
-                                bio = bio,
-                                location = location
-                               ),
-                            imageUri = avatarUri
-                        )
+                composable(Screen.Search.route) { SearchScreen(
+                    searchState = searchPagingState,
+                    users = searchedUsers,
+                    onSearch = { query, category, location, radiusKm ->
+                        productsViewModel.startSearchPaging(query, category, location, radiusKm)
                     },
-                    onCancel = {
-                        navController.popBackStack()
-                        userViewModel.resetUpdateState()
+                    onUserSearch = { query ->
+                        userViewModel.searchUsersByName(query)
                     },
-                )
+                    onLoadMore = {
+                        productsViewModel.loadNextSearchPage()
+                    },
+                ) }
+                composable(Screen.Sell.route) {
+                    SellScreen(
+                        productsViewModel,
+                        onPublish = { product, images ->
+                            user?.let {
+                                product.userId = it.id
+                                product.userName = it.name
+                                product.userAvatar = it.profileImageUrl
+                                productsViewModel.publishProduct(product, images)
+                            }
+                        }
+                    )
+                }
+                composable(Screen.Inbox.route) {
+                    InboxScreen(
+                        currentUser = user,
+                        chatViewModel = chatViewModel,
+                        onConversationClick = { conversation ->
+                            Intent(context, ChatActivity::class.java).also {
+                                it.putExtra("conversation_id", conversation.id)
+                                context.startActivity(it)
+                            }
+                        }
+                    )
+                }
+                composable(Screen.Profile.route) {
+                    val producerState by userViewModel.producerState.collectAsStateWithLifecycle()
+                    ProfileScreen(
+                        user = user,
+                        uiState = producerState,
+                        onEditProfile = {navController.navigate("edit_profile") },
+                        onConvertToProducer = { userViewModel.changeProducerState() },
+                        onSettings = {
+                            Intent(context, SettingsActivity::class.java).also {
+                                context.startActivity(it)
+                            }
+                        },
+                        onLogout = {
+                            authViewModel.logout()
+                            Intent(context, LoginActvity::class.java).also {
+                                it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                context.startActivity(it)
+                                (context as Activity).finish()
+                            }
+                        },
+                        onViewShop = { userId ->
+                            Intent(context, ViewProfileActivity::class.java).also {
+                                it.putExtra("user_id", userId)
+                                context.startActivity(it)
+                            }
+                        },
+                    )
+                }
+                composable("edit_profile") {
+                    if (user == null) {
+                        LaunchedEffect(Unit) { navController.popBackStack() }
+                        return@composable
+                    }
+                    EditProfileScreen(
+                        user     = user,
+                        editProfileState = editProfileState,
+                        onSave   = { name, bio, avatarUri, location ->
+                            userViewModel.updateUser(
+                                updatedUser = user.copy(
+                                    name = name,
+                                    bio = bio,
+                                    location = location
+                                   ),
+                                imageUri = avatarUri
+                            )
+                        },
+                        onCancel = {
+                            navController.popBackStack()
+                            userViewModel.resetUpdateState()
+                        },
+                    )
 
+                }
             }
         }
     }
