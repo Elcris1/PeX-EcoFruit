@@ -236,4 +236,5 @@
     <string name="my_shop">My shop</string>
     <string name="profile_view_shop_title">View shop</string>
     <string name="profile_view_shop_desc">See your public shop profile</string>
+    <string name="app_session">App session</string>
 </resources>

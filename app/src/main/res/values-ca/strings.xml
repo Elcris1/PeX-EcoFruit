@@ -227,4 +227,8 @@
     <string name="search_filters_radius">Radi: %d km</string>
     <string name="search_filters_reset">Restablir</string>
     <string name="search_filters_apply">Aplicar</string>
+    <string name="my_shop">La meva tenda</string>
+    <string name="profile_view_shop_title">Veure tenda</string>
+    <string name="profile_view_shop_desc">Veure la teva tenda publica</string>
+    <string name="app_session">Sessió app</string>
 </resources>
