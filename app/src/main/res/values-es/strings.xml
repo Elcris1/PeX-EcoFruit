@@ -202,4 +202,35 @@
     <string name="product_detail_add_review_dialog_title">Añadir reseña</string>
     <string name="product_detail_comment_placeholder">Tu comentario</string>
     <string name="product_detail_contact_self_error">No puedes contactarte a ti mismo</string>
+    <string name="product_detail_menu">Menú</string>
+    <string name="product_detail_edit_product">Editar producto</string>
+    <string name="product_detail_delete_product">Eliminar producto</string>
+    <string name="product_detail_delete_product_error">Error al eliminar producto: %s</string>
+    <string name="product_detail_save_product">Guardar producto</string>
+    <string name="product_detail_updated_success">Producto actualizado correctamente</string>
+    <string name="product_detail_updated_error">Error al actualizar producto: %s</string>
+    <string name="product_detail_cancel_edit_product">Cancelar edición</string>
+    <string name="product_detail_no_location">Localización no seleccionada</string>
+
+    <string name="search_placeholder">Buscar productos o usuarios</string>
+    <string name="search_clear_query">Limpiar búsqueda</string>
+    <string name="search_open_filters">Abrir filtros</string>
+    <string name="search_tab_products">Productos</string>
+    <string name="search_tab_users">Usuarios</string>
+    <string name="search_empty_results">No se han encontrado resultados</string>
+    <string name="search_user_producer">Productor</string>
+    <string name="search_user_consumer">Consumidor</string>
+    <string name="search_active_categories">%d categorías</string>
+    <string name="search_active_location">A menos de %d km</string>
+    <string name="search_filters_title">Filtros</string>
+    <string name="search_filters_category">Categoría</string>
+    <string name="search_filters_location">Ubicación</string>
+    <string name="search_filters_radius">Radio: %d km</string>
+    <string name="search_filters_reset">Restablecer</string>
+    <string name="search_filters_apply">Aplicar</string>
+    <string name="my_shop">Mi tienda</string>
+    <string name="profile_view_shop_title">Ver tienda</string>
+    <string name="profile_view_shop_desc">Ver tu tienda publica</string>
+    <string name="app_session">Sesión de la app</string>
+    <string name="no_internet_connection">Sin conexión a internet</string>
 </resources>

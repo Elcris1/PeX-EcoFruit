@@ -31,7 +31,7 @@ import com.example.ecofruit.ui.viewmodels.ProductViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 
-class ViewProductActivity : ComponentActivity() {
+class ViewProductActivity : BaseActivity() {
 
     private val authViewModel: AuthViewModel by viewModels()
     private val productViewModel: ProductViewModel by viewModels { ViewModelFactory() }
@@ -51,7 +51,9 @@ class ViewProductActivity : ComponentActivity() {
             val addReviewState by productViewModel.addReviewState.collectAsState()
             val deleteReviewState by productViewModel.deleteReviewState.collectAsState()
             val contactState by chatViewModel.contactState.collectAsState()
-            
+            val deleteProductState by productViewModel.deleteProductState.collectAsState()
+            val updateProductState by productViewModel.updateProductState.collectAsState()
+
             val context = LocalContext.current
 
             LaunchedEffect(productId) {
@@ -92,6 +94,15 @@ class ViewProductActivity : ComponentActivity() {
                 } else if (deleteReviewState is RequestUiState.Error) {
                     val message = (deleteReviewState as RequestUiState.Error).message
                     Toast.makeText(context, context.getString(R.string.product_detail_deleted_error, message), Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            LaunchedEffect(deleteProductState) {
+                if (deleteProductState is RequestUiState.Success) {
+                    finish()
+                } else if (deleteProductState is RequestUiState.Error) {
+                    val message = (deleteProductState as RequestUiState.Error).message
+                    Toast.makeText(context, context.getString(R.string.product_detail_delete_product_error, message), Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -147,6 +158,12 @@ class ViewProductActivity : ComponentActivity() {
                                     },
                                     onDeleteReview = { review ->
                                         productViewModel.deleteReview(review)
+                                    },
+                                    onDeleteProduct = {
+                                        productViewModel.deleteProduct(product.id)
+                                    },
+                                    onSaveProduct = { updatedProduct ->
+                                        productViewModel.updateProduct(updatedProduct.copy(id = product.id))
                                     }
                                 )
                             } else {

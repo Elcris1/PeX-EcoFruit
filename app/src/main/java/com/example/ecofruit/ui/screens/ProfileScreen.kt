@@ -42,9 +42,6 @@ import com.example.ecofruit.ui.data.model.User
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.data.model.RequestUiState
 
-
-//TODO: añadir my products en caso de ser prodcutor para poder ver y editar tus productos
-
 data class ProfileMenuItem(
     val icon: ImageVector,
     val label: String,
@@ -66,6 +63,7 @@ fun ProfileScreen(
     onConvertToProducer: () -> Unit,
     onSettings: () -> Unit,
     onLogout: () -> Unit,
+    onViewShop: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
@@ -94,7 +92,7 @@ fun ProfileScreen(
                     onClick = onEditProfile,
                 ),
                 ProfileMenuItem(
-                    icon = Icons.Outlined.Store,
+                    icon = Icons.Outlined.Agriculture,
                     label = if (!user.isProducer) stringResource(R.string.profile_go_pro_title) else stringResource(R.string.profile_go_consumer_title),
                     description = if (!user.isProducer) stringResource(R.string.profile_go_pro_desc) else stringResource(R.string.profile_go_consumer_desc),
                     onClick = onConvertToProducer,
@@ -299,6 +297,34 @@ fun ProfileScreen(
 
                     Spacer(Modifier.height(8.dp))
 
+                    if (user.isProducer) {
+                        Text(
+                            text = stringResource(R.string.my_shop),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 2.dp),
+                        )
+
+                        ProfileMenuRow(
+                            item = ProfileMenuItem(
+                                icon = Icons.Outlined.Store,
+                                label = stringResource(R.string.profile_view_shop_title),
+                                description = stringResource(R.string.profile_view_shop_desc),
+                                onClick = { onViewShop(user.id) },
+                            ),
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+                    }
+
+                    Text(
+                        text = stringResource(R.string.app_session),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 2.dp),
+                    )
                     // Logout – secondary destructive row
                     ProfileMenuRow(
                         item = ProfileMenuItem(
@@ -470,6 +496,7 @@ private fun ProfileScreenPreview() {
             onConvertToProducer = {},
             onSettings = {},
             onLogout = {},
+            onViewShop = {},
         )
     }
 }

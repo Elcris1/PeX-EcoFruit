@@ -2,6 +2,7 @@ package com.example.ecofruit.ui.data.repository
 
 import com.example.ecofruit.ui.data.model.Review
 import com.example.ecofruit.ui.data.constants.ReviewType
+import com.example.ecofruit.ui.data.model.calculateRecommendationScore
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
@@ -90,12 +91,14 @@ class ReviewRepository {
             // 3. Calculate new average
             val newCount = currentCount + 1
             val newAverage = ((currentRating * currentCount) + review.rating) / newCount
+            val recomendationScore = calculateRecommendationScore(newAverage, newCount.toInt())
 
             // 4. Perform atomic writes
             transaction.set(newReviewRef, finalReview)
             transaction.update(targetDocRef, mapOf(
                 "rating" to newAverage,
-                "reviewCount" to newCount
+                "reviewCount" to newCount,
+                "recommendationScore" to recomendationScore
             ))
         }.await()
     }
@@ -121,12 +124,14 @@ class ReviewRepository {
             } else {
                 0.0
             }
+            val recomendationScore = calculateRecommendationScore(newAverage, newCount.toInt())
 
             // 4. Perform atomic writes
             transaction.delete(reviewRef)
             transaction.update(targetDocRef, mapOf(
                 "rating" to newAverage,
-                "reviewCount" to newCount
+                "reviewCount" to newCount,
+                "recommendationScore" to recomendationScore
             ))
         }.await()
     }

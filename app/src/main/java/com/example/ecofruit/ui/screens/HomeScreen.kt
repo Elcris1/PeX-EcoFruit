@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -156,6 +157,7 @@ private fun ProductSectionStateWrapper(
             )
         }
         is RequestUiState.Error -> {
+            Log.d("HomeScreen", state.message)
             // Mostramos el header incluso con error
             SectionHeader(
                 title = title,
@@ -216,6 +218,7 @@ private fun FollowedProducersSectionStateWrapper(
             )
         }
         is RequestUiState.Error -> {
+            Log.d("HomeScreen", state.message)
             SectionHeader(
                 title = title,
                 subtitle = subtitle,

@@ -142,6 +142,16 @@ class UserRepository private constructor() {
         return _users.value.find { it.id == userId }
     }
 
+    suspend fun searchUsersByName(query: String): Result<List<User>> = runCatching {
+        val normalizedQuery = query.trim().lowercase()
+        val snapshot = usersCollection.limit(50).get().await()
+        val users = snapshot.toObjects(User::class.java)
+        if (normalizedQuery.isBlank()) {
+            users
+        } else {
+            users.filter { it.name.lowercase().contains(normalizedQuery) }
+        }
+    }
 
     fun logOut() {
         auth.signOut()

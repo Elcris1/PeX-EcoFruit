@@ -22,6 +22,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -61,11 +62,12 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import java.util.Locale
 import com.example.ecofruit.R
+import com.example.ecofruit.ui.components.NetworkStatusNotification
 import com.example.ecofruit.ui.data.constants.ConversationTag
 import com.example.ecofruit.ui.screens.displayName
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
 
-class ChatActivity : ComponentActivity() {
+class ChatActivity : BaseActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
     private val authViewModel : AuthViewModel by viewModels()
@@ -81,6 +83,7 @@ class ChatActivity : ComponentActivity() {
             val conversationUI by chatViewModel.conversation.collectAsState()
             val chatState by chatViewModel.chatState.collectAsState()
             val messages by chatViewModel.messages.collectAsState()
+            val isConnected by settingsViewModel.isConnectionSatisfied.collectAsStateWithLifecycle()
 
             val context = LocalContext.current
 
@@ -108,7 +111,8 @@ class ChatActivity : ComponentActivity() {
                         onSend = { message ->
                             chatViewModel.addMessage(message)
                         },
-                        onBackClick = { finish() }
+                        onBackClick = { finish() },
+                        isConnected = isConnected
                     )
                 }
             }
@@ -126,6 +130,7 @@ fun ChatScreen(
     onProfileClick: (String) -> Unit = {},
     onSend: (ChatMessage) -> Unit = {},
     onBackClick: () -> Unit = {},
+    isConnected: Boolean = true
 ) {
     var messageText by remember { mutableStateOf("") }
 
@@ -200,12 +205,19 @@ fun ChatScreen(
                 contentPadding = PaddingValues(vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                item { DateDivider(label = stringResource(R.string.chat_today)) }
-
-                items(messages, key = { it.id }) { message ->
+                itemsIndexed(messages, key = { _, it -> it.id }) { index, message ->
                     val isMe = message.isFromCurrentUser(currentUser.id)
                     val sender = usersById[message.senderId]
+                    val prevMessage = messages.getOrNull(index - 1)
 
+                    if (!isSameDay(prevMessage?.timestamp, message.timestamp)) {
+                        if (isSameDay(message.timestamp, System.currentTimeMillis())) {
+                            DateDivider(label = stringResource(R.string.chat_today))
+                        } else {
+                            val dateStr = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(message.timestamp))
+                            DateDivider(label = dateStr)
+                        }
+                    }
                     AnimatedVisibility(
                         visible = true,
                         enter = fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 2 },
@@ -217,10 +229,18 @@ fun ChatScreen(
                         )
                     }
                 }
+
+                item{ NetworkStatusNotification(isConnected = isConnected) }
+
             }
         }
     }
 
+}
+private fun isSameDay(t1: Long?, t2: Long?): Boolean {
+    if(t1 == null || t2 == null) return false
+    val formatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+    return formatter.format(Date(t1)) == formatter.format(Date(t2))
 }
 
 // ── Top bar ────────────────────────────────────────────────────────────────
@@ -232,7 +252,6 @@ private fun ChatTopBar(
     onProfileClick: (String) -> Unit,
     onBackClick: () -> Unit,
 ) {
-
     val other = conversation.otherUser
     Surface(
         shadowElevation = 2.dp,
@@ -495,7 +514,8 @@ private fun ChatInputBar(
 private fun LightPreview() {
     EcoFruitTheme (darkTheme = false) {
         ChatScreen(
-            chatState = RequestUiState.Idle()
+            chatState = RequestUiState.Idle(),
+            isConnected = false
         )
     }
 }

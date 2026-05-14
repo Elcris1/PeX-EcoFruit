@@ -80,7 +80,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.getValue
 
-class RegisterActivity : ComponentActivity() {
+class RegisterActivity : BaseActivity() {
 
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }

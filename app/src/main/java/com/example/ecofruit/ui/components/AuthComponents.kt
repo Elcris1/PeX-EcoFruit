@@ -284,8 +284,6 @@ fun LoadingButton(
     }
 }
 
-
-//TODO: move this to generalComponents.kt
 @Composable
 fun AnimatedBubbleBackground(
     modifier: Modifier = Modifier,

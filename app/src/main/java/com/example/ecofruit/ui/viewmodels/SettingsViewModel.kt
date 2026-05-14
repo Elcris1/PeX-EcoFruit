@@ -6,6 +6,7 @@ import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import com.example.ecofruit.ui.data.model.Settings
 import com.example.ecofruit.ui.data.repository.SettingsRepository
+import com.example.ecofruit.ui.managers.LocaleManager
 import com.example.ecofruit.ui.managers.NetworkPreferenceManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,12 +26,16 @@ class SettingsViewModel(
             initialValue = Settings()
         )
 
-    private val networkManager = NetworkPreferenceManager(application)
+    private val networkManager = NetworkPreferenceManager(app)
+
+    val isConnectionSatisfied: StateFlow<Boolean> = networkManager.isConnectionSatisfied
 
     init {
         viewModelScope.launch {
             val savedSettings = repo.settingsFlow.first() // primer valor real de disco
             networkManager.applyWifiOnly(savedSettings.wifiOnlyMode)
+            // Mirror language to SharedPreferences so applyLocale() can read it on next cold start
+
         }
     }
     // ── Network ───────────────────────────────────────────────────────────────
@@ -50,7 +55,10 @@ class SettingsViewModel(
     fun setDarkTheme(v: Boolean)         = viewModelScope.launch { repo.setDarkTheme(v) }
     fun setNotifications(v: Boolean)     = viewModelScope.launch { repo.setNotifications(v) }
     fun setProducersNotification(v: Boolean) = viewModelScope.launch { repo.setProducersNotification(v) }
-    fun setLanguage(v: String)           = viewModelScope.launch { repo.setLanguage(v) }
+    fun setLanguage(v: String)           = viewModelScope.launch {
+        repo.setLanguage(v)
+
+    }
 
     fun resetAll()                       = viewModelScope.launch { repo.resetAll() }
 
