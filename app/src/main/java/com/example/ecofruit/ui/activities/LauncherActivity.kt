@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.activities
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -51,13 +52,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecofruit.R
 import com.example.ecofruit.ui.components.AnimatedBubbleBackground
 import com.example.ecofruit.ui.data.model.RequestUiState
+import com.example.ecofruit.ui.data.repository.SettingsKeys
+import com.example.ecofruit.ui.data.repository.settingsDataStore
+import com.example.ecofruit.ui.managers.LocaleManager
 import com.example.ecofruit.ui.theme.EcoFruitTheme
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-class LauncherActivity : ComponentActivity() {
+import kotlinx.coroutines.runBlocking
+
+class LauncherActivity : BaseActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val authViewModel: AuthViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,6 +82,15 @@ class LauncherActivity : ComponentActivity() {
                 }
             }
         }
+    }
+    override fun attachBaseContext(newBase: Context) {
+        // Read the saved language synchronously at startup
+        val language = runBlocking {
+            newBase.settingsDataStore.data
+                .map { it[SettingsKeys.LANGUAGE] ?: "es" }
+                .first()
+        }
+        super.attachBaseContext(LocaleManager.applyLocale(newBase, language))
     }
 }
 @SuppressLint("LocalContextGetResourceValueCall")

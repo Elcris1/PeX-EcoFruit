@@ -31,7 +31,7 @@ import com.example.ecofruit.ui.viewmodels.ProductViewModel
 import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 
-class ViewProductActivity : ComponentActivity() {
+class ViewProductActivity : BaseActivity() {
 
     private val authViewModel: AuthViewModel by viewModels()
     private val productViewModel: ProductViewModel by viewModels { ViewModelFactory() }

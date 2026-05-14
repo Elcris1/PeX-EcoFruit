@@ -54,7 +54,7 @@ import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import androidx.compose.ui.res.stringResource
 import com.example.ecofruit.ui.components.NetworkStatusNotification
 
-class MainActivity : ComponentActivity() {
+class MainActivity : BaseActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
     private val productsViewModel: ProductViewModel by viewModels { ViewModelFactory() }
     private val settingsViewModel: SettingsViewModel by viewModels()

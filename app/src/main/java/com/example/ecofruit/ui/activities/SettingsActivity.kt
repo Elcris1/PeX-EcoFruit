@@ -1,5 +1,8 @@
 package com.example.ecofruit.ui.activities
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,16 +32,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecofruit.ui.data.model.Settings
 import com.example.ecofruit.R
+import com.example.ecofruit.ui.data.repository.SettingsKeys
+import com.example.ecofruit.ui.data.repository.settingsDataStore
+import com.example.ecofruit.ui.managers.LocaleManager
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 
-class SettingsActivity : ComponentActivity() {
+class SettingsActivity : BaseActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
 
@@ -72,6 +82,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     var showResetDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -153,7 +164,13 @@ fun SettingsScreen(
                             else -> settings.language
                         },
                         options  = listOf("es" to stringResource(R.string.language_spanish), "en" to stringResource(R.string.language_english), "ca" to stringResource(R.string.language_catalan)),
-                        onSelect = viewModel::setLanguage,
+                        onSelect = { v ->
+                            viewModel.setLanguage(v)
+                            Intent(context, LauncherActivity::class.java).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                                context.startActivity(this)
+                            }
+                        },
                     )
                 }
             }
@@ -441,7 +458,6 @@ private fun DropdownPreferenceRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = enabled) { expanded = true }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -473,25 +489,30 @@ private fun DropdownPreferenceRow(
                 color = MaterialTheme.colorScheme.primary,
             )
         }
-        Icon(
-            imageVector        = Icons.Outlined.ChevronRight,
-            contentDescription = null,
-            tint               = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier           = Modifier.size(20.dp),
-        )
-    }
+        Box {
 
-    DropdownMenu(
-        expanded         = expanded,
-        onDismissRequest = { expanded = false },
-    ) {
-        options.forEach { (key, label) ->
-            DropdownMenuItem(
-                text    = { Text(label) },
-                onClick = { onSelect(key); expanded = false },
+            Icon(
+                imageVector        = Icons.Outlined.ChevronRight,
+                contentDescription = null,
+                tint               = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier           = Modifier.size(20.dp)
+                    .clickable(enabled = enabled) { expanded = true },
             )
+
+            DropdownMenu(
+                expanded         = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                options.forEach { (key, label) ->
+                    DropdownMenuItem(
+                        text    = { Text(label) },
+                        onClick = { onSelect(key); expanded = false },
+                    )
+                }
+            }
         }
     }
+
 }
 
 @Preview(showBackground = true, name = "LightMode")

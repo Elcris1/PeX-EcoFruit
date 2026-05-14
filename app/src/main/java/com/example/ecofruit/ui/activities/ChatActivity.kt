@@ -67,7 +67,7 @@ import com.example.ecofruit.ui.data.constants.ConversationTag
 import com.example.ecofruit.ui.screens.displayName
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
 
-class ChatActivity : ComponentActivity() {
+class ChatActivity : BaseActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val chatViewModel: ChatViewModel by viewModels { ViewModelFactory() }
     private val authViewModel : AuthViewModel by viewModels()

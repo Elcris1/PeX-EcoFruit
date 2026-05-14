@@ -27,7 +27,7 @@ import com.example.ecofruit.ui.viewmodels.SettingsViewModel
 import com.example.ecofruit.ui.viewmodels.UserViewModel
 import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 
-class ViewProfileActivity : ComponentActivity() {
+class ViewProfileActivity : BaseActivity() {
     private val authViewModel: AuthViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
     private val profileViewModel: ProfileViewModel by viewModels { ViewModelFactory() }

@@ -57,7 +57,7 @@ import com.example.ecofruit.ui.viewmodels.ViewModelFactory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class LoginActvity : ComponentActivity() {
+class LoginActvity : BaseActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val authViewModel: AuthViewModel by viewModels()
 
