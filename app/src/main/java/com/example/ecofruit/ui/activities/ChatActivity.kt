@@ -22,6 +22,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -204,12 +205,19 @@ fun ChatScreen(
                 contentPadding = PaddingValues(vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                item { DateDivider(label = stringResource(R.string.chat_today)) }
-
-                items(messages, key = { it.id }) { message ->
+                itemsIndexed(messages, key = { _, it -> it.id }) { index, message ->
                     val isMe = message.isFromCurrentUser(currentUser.id)
                     val sender = usersById[message.senderId]
+                    val prevMessage = messages.getOrNull(index - 1)
 
+                    if (!isSameDay(prevMessage?.timestamp, message.timestamp)) {
+                        if (isSameDay(message.timestamp, System.currentTimeMillis())) {
+                            DateDivider(label = stringResource(R.string.chat_today))
+                        } else {
+                            val dateStr = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(message.timestamp))
+                            DateDivider(label = dateStr)
+                        }
+                    }
                     AnimatedVisibility(
                         visible = true,
                         enter = fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 2 },
@@ -228,6 +236,11 @@ fun ChatScreen(
         }
     }
 
+}
+private fun isSameDay(t1: Long?, t2: Long?): Boolean {
+    if(t1 == null || t2 == null) return false
+    val formatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+    return formatter.format(Date(t1)) == formatter.format(Date(t2))
 }
 
 // ── Top bar ────────────────────────────────────────────────────────────────
