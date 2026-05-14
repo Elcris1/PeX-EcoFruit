@@ -217,4 +217,23 @@
     <string name="product_detail_updated_error">Error updating product: %s</string>
     <string name="product_detail_cancel_edit_product">Cancel edit</string>
     <string name="product_detail_no_location">No location selected </string>
+    <string name="search_placeholder">Search products or users</string>
+    <string name="search_clear_query">Clear search</string>
+    <string name="search_open_filters">Open filters</string>
+    <string name="search_tab_products">Products</string>
+    <string name="search_tab_users">Users</string>
+    <string name="search_empty_results">No results found</string>
+    <string name="search_user_producer">Producer</string>
+    <string name="search_user_consumer">Consumer</string>
+    <string name="search_active_categories">%d categories</string>
+    <string name="search_active_location">Within %d km</string>
+    <string name="search_filters_title">Filters</string>
+    <string name="search_filters_category">Category</string>
+    <string name="search_filters_location">Location</string>
+    <string name="search_filters_radius">Radius: %d km</string>
+    <string name="search_filters_reset">Reset</string>
+    <string name="search_filters_apply">Apply</string>
+    <string name="my_shop">My shop</string>
+    <string name="profile_view_shop_title">View shop</string>
+    <string name="profile_view_shop_desc">See your public shop profile</string>
 </resources>

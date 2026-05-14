@@ -210,4 +210,21 @@
     <string name="product_detail_updated_error">Error actualitzant el producte: %s</string>
     <string name="product_detail_cancel_edit_product">Cancel·lar edició</string>
     <string name="product_detail_no_location">Ubicació no seleccionada</string>
+
+    <string name="search_placeholder">Cerca productes o usuaris</string>
+    <string name="search_clear_query">Neteja la cerca</string>
+    <string name="search_open_filters">Obrir filtres</string>
+    <string name="search_tab_products">Productes</string>
+    <string name="search_tab_users">Usuaris</string>
+    <string name="search_empty_results">No s\'han trobat resultats</string>
+    <string name="search_user_producer">Productor</string>
+    <string name="search_user_consumer">Consumidor</string>
+    <string name="search_active_categories">%d categories</string>
+    <string name="search_active_location">A menys de %d km</string>
+    <string name="search_filters_title">Filtres</string>
+    <string name="search_filters_category">Categoria</string>
+    <string name="search_filters_location">Ubicació</string>
+    <string name="search_filters_radius">Radi: %d km</string>
+    <string name="search_filters_reset">Restablir</string>
+    <string name="search_filters_apply">Aplicar</string>
 </resources>

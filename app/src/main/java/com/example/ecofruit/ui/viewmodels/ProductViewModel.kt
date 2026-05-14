@@ -10,12 +10,15 @@ import com.example.ecofruit.ui.data.model.RequestUiState
 import com.example.ecofruit.ui.data.repository.ProductRepository
 import com.example.ecofruit.ui.data.repository.ReviewRepository
 import com.example.ecofruit.ui.data.repository.UserRepository
+import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.example.ecofruit.ui.data.constants.ProductType
+import com.example.ecofruit.ui.data.model.LocationData
 
 data class ProductWithUser(
     val product: Product,
@@ -57,6 +60,15 @@ class ProductViewModel(
 
     private val _updateProductState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
     val updateProductState: StateFlow<RequestUiState<Unit>> = _updateProductState.asStateFlow()
+
+    private val _searchProductsState = MutableStateFlow<RequestUiState<List<Product>>>(RequestUiState.Idle())
+    val searchProductsState: StateFlow<RequestUiState<List<Product>>> = _searchProductsState.asStateFlow()
+
+    private val _searchPagingState = MutableStateFlow(ProductSearchPagingState())
+    val searchPagingState: StateFlow<ProductSearchPagingState> = _searchPagingState.asStateFlow()
+
+    private var searchCursor: DocumentSnapshot? = null
+    private var searchParams: ProductSearchParams? = null
 
     fun loadHomePageRealtime(user: User) {
         viewModelScope.launch {
@@ -212,4 +224,83 @@ class ProductViewModel(
             }
         }
     }
+
+    fun searchProducts(
+        query: String,
+        category: ProductType? = null,
+        location: LocationData? = null,
+        radiusKm: Double? = null
+    ) {
+        viewModelScope.launch {
+            _searchProductsState.value = RequestUiState.Loading()
+            productRepository.searchProducts(query, category, location, radiusKm)
+                .onSuccess { products ->
+                    _searchProductsState.value = RequestUiState.Success(products)
+                }
+                .onFailure { error ->
+                    _searchProductsState.value = RequestUiState.Error(error.message ?: "Error searching products")
+                }
+        }
+    }
+
+    fun startSearchPaging(
+        query: String,
+        category: ProductType? = null,
+        location: LocationData? = null,
+        radiusKm: Double? = null
+    ) {
+        val newParams = ProductSearchParams(query, category, location, radiusKm)
+        if (newParams == searchParams && _searchPagingState.value.items.isNotEmpty()) return
+
+        searchParams = newParams
+        searchCursor = null
+        _searchPagingState.value = ProductSearchPagingState()
+        loadNextSearchPage()
+    }
+
+    fun loadNextSearchPage() {
+        val params = searchParams ?: return
+        val currentState = _searchPagingState.value
+        if (currentState.isLoading || !currentState.hasMore) return
+
+        viewModelScope.launch {
+            _searchPagingState.value = currentState.copy(isLoading = true, errorMessage = null)
+            productRepository.searchProductsPage(
+                query = params.query,
+                category = params.category,
+                location = params.location,
+                radiusKm = params.radiusKm,
+                pageSize = 20,
+                startAfter = searchCursor
+            ).onSuccess { page ->
+                searchCursor = page.lastSnapshot
+                val merged = currentState.items + page.items
+                _searchPagingState.value = currentState.copy(
+                    items = merged,
+                    isLoading = false,
+                    hasMore = page.hasMore,
+                    errorMessage = null
+                )
+            }.onFailure { error ->
+                _searchPagingState.value = currentState.copy(
+                    isLoading = false,
+                    errorMessage = error.message ?: "Error searching products"
+                )
+            }
+        }
+    }
 }
+
+data class ProductSearchPagingState(
+    val items: List<Product> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val hasMore: Boolean = true
+)
+
+data class ProductSearchParams(
+    val query: String,
+    val category: ProductType?,
+    val location: LocationData?,
+    val radiusKm: Double?
+)

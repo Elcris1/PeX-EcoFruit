@@ -24,6 +24,9 @@ class UserViewModel(
     private val _updateState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
     val updateState: StateFlow<RequestUiState<Unit>> = _updateState.asStateFlow()
 
+    private val _searchedUsers = MutableStateFlow<List<User>>(emptyList())
+    val searchedUsers: StateFlow<List<User>> = _searchedUsers.asStateFlow()
+
     fun logOut() {
         userRepo.logOut()
     }
@@ -76,6 +79,17 @@ class UserViewModel(
         viewModelScope.launch {
             userRepo.unfollowUser(userId).onFailure {
                 Log.e("UserViewModel", "Error unfollowing user: ${it.message}")
+            }
+        }
+    }
+
+    fun searchUsersByName(query: String) {
+        viewModelScope.launch {
+            userRepo.searchUsersByName(query).onSuccess { users ->
+                _searchedUsers.value = users
+            }.onFailure {
+                Log.e("UserViewModel", "Error searching users: ${it.message}")
+                _searchedUsers.value = emptyList()
             }
         }
     }

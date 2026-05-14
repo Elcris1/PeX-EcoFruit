@@ -12,6 +12,16 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import com.example.ecofruit.ui.data.constants.ProductType
+import com.example.ecofruit.ui.data.model.LocationData
+import com.google.firebase.firestore.DocumentSnapshot
+import kotlin.math.*
+
+data class ProductPage(
+    val items: List<Product>,
+    val lastSnapshot: DocumentSnapshot?,
+    val hasMore: Boolean
+)
 
 class ProductRepository {
 
@@ -139,6 +149,125 @@ class ProductRepository {
         } else {
             productRef.update("favouritesList", FieldValue.arrayRemove(userId)).await()
         }
+    }
+
+    suspend fun searchProducts(
+        query: String,
+        category: ProductType? = null,
+        location: LocationData? = null,
+        radiusKm: Double? = null
+    ): Result<List<Product>> = runCatching {
+        var firestoreQuery: Query = productsCollection
+        if (category != null) {
+            firestoreQuery = firestoreQuery.whereEqualTo("type", category)
+        }
+
+        firestoreQuery = firestoreQuery.orderBy("createdAt", Query.Direction.DESCENDING)
+        val snapshot = firestoreQuery.get().await()
+        val products = snapshot.toObjects(Product::class.java)
+        val filtered = filterProducts(products, query, location, radiusKm)
+        filtered
+    }
+
+    suspend fun searchProductsPage(
+        query: String,
+        category: ProductType? = null,
+        location: LocationData? = null,
+        radiusKm: Double? = null,
+        pageSize: Int = 20,
+        startAfter: DocumentSnapshot? = null
+    ): Result<ProductPage> = runCatching {
+        var firestoreQuery: Query = productsCollection
+        if (category != null) {
+            firestoreQuery = firestoreQuery.whereEqualTo("type", category)
+        }
+
+        firestoreQuery = firestoreQuery.orderBy("createdAt", Query.Direction.DESCENDING)
+        if (startAfter != null) {
+            firestoreQuery = firestoreQuery.startAfter(startAfter)
+        }
+
+        val snapshot = firestoreQuery.limit(pageSize.toLong()).get().await()
+        val products = snapshot.toObjects(Product::class.java)
+        val filtered = filterProducts(products, query, location, radiusKm)
+        val last = snapshot.documents.lastOrNull()
+        val hasMore = snapshot.size() == pageSize
+        ProductPage(filtered, last, hasMore)
+    }
+
+    fun searchProductsRealtime(
+        query: String,
+        category: ProductType? = null,
+        location: LocationData? = null,
+        radiusKm: Double? = null
+    ): Flow<Result<List<Product>>> = callbackFlow {
+        var firestoreQuery: Query = productsCollection
+        if (category != null) {
+            firestoreQuery = firestoreQuery.whereEqualTo("type", category)
+        }
+
+        val subscription = firestoreQuery.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(Result.failure(error))
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val products = snapshot.toObjects(Product::class.java)
+                val filtered = filterProducts(products, query, location, radiusKm)
+                trySend(Result.success(filtered))
+            }
+        }
+        awaitClose { subscription.remove() }
+    }
+
+    private fun filterProducts(
+        products: List<Product>,
+        query: String,
+        location: LocationData?,
+        radiusKm: Double?
+    ): List<Product> {
+        val normalizedQuery = query.trim().lowercase()
+        val hasLocation = location?.isValid == true && radiusKm != null && radiusKm > 0
+
+        return products.filter { product ->
+            val matchesQuery = normalizedQuery.isBlank() ||
+                product.name.lowercase().contains(normalizedQuery)
+
+            val matchesLocation = if (hasLocation) {
+                val productLocation = product.location
+                if (productLocation?.isValid == true) {
+                    val distanceKm = haversineKm(
+                        location.latitude,
+                        location.longitude,
+                        productLocation.latitude,
+                        productLocation.longitude
+                    )
+                    distanceKm <= radiusKm
+                } else {
+                    false
+                }
+            } else {
+                true
+            }
+
+            matchesQuery && matchesLocation
+        }
+    }
+
+    private fun haversineKm(
+        lat1: Double,
+        lon1: Double,
+        lat2: Double,
+        lon2: Double
+    ): Double {
+        val earthRadiusKm = 6371.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = sin(dLat / 2).pow(2.0) +
+            cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+            sin(dLon / 2).pow(2.0)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return earthRadiusKm * c
     }
 
     companion object {

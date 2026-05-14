@@ -211,4 +211,21 @@
     <string name="product_detail_updated_error">Error al actualizar producto: %s</string>
     <string name="product_detail_cancel_edit_product">Cancelar edición</string>
     <string name="product_detail_no_location">Localización no seleccionada</string>
+
+    <string name="search_placeholder">Buscar productos o usuarios</string>
+    <string name="search_clear_query">Limpiar búsqueda</string>
+    <string name="search_open_filters">Abrir filtros</string>
+    <string name="search_tab_products">Productos</string>
+    <string name="search_tab_users">Usuarios</string>
+    <string name="search_empty_results">No se han encontrado resultados</string>
+    <string name="search_user_producer">Productor</string>
+    <string name="search_user_consumer">Consumidor</string>
+    <string name="search_active_categories">%d categorías</string>
+    <string name="search_active_location">A menos de %d km</string>
+    <string name="search_filters_title">Filtros</string>
+    <string name="search_filters_category">Categoría</string>
+    <string name="search_filters_location">Ubicación</string>
+    <string name="search_filters_radius">Radio: %d km</string>
+    <string name="search_filters_reset">Restablecer</string>
+    <string name="search_filters_apply">Aplicar</string>
 </resources>

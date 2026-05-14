@@ -3,6 +3,7 @@ package com.example.ecofruit.ui.activities
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -51,6 +52,7 @@ import com.example.ecofruit.R
 import com.example.ecofruit.ui.screens.EditProfileScreen
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import androidx.compose.ui.res.stringResource
+import com.example.ecofruit.ui.activities.ViewProfileActivity
 
 class MainActivity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
@@ -192,6 +194,8 @@ fun MainScreen(
     val recommendedProductsState by productsViewModel.recommendedProducts.collectAsStateWithLifecycle()
     val followedProducerProductsState by productsViewModel.followingProducts.collectAsStateWithLifecycle()
     val favouriteProductsState by productsViewModel.favouriteProducts.collectAsStateWithLifecycle()
+    val searchPagingState by productsViewModel.searchPagingState.collectAsStateWithLifecycle()
+    val searchedUsers by userViewModel.searchedUsers.collectAsStateWithLifecycle()
 
     val editProfileState by userViewModel.updateState.collectAsStateWithLifecycle()
 
@@ -250,20 +254,32 @@ fun MainScreen(
                     followedProducerProductsState = followedProducerProductsState,
                     favouriteProductsState = favouriteProductsState,
                     onProductClick = { productId ->
-                        Intent(context, ViewProductActivity::class.java).also {
+                       Intent(context, ViewProductActivity::class.java).also {
                             it.putExtra("product_id", productId)
                             context.startActivity(it)
                         }
                     },
                     onSearchClick = {
-                        // TODO: Implement search
+                        navigationIntentViewModel.send("search")
                     },
                     onFavouriteClick = { product, userId, isFavourite ->
                         productsViewModel.toggleFavourite(product.id, userId, isFavourite)
                     }
                 )
             }
-            composable(Screen.Search.route) { SearchScreen() }
+            composable(Screen.Search.route) { SearchScreen(
+                searchState = searchPagingState,
+                users = searchedUsers,
+                onSearch = { query, category, location, radiusKm ->
+                    productsViewModel.startSearchPaging(query, category, location, radiusKm)
+                },
+                onUserSearch = { query ->
+                    userViewModel.searchUsersByName(query)
+                },
+                onLoadMore = {
+                    productsViewModel.loadNextSearchPage()
+                },
+            ) }
             composable(Screen.Sell.route) {
                 SellScreen(
                     productsViewModel,
@@ -308,7 +324,13 @@ fun MainScreen(
                             context.startActivity(it)
                             (context as Activity).finish()
                         }
-                    }
+                    },
+                    onViewShop = { userId ->
+                        Intent(context, ViewProfileActivity::class.java).also {
+                            it.putExtra("user_id", userId)
+                            context.startActivity(it)
+                        }
+                    },
                 )
             }
             composable("edit_profile") {
