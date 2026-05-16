@@ -3,18 +3,6 @@
 Marketplace mòbil per a productes agrícoles desenvolupat en **Kotlin amb Jetpack Compose** i connectat a un projecte al núvol de **Firebase**.
 
 ---
-## 📱 Imatges
-Algunes de les captures més representatives del projecte.
-![Pantalla principal](./screenshots/Screenshot_20260516_141923.png)
-
-![Cerca i filtres](./screenshots/Screenshot_20260516_141651.png)
-
-![Detall d'un producte](./screenshots/Screenshot_20260516_141455.png)
-
-![Perfil o vista de comunitat](./screenshots/Screenshot_20260516_141431.png)
-
-Mes captures a [`screenshots/`](./screenshots/) 
-
 ## 🚀 Accés a l'aplicació
 
 L'aplicació està integrada amb Firebase, així que les dades i les funcionalitats ja es gestionen al projecte al núvol i no queden limitades a una simple simulació en memòria.
@@ -103,4 +91,33 @@ En aquesta entrega s'han afegit i consolidat les funcionalitats següents:
 - [`functions/`](./functions/README.md): **Firebase Cloud Functions** encarregades d'enviar notificacions als usuaris i donar suport a la lògica del núvol.
 
 ---
+
+## 📱 Imatges
+Algunes de les captures més representatives del projecte.
+
+### Launcher activity
+![Pantalla principal](./screenshots/Screenshot_20260516_144859.png)
+
+### Pantalla d'inici
+![Menu de navegació](./screenshots/Screenshot_20260516_141651.png)
+
+### Detall d'un producte
+![Detall d'un producte](./screenshots/Screenshot_20260516_140307.png)
+
+### Ressenyes d'un producte
+![Ressenyes en producte](./screenshots/Screenshot_20260516_140653.png)
+
+### Editar productes publicats
+![Edició localització producte](./screenshots/Screenshot_20260516_135338.png)
+
+### Perfil d'usuari
+![Perfil comunitat - productes](./screenshots/Screenshot_20260516_140748.png)
+
+![Perfil comunitat - ressenyes](./screenshots/Screenshot_20260516_140754.png)
+
+### Comunicació entre usuaris
+![Chat](./screenshots/Screenshot_20260516_141455.png)
+
+Mes captures a [`screenshots/`](./screenshots/) 
+
 
