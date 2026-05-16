@@ -95,29 +95,56 @@ En aquesta entrega s'han afegit i consolidat les funcionalitats següents:
 ## 📱 Imatges
 Algunes de les captures més representatives del projecte.
 
-### Launcher activity
-![Pantalla principal](./screenshots/Screenshot_20260516_144859.png)
+<table>
+  <tr>
+    <td align="center">
+      <img src="./screenshots/Screenshot_20260516_144859.png" alt="Pantalla principal" width="220"><br>
+      <sub>Pantalla principal</sub>
+    </td>
 
-### Pantalla d'inici
-![Menu de navegació](./screenshots/Screenshot_20260516_141651.png)
+    <td align="center">
+      <img src="./screenshots/Screenshot_20260516_141651.png" alt="Menú de navegació" width="220"><br>
+      <sub>Menú de navegació</sub>
+    </td>
 
-### Detall d'un producte
-![Detall d'un producte](./screenshots/Screenshot_20260516_140307.png)
+    <td align="center">
+      <img src="./screenshots/Screenshot_20260516_140307.png" alt="Detall d'un producte" width="220"><br>
+      <sub>Detall d'un producte</sub>
+    </td>
+  </tr>
 
-### Ressenyes d'un producte
-![Ressenyes en producte](./screenshots/Screenshot_20260516_140653.png)
+  <tr>
+    <td align="center">
+      <img src="./screenshots/Screenshot_20260516_140653.png" alt="Ressenyes en producte" width="220"><br>
+      <sub>Ressenyes en producte</sub>
+    </td>
 
-### Editar productes publicats
-![Edició localització producte](./screenshots/Screenshot_20260516_135338.png)
+    <td align="center">
+      <img src="./screenshots/Screenshot_20260516_135338.png" alt="Edició localització producte" width="220"><br>
+      <sub>Edició de localització</sub>
+    </td>
 
-### Perfil d'usuari
-![Perfil comunitat - productes](./screenshots/Screenshot_20260516_140748.png)
+    <td align="center">
+      <img src="./screenshots/Screenshot_20260516_140748.png" alt="Perfil comunitat - productes" width="220"><br>
+      <sub>Perfil d'usuari</sub>
+    </td>
+  </tr>
 
-![Perfil comunitat - ressenyes](./screenshots/Screenshot_20260516_140754.png)
+  <tr>
+    <td align="center">
+      <img src="./screenshots/Screenshot_20260516_140754.png" alt="Perfil comunitat - ressenyes" width="220"><br>
+      <sub>Perfil: ressenyes</sub>
+    </td>
 
-### Comunicació entre usuaris
-![Chat](./screenshots/Screenshot_20260516_141455.png)
+    <td align="center">
+      <img src="./screenshots/Screenshot_20260516_141455.png" alt="Chat" width="220"><br>
+      <sub>Comunicació entre usuaris</sub>
+    </td>
 
-Mes captures a [`screenshots/`](./screenshots/) 
+    <td align="center">
+      <sub>Més captures a la carpeta <code>screenshots/</code></sub>
+    </td>
+  </tr>
+</table>
 
 
