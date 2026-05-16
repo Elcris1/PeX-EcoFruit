@@ -1,64 +1,106 @@
-# 🌿 Ecofruit
+# 🍐 Ecofruit
 
-Marketplace mòbil per a productes agrícoles desenvolupat en **Kotlin amb Jetpack Compose**.
+Marketplace mòbil per a productes agrícoles desenvolupat en **Kotlin amb Jetpack Compose** i connectat a un projecte al núvol de **Firebase**.
 
 ---
+## 📱 Imatges
+Algunes de les captures més representatives del projecte.
+![Pantalla principal](./screenshots/Screenshot_20260516_141923.png)
+
+![Cerca i filtres](./screenshots/Screenshot_20260516_141651.png)
+
+![Detall d'un producte](./screenshots/Screenshot_20260516_141455.png)
+
+![Perfil o vista de comunitat](./screenshots/Screenshot_20260516_141431.png)
+
+Mes captures a [`screenshots/`](./screenshots/) 
 
 ## 🚀 Accés a l'aplicació
 
-Les dades estan **mockeijades en memòria**, per tant no es guarda res creat entre execucions.
+L'aplicació està integrada amb Firebase, així que les dades i les funcionalitats ja es gestionen al projecte al núvol i no queden limitades a una simple simulació en memòria.
 
-Hi ha dues maneres d'accedir:
+Hi ha **3 maneres** d'accedir-hi:
 
-**Opció 1 — Registre nou**
-Crea un compte nou des de la pantalla de registre. Les dades es mantindran durant tota l'execució.
+### 1) Crear un compte nou
 
-**Opció 2 — Usuaris mockeijats**
-Accedeix directament amb el correu de qualsevol usuari existent i qualsevol contrasenya de més de 8 caràcters.
+Pots registrar-te des de la pantalla de registre. En completar el procés, es farà l'enviament d'un **correu de confirmació**.
 
-Exemple:
+> ⚠️ Si no el veus a la safata d'entrada, revisa també la carpeta de **correu brossa / spam**.
+
+### 2) Fer servir comptes creats manualment
+
+També pots entrar amb comptes creats manualment per fer proves:
+
+| Rol | Email | Contrasenya |
+|-----|-------|-------------|
+| Productor | `producer@email.com` | `123456789` |
+| Consumidor | `eloiconsumidor@email.com` | `123456789` |
+
+### 3) Fer servir comptes generats amb scripts
+
+A [`scripts/`](./scripts/README.md) tens més referències sobre els comptes generats automàticament amb els scripts de suport.
+
+La contrasenya comuna d'aquests comptes és:
 
 | Camp | Valor |
 |------|-------|
-| Email | `alex@ecofruit.com` |
-| Password | qualsevol cadena > 8 caràcters (ex: `asajsdlfkjaslkdfl`) |
+| Password | `Password123!` |
 
-> ⚠️ Les dades no persisteixen entre execucions al ser en memòria.
+Aquests scripts tenen un toc bastant **vibecoded**: s'han creat aprofitant IA i alguna capa de feina personal per automatitzar la càrrega de dades, generar usuaris i facilitar proves ràpides del projecte.
 
 ---
 
-## 🌿 Paleta de colors
+## 🎨 Paleta de colors
 
-L'app utilitza un tema personalitzat basat en colors naturals i terrosos, amb suport per a **mode clar i fosc**.
+L'aplicació utilitza un tema personalitzat basat en colors naturals i terrosos, amb suport per a **mode clar i fosc**.
 
 ---
 
 ## 🌿 Branques
 
-| Branca | Descripció |
-|--------|-----------|
-| `master` | Contingut estable de l'entrega |
-| `development` | Branca de treball activa |
+| Branca           | Descripció |
+|------------------|-----------|
+| 🚀 `master`      | Contingut estable de l'entrega |
+| 💻 `development` | Branca de treball activa |
 
 ---
+
 ## ✅ Funcionalitats implementades
 
-- Autenticació (registre i login amb usuaris mockeijats)
+Totes les funcionalitats següents estan implementades dins del projecte Firebase al núvol.
+
+### Entrega anterior
+
+A la primera entrega ja hi havia aquestes funcionalitats:
+
+- Autenticació bàsica amb registre i inici de sessió amb usuaris mockejats
 - Navegació principal entre seccions
-- Preferències de xarxa (només WiFi / qualsevol connexió)
+- Preferències de xarxa: només WiFi o qualsevol connexió
 - Tema clar i fosc
-- Internacionalització preparada (EN / CA / ES)
+- Internacionalització preparada: anglès, català i castellà
+
+### Aquesta entrega transició dades locals MOCK -> FIREBASE
+
+En aquesta entrega s'han afegit i consolidat les funcionalitats següents:
+
+- Autenticació completa: verificació de correu, restabliment de la contrasenya i inici de sessió amb Google
+- Manteniment de la sessió de l'usuari
+- Cerca i filtratge de productes
+- Detall complet del producte
+- Creació de valoracions per a productes i usuaris
+- Generació de converses des del perfil d'un usuari
+- Inbox en temps real amb actualització automàtica dels missatges rebuts
+- Preferències d'idioma funcionals
+- Preferències de notificacions tant per la creació de productes com de manera general
+- Mostrar missatge en cas de pérdua de conexió a internet
 
 ---
-## 🚧 Funcionalitats pendents
 
-Les següents funcionalitats han quedat fora d'aquesta primera entrega:
+## 🛠️ Distribució del projecte
 
-- **Cerca i filtratge de productes** — pantalla per buscar productes, filtrar-los o buscar productos
-- **Detall del producte** — pantalla amb informació completa, galeria i informació del productor
-- **Creació de Valoracions** — possibilitat d'afegir ressenyes tant a productes com a usuaris
-- **Generació de converses** — iniciar un xat des de la pantalla de perfil d'un usuari
-- **Inbox en temps real** — actualització automàtica dels missatges rebuts
-- **Preferències d'idioma** — selector funcional per canviar entre anglès, català i castellà (les traduccions ja estan disponibles)
+- [`app/`](./app/README.md): aplicació mòbil desenvolupada en **Kotlin amb Jetpack Compose**.
+- [`scripts/`](./scripts/README.md): scripts **vibecoded** per generar dades automatitzades, crear usuaris i donar suport a les proves del projecte.
+- [`functions/`](./functions/README.md): **Firebase Cloud Functions** encarregades d'enviar notificacions als usuaris i donar suport a la lògica del núvol.
 
 ---
+
