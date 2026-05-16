@@ -195,30 +195,6 @@ class ProductRepository {
         ProductPage(filtered, last, hasMore)
     }
 
-    fun searchProductsRealtime(
-        query: String,
-        category: ProductType? = null,
-        location: LocationData? = null,
-        radiusKm: Double? = null
-    ): Flow<Result<List<Product>>> = callbackFlow {
-        var firestoreQuery: Query = productsCollection
-        if (category != null) {
-            firestoreQuery = firestoreQuery.whereEqualTo("type", category)
-        }
-
-        val subscription = firestoreQuery.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                trySend(Result.failure(error))
-                return@addSnapshotListener
-            }
-            if (snapshot != null) {
-                val products = snapshot.toObjects(Product::class.java)
-                val filtered = filterProducts(products, query, location, radiusKm)
-                trySend(Result.success(filtered))
-            }
-        }
-        awaitClose { subscription.remove() }
-    }
 
     private fun filterProducts(
         products: List<Product>,

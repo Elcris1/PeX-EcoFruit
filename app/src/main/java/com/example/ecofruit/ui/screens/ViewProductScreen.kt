@@ -3,12 +3,10 @@ package com.example.ecofruit.ui.screens
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,11 +17,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -38,6 +34,7 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.ecofruit.R
+import com.example.ecofruit.ui.components.InteractiveMap
 import com.example.ecofruit.ui.data.constants.ProductType
 import com.example.ecofruit.ui.data.constants.ProductUnit
 import com.example.ecofruit.ui.data.constants.toDisplayNameRes
@@ -45,10 +42,12 @@ import com.example.ecofruit.ui.data.constants.toEmoji
 import com.example.ecofruit.ui.data.model.LocationData
 import com.example.ecofruit.ui.data.model.Product
 import com.example.ecofruit.ui.data.model.Review
+import com.example.ecofruit.ui.managers.LocationHelper
 import com.example.ecofruit.ui.theme.EcoFruitTheme
+import kotlinx.coroutines.launch
+import org.maplibre.android.geometry.LatLng
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.Collections.emptyList
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
@@ -78,15 +77,18 @@ fun ProductDetailScreen(
     }
 
     var showAddReviewDialog by remember { mutableStateOf(false) }
+    var showLocationDialog by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(false) }
     var editableName by remember { mutableStateOf(product.name) }
     var editableDescription by remember { mutableStateOf(product.description) }
     var editablePrice by remember { mutableStateOf(product.price.toString()) }
+    var editableLocation by remember { mutableStateOf(product.location) }
 
     fun cancelEdit() {
         editableName = product.name
         editableDescription = product.description
         editablePrice = product.price.toString()
+        editableLocation = product.location
         isEditing = false
     }
 
@@ -95,6 +97,7 @@ fun ProductDetailScreen(
             editableName = product.name
             editableDescription = product.description
             editablePrice = product.price.toString()
+            editableLocation = product.location
         }
     }
 
@@ -152,7 +155,12 @@ fun ProductDetailScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    if (isEditing) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        LocationEditBanner(onEditClick = { showLocationDialog = true })
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // ── Name + Favourite ──
                     Row(
@@ -212,7 +220,7 @@ fun ProductDetailScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // ── Meta info grid ──
-                    MetaInfoGrid(product = product)
+                    MetaInfoGrid(product = product, isEditing = isEditing, editableLocation = editableLocation)
 
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -285,7 +293,8 @@ fun ProductDetailScreen(
                         product.copy(
                             name = editableName,
                             description = editableDescription,
-                            price = parsedPrice
+                            price = parsedPrice,
+                            location = editableLocation
                         )
                     )
                     isEditing = false
@@ -307,6 +316,157 @@ fun ProductDetailScreen(
                 showAddReviewDialog = false
             }
         )
+    }
+
+    if (showLocationDialog) {
+        LocationEditDialog(
+            initialLocation = editableLocation,
+            onDismiss = { showLocationDialog = false },
+            onConfirm = { newLoc ->
+                editableLocation = newLoc
+                showLocationDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun LocationEditBanner(onEditClick: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        tonalElevation = 2.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.EditLocation,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.sell_product_location),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(R.string.product_detail_update_location_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            Button(
+                onClick = onEditClick,
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                modifier = Modifier.height(36.dp)
+            ) {
+                Text(stringResource(R.string.edit), style = MaterialTheme.typography.labelMedium)
+            }
+        }
+    }
+}
+
+@Composable
+fun LocationEditDialog(
+    initialLocation: LocationData?,
+    onDismiss: () -> Unit,
+    onConfirm: (LocationData) -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var isGeocoding by remember { mutableStateOf(false) }
+
+    var selectedLatLng by remember {
+        mutableStateOf(initialLocation?.let { LatLng(it.latitude, it.longitude) })
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .wrapContentHeight()
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.edit_profile_confirm_location),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(320.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
+                ) {
+                    InteractiveMap(
+                        selectedLocation = selectedLatLng,
+                        onLocationSelected = { selectedLatLng = it },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = !isGeocoding
+                    ) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                    Button(
+                        onClick = {
+                            selectedLatLng?.let { latLng ->
+                                scope.launch {
+                                    isGeocoding = true
+                                    val fullLocation = LocationHelper.reverseGeocode(
+                                        context,
+                                        latLng.latitude,
+                                        latLng.longitude
+                                    )
+                                    isGeocoding = false
+                                    onConfirm(fullLocation ?: LocationData(latitude = latLng.latitude, longitude = latLng.longitude))
+                                }
+                            }
+                        },
+                        enabled = selectedLatLng != null && !isGeocoding,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (isGeocoding) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        } else {
+                            Text(stringResource(R.string.edit_profile_save_changes))
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -396,10 +556,6 @@ fun AddReviewDialog(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Image Pager
-// ─────────────────────────────────────────────────────────────────
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ImagePager(
@@ -416,19 +572,18 @@ fun ImagePager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
         ) { page ->
-            val pageOffset = (pagerState.currentPage - page) +
-                    pagerState.currentPageOffsetFraction
-
-            val scale = 1f - (pageOffset.absoluteValue * 0.05f).coerceIn(0f, 0.05f)
-            val alpha = 1f - (pageOffset.absoluteValue * 0.3f).coerceIn(0f, 0.3f)
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        this.alpha = alpha
+                        val pageOffset = (pagerState.currentPage - page) +
+                                pagerState.currentPageOffsetFraction
+                        val scaleValue = 1f - (pageOffset.absoluteValue * 0.05f).coerceIn(0f, 0.05f)
+                        val alphaValue = 1f - (pageOffset.absoluteValue * 0.3f).coerceIn(0f, 0.3f)
+                        
+                        scaleX = scaleValue
+                        scaleY = scaleValue
+                        alpha = alphaValue
                     }
             ) {
                 if (displayUrls[page] == "placeholder") {
@@ -456,7 +611,7 @@ fun ImagePager(
                             .data(displayUrls[page])
                             .crossfade(true)
                             .build(),
-                        contentDescription = "Imagen del producto ${page + 1}",
+                        contentDescription = stringResource(R.string.product_detail_image_content_desc, page + 1),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -525,10 +680,6 @@ fun ImagePager(
         }
     }
 }
-
-// ─────────────────────────────────────────────────────────────────
-// Floating Top Bar
-// ─────────────────────────────────────────────────────────────────
 
 @Composable
 fun FloatingTopBar(
@@ -649,10 +800,6 @@ fun FloatingTopBar(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Badge components
-// ─────────────────────────────────────────────────────────────────
-
 @Composable
 fun ProductTypeBadge(type: ProductType) {
     Surface(
@@ -701,10 +848,6 @@ fun OrganicBadge() {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Price Row
-// ─────────────────────────────────────────────────────────────────
-
 @Composable
 fun PriceRow(price: Double, unit: ProductUnit) {
     Row(verticalAlignment = Alignment.Bottom) {
@@ -749,10 +892,6 @@ fun EditablePriceRow(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Rating Row
-// ─────────────────────────────────────────────────────────────────
-
 @Composable
 fun RatingRow(rating: Double, reviewCount: Int) {
     Row(
@@ -796,10 +935,6 @@ fun StarRating(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Favourite Button
-// ─────────────────────────────────────────────────────────────────
-
 @Composable
 fun FavouriteButton(
     isFavourite: Boolean,
@@ -807,7 +942,7 @@ fun FavouriteButton(
     onClick: () -> Unit
 ) {
     val scale by animateFloatAsState(
-        targetValue = if (isFavourite) 1f else 1f,
+        targetValue = if (isFavourite) 1.2f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioHighBouncy),
         label = "fav_scale"
     )
@@ -827,7 +962,7 @@ fun FavouriteButton(
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = if (isFavourite) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (isFavourite) "Quitar de favoritos" else "Añadir a favoritos",
+                    contentDescription = if (isFavourite) stringResource(R.string.product_detail_remove_favourite) else stringResource(R.string.product_detail_add_favourite),
                     tint = if (isFavourite) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(22.dp)
@@ -844,13 +979,14 @@ fun FavouriteButton(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Meta Info Grid
-// ─────────────────────────────────────────────────────────────────
-
 @Composable
-fun MetaInfoGrid(product: Product) {
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale("es", "ES")) }
+fun MetaInfoGrid(
+    product: Product,
+    isEditing: Boolean = false,
+    editableLocation: LocationData? = null
+) {
+    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+    val displayLocation = if (isEditing) editableLocation else product.location
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -860,7 +996,7 @@ fun MetaInfoGrid(product: Product) {
             MetaChip(
                 icon = Icons.Default.LocationOn,
                 label = stringResource(R.string.product_detail_location_label),
-                value = product.location?.shortDisplayName ?: stringResource(R.string.product_detail_no_location),
+                value = displayLocation?.shortDisplayName ?: stringResource(R.string.product_detail_no_location),
                 modifier = Modifier.weight(1f)
             )
             MetaChip(
@@ -932,10 +1068,6 @@ fun MetaChip(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Expandable Description
-// ─────────────────────────────────────────────────────────────────
-
 @Composable
 fun ExpandableDescription(description: String) {
     var expanded by remember { mutableStateOf(false) }
@@ -1003,13 +1135,9 @@ fun EditableDescriptionField(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Seller Card
-// ─────────────────────────────────────────────────────────────────
-
 @Composable
 fun SellerCard(name: String, avatarUrl: String, joinedDate: Long, onProducerClick: () -> Unit = {}) {
-    val dateFormat = remember { SimpleDateFormat("MMMM yyyy", Locale("es", "ES")) }
+    val dateFormat = remember { SimpleDateFormat("MMMM yyyy", Locale.getDefault()) }
 
     Column {
         Text(
@@ -1042,7 +1170,7 @@ fun SellerCard(name: String, avatarUrl: String, joinedDate: Long, onProducerClic
                     if (avatarUrl.isNotBlank()) {
                         AsyncImage(
                             model = avatarUrl,
-                            contentDescription = "Avatar de $name",
+                            contentDescription = stringResource(R.string.product_detail_avatar_content_desc, name),
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -1078,10 +1206,6 @@ fun SellerCard(name: String, avatarUrl: String, joinedDate: Long, onProducerClic
         }
     }
 }
-
-// ─────────────────────────────────────────────────────────────────
-// Reviews Section
-// ─────────────────────────────────────────────────────────────────
 
 @Composable
 fun ReviewsSection(
@@ -1276,7 +1400,7 @@ fun ReviewCard(
     currentUserId: String = "",
     onDeleteReview: (Review) -> Unit = {}
 ) {
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale("es", "ES")) }
+    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
     Surface(
         shape = RoundedCornerShape(16.dp),
@@ -1369,10 +1493,6 @@ fun ReviewCard(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Bottom CTA Button
-// ─────────────────────────────────────────────────────────────────
-
 @Composable
 fun ContactProducerButton(
     onClick: () -> Unit,
@@ -1432,10 +1552,6 @@ fun ContactProducerButton(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// Preview
-// ─────────────────────────────────────────────────────────────────
-
 @Preview(showBackground = true)
 @Composable
 fun ProductDetailScreenPreview() {
@@ -1459,7 +1575,6 @@ fun ProductDetailScreenPreview() {
         reviewCount = 3,
     )
 
-    // Replace with EcoFruitTheme { ... } in your project
     EcoFruitTheme {
         ProductDetailScreen(
             product = sampleProduct,

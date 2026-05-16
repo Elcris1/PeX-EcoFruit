@@ -233,4 +233,9 @@
     <string name="profile_view_shop_desc">Ver tu tienda publica</string>
     <string name="app_session">Sesión de la app</string>
     <string name="no_internet_connection">Sin conexión a internet</string>
+    <string name="product_detail_update_location_desc">Actualiza la ubicación de origen de tu producto</string>
+    <string name="product_detail_image_content_desc">Imagen del producto %d</string>
+    <string name="product_detail_remove_favourite">Quitar de favoritos</string>
+    <string name="product_detail_add_favourite">Añadir a favoritos</string>
+    <string name="product_detail_avatar_content_desc">Avatar de %s</string>
 </resources>
