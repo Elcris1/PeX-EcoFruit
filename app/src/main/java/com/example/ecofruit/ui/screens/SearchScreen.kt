@@ -1,5 +1,6 @@
 package com.example.ecofruit.ui.screens
 
+import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -81,6 +82,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.ecofruit.ui.activities.ViewProductActivity
 import com.example.ecofruit.ui.activities.ViewProfileActivity
+import com.example.ecofruit.ui.managers.LocationHelper
+
+private suspend fun resolveLocationLabel(
+    context: Context,
+    latLng: LatLng
+): String? {
+    return LocationHelper.reverseGeocode(context, latLng.latitude, latLng.longitude)
+        ?.let { resolved ->
+            resolved.city.takeIf { it.isNotBlank() }
+                ?: resolved.shortDisplayName.takeIf { it.isNotBlank() }
+                ?: resolved.displayName.takeIf { it.isNotBlank() }
+        }
+}
 
 @Composable
 fun SearchScreen(
@@ -98,20 +112,33 @@ fun SearchScreen(
     onUserSearch: (query: String) -> Unit = {},
     onLoadMore: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+
     var query by remember { mutableStateOf("") }
     var selectedTab by remember { mutableStateOf(0) }
     var showFilters by remember { mutableStateOf(false) }
 
     var appliedCategory by remember { mutableStateOf<ProductType?>(null) }
     var appliedLocation by remember { mutableStateOf<LatLng?>(null) }
+    var appliedLocationLabel by remember { mutableStateOf<String?>(null) }
     var appliedRadiusKm by remember { mutableStateOf(10f) }
 
     var pendingCategory by remember { mutableStateOf<ProductType?>(null) }
     var pendingLocation by remember { mutableStateOf<LatLng?>(null) }
+    var pendingLocationLabel by remember { mutableStateOf<String?>(null) }
     var pendingRadiusKm by remember { mutableStateOf(10f) }
 
     val locationData = appliedLocation?.let {
         LocationData(latitude = it.latitude, longitude = it.longitude)
+    }
+
+    LaunchedEffect(pendingLocation, appliedLocation) {
+        pendingLocationLabel = pendingLocation?.let { latLng ->
+            resolveLocationLabel(context, latLng)
+        }
+        appliedLocationLabel = appliedLocation?.let { latLng ->
+            resolveLocationLabel(context, latLng)
+        }
     }
 
     LaunchedEffect(query, appliedCategory, appliedLocation, appliedRadiusKm) {
@@ -142,7 +169,9 @@ fun SearchScreen(
             ActiveFiltersSummary(
                 selectedCategories = appliedCategory?.let { setOf(it) } ?: emptySet(),
                 selectedLocation = appliedLocation,
-                radiusKm = appliedRadiusKm
+                selectedLocationLabel = appliedLocationLabel,
+                radiusKm = appliedRadiusKm,
+                selectedTab = selectedTab
             )
 
             SearchTabs(
@@ -167,6 +196,7 @@ fun SearchScreen(
         SearchFiltersDialog(
             selectedCategories = pendingCategory?.let { setOf(it) } ?: emptySet(),
             selectedLocation = pendingLocation,
+            selectedLocationLabel = pendingLocationLabel,
             radiusKm = pendingRadiusKm,
             onCategoryToggle = { type ->
                 pendingCategory = if (pendingCategory == type) null else type
@@ -176,12 +206,14 @@ fun SearchScreen(
             onReset = {
                 pendingCategory = null
                 pendingLocation = null
+                pendingLocationLabel = null
                 pendingRadiusKm = 10f
             },
             onDismiss = { showFilters = false },
             onApply = {
                 appliedCategory = pendingCategory
                 appliedLocation = pendingLocation
+                appliedLocationLabel = pendingLocationLabel
                 appliedRadiusKm = pendingRadiusKm
                 showFilters = false
             }
@@ -262,7 +294,9 @@ private fun SearchHeader(
 private fun ActiveFiltersSummary(
     selectedCategories: Set<ProductType>,
     selectedLocation: LatLng?,
-    radiusKm: Float
+    selectedLocationLabel: String?,
+    radiusKm: Float,
+    selectedTab: Int
 ) {
     if (selectedCategories.isEmpty() && selectedLocation == null) return
 
@@ -275,14 +309,12 @@ private fun ActiveFiltersSummary(
                 )
             )
         }
-        if (selectedLocation != null) {
+        if (selectedLocation != null && selectedTab == 0) {
             if (isNotEmpty()) append("  ·  ")
-            append(
-                stringResource(
-                    R.string.search_active_location,
-                    radiusKm.toInt()
-                )
-            )
+            append(selectedLocationLabel?.takeIf { it.isNotBlank() } ?: stringResource(R.string.search_filters_location))
+            append(" - within ")
+            append(radiusKm.toInt())
+            append(" km")
         }
     }
 
@@ -648,6 +680,7 @@ private fun UserResultItem(user: User) {
 private fun SearchFiltersDialog(
     selectedCategories: Set<ProductType>,
     selectedLocation: LatLng?,
+    selectedLocationLabel: String?,
     radiusKm: Float,
     onCategoryToggle: (ProductType) -> Unit,
     onLocationChange: (LatLng) -> Unit,
@@ -684,7 +717,7 @@ private fun SearchFiltersDialog(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        ProductType.values().forEach { type ->
+                        ProductType.entries.forEach { type ->
                             FilterChipItem(
                                 label = stringResource(type.toDisplayNameRes()),
                                 selected = type in selectedCategories,
@@ -706,6 +739,14 @@ private fun SearchFiltersDialog(
                             .fillMaxWidth()
                             .height(300.dp)
                     )
+
+                    if (selectedLocation != null) {
+                        Text(
+                            text = selectedLocationLabel?.takeIf { it.isNotBlank() } ?: stringResource(R.string.search_filters_location),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
 
                     Text(
                         text = stringResource(

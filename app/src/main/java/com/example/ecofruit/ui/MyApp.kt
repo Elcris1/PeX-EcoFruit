@@ -38,8 +38,8 @@ class MyApp: Application() {
                             val savedToken = it.fcmToken
                             if (savedToken != null && savedToken != token) {
                                 userRepo.updateFcmTokenStatus(savedToken, false)
-                                userRepo.saveFcmToken(token, it.producersNotification)
                            }
+                            userRepo.saveFcmToken(token, it.producersNotification)
                             settingsRepo.setFcmToken(token)
                             Log.d(TAG, "Token guardado en SettingsRepository")
                         }
