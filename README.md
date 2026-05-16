@@ -95,10 +95,10 @@ En aquesta entrega s'han afegit i consolidat les funcionalitats següents:
 ## 📱 Imatges
 Algunes de les captures més representatives del projecte.
 
-| | | |
-|---|---|---|
-| <img src="./screenshots/Screenshot_20260516_144859.png" width="220"><br><sub>Pantalla principal</sub> | <img src="./screenshots/Screenshot_20260516_141651.png" width="220"><br><sub>Menú de navegació</sub> | <img src="./screenshots/Screenshot_20260516_140307.png" width="220"><br><sub>Detall d'un producte</sub> |
-| <img src="./screenshots/Screenshot_20260516_140653.png" width="220"><br><sub>Ressenyes en producte</sub> | <img src="./screenshots/Screenshot_20260516_135338.png" width="220"><br><sub>Edició de localització</sub> | <img src="./screenshots/Screenshot_20260516_140748.png" width="220"><br><sub>Perfil d'usuari</sub> |
-| <img src="./screenshots/Screenshot_20260516_140754.png" width="220"><br><sub>Perfil: ressenyes</sub> | <img src="./screenshots/Screenshot_20260516_141455.png" width="220"><br><sub>Comunicació entre usuaris</sub> | Més captures a `screenshots/` |
+| | |                                                                                                         |
+|---|---|---------------------------------------------------------------------------------------------------------|
+| <sub>Pantalla principal</sub><br><img src="./screenshots/Screenshot_20260516_144859.png" width="220"> | <sub>Menú de navegació</sub><br><img src="./screenshots/Screenshot_20260516_141651.png" width="220"> | <sub>Detall d'un producte</sub><br><img src="./screenshots/Screenshot_20260516_140307.png" width="220"> |
+| <sub>Ressenyes en producte</sub><br><img src="./screenshots/Screenshot_20260516_140653.png" width="220"> | <sub>Edició de localització</sub><br><img src="./screenshots/Screenshot_20260516_135338.png" width="220"> | <sub>Perfil d'usuari</sub><br><img src="./screenshots/Screenshot_20260516_140748.png" width="220">      |
+| <sub>Perfil: ressenyes</sub><br><img src="./screenshots/Screenshot_20260516_140754.png" width="220"> | <sub>Comunicació entre usuaris</sub><br><img src="./screenshots/Screenshot_20260516_141455.png" width="220"> | <sub>Comunicació entre usuaris</sub><br><img src="./screenshots/Screenshot_20260516_163833.png" width="220">                          |
 
-
+Més captures a [`screenshots/`](./screenshots/)
