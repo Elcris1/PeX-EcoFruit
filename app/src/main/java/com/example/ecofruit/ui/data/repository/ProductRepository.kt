@@ -182,43 +182,29 @@ class ProductRepository {
             firestoreQuery = firestoreQuery.whereEqualTo("type", category)
         }
 
-        firestoreQuery = firestoreQuery.orderBy("createdAt", Query.Direction.DESCENDING)
-        if (startAfter != null) {
-            firestoreQuery = firestoreQuery.startAfter(startAfter)
+        val baseQuery = firestoreQuery.orderBy("createdAt", Query.Direction.DESCENDING)
+        var cursor = startAfter
+        var filtered: List<Product> = emptyList()
+        var lastSnapshot: DocumentSnapshot? = null
+        var hasMore = true
+
+        while (filtered.isEmpty() && hasMore) {
+            var pageQuery = baseQuery
+            if (cursor != null) {
+                pageQuery = pageQuery.startAfter(cursor)
+            }
+
+            val snapshot = pageQuery.limit(pageSize.toLong()).get().await()
+            val products = snapshot.toObjects(Product::class.java)
+            filtered = filterProducts(products, query, location, radiusKm)
+            lastSnapshot = snapshot.documents.lastOrNull()
+            hasMore = snapshot.size() == pageSize
+            cursor = lastSnapshot
         }
 
-        val snapshot = firestoreQuery.limit(pageSize.toLong()).get().await()
-        val products = snapshot.toObjects(Product::class.java)
-        val filtered = filterProducts(products, query, location, radiusKm)
-        val last = snapshot.documents.lastOrNull()
-        val hasMore = snapshot.size() == pageSize
-        ProductPage(filtered, last, hasMore)
+        ProductPage(filtered, lastSnapshot, hasMore)
     }
 
-    fun searchProductsRealtime(
-        query: String,
-        category: ProductType? = null,
-        location: LocationData? = null,
-        radiusKm: Double? = null
-    ): Flow<Result<List<Product>>> = callbackFlow {
-        var firestoreQuery: Query = productsCollection
-        if (category != null) {
-            firestoreQuery = firestoreQuery.whereEqualTo("type", category)
-        }
-
-        val subscription = firestoreQuery.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                trySend(Result.failure(error))
-                return@addSnapshotListener
-            }
-            if (snapshot != null) {
-                val products = snapshot.toObjects(Product::class.java)
-                val filtered = filterProducts(products, query, location, radiusKm)
-                trySend(Result.success(filtered))
-            }
-        }
-        awaitClose { subscription.remove() }
-    }
 
     private fun filterProducts(
         products: List<Product>,

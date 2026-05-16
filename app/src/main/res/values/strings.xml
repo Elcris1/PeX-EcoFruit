@@ -238,4 +238,9 @@
     <string name="profile_view_shop_desc">See your public shop profile</string>
     <string name="app_session">App session</string>
     <string name="no_internet_connection">No internet connection</string>
+    <string name="product_detail_update_location_desc">Update the source location of your product</string>
+    <string name="product_detail_image_content_desc">Product image %d</string>
+    <string name="product_detail_remove_favourite">Remove from favorites</string>
+    <string name="product_detail_add_favourite">Add to favorites</string>
+    <string name="product_detail_avatar_content_desc">Avatar of %s</string>
 </resources>

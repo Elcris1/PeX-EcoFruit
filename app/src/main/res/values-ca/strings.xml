@@ -232,4 +232,9 @@
     <string name="profile_view_shop_desc">Veure la teva tenda publica</string>
     <string name="app_session">Sessió app</string>
     <string name="no_internet_connection">Sense connexió a internet</string>
+    <string name="product_detail_update_location_desc">Actualitza la ubicació d\'origen del teu producte</string>
+    <string name="product_detail_image_content_desc">Imatge del producte %d</string>
+    <string name="product_detail_remove_favourite">Treure de preferits</string>
+    <string name="product_detail_add_favourite">Afegir a preferits</string>
+    <string name="product_detail_avatar_content_desc">Àvatar de %s</string>
 </resources>

@@ -53,6 +53,8 @@ import com.example.ecofruit.ui.screens.EditProfileScreen
 import com.example.ecofruit.ui.viewmodels.AuthViewModel
 import androidx.compose.ui.res.stringResource
 import com.example.ecofruit.ui.components.NetworkStatusNotification
+import com.example.ecofruit.ui.data.model.RequestUiState
+import kotlin.math.log
 
 class MainActivity : BaseActivity() {
     private val userViewModel: UserViewModel by viewModels { ViewModelFactory() }
@@ -201,6 +203,7 @@ fun MainScreen(
     val searchedUsers by userViewModel.searchedUsers.collectAsStateWithLifecycle()
 
     val editProfileState by userViewModel.updateState.collectAsStateWithLifecycle()
+    val logoutState by authViewModel.logoutState.collectAsStateWithLifecycle()
 
     LaunchedEffect(user) {
         user?.let {
@@ -212,6 +215,20 @@ fun MainScreen(
                 ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
             }) {
             launchMultiplePermissions.launch(permissions)
+        }
+    }
+    LaunchedEffect(logoutState) {
+        when(logoutState) {
+            is RequestUiState.Success -> {
+                Intent(context, LoginActvity::class.java).also {
+                    it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    context.startActivity(it)
+                    (context as Activity).finish()
+                }
+            }
+            is RequestUiState.Error -> {
+                Toast.makeText(context, "Error al cerrar sesión", Toast.LENGTH_SHORT).show()            }
+            else -> {}
         }
     }
 
@@ -324,11 +341,6 @@ fun MainScreen(
                         },
                         onLogout = {
                             authViewModel.logout()
-                            Intent(context, LoginActvity::class.java).also {
-                                it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                context.startActivity(it)
-                                (context as Activity).finish()
-                            }
                         },
                         onViewShop = { userId ->
                             Intent(context, ViewProfileActivity::class.java).also {
