@@ -95,56 +95,10 @@ En aquesta entrega s'han afegit i consolidat les funcionalitats següents:
 ## 📱 Imatges
 Algunes de les captures més representatives del projecte.
 
-<table>
-  <tr>
-    <td align="center">
-      <img src="./screenshots/Screenshot_20260516_144859.png" alt="Pantalla principal" width="220"><br>
-      <sub>Pantalla principal</sub>
-    </td>
-
-    <td align="center">
-      <img src="./screenshots/Screenshot_20260516_141651.png" alt="Menú de navegació" width="220"><br>
-      <sub>Menú de navegació</sub>
-    </td>
-
-    <td align="center">
-      <img src="./screenshots/Screenshot_20260516_140307.png" alt="Detall d'un producte" width="220"><br>
-      <sub>Detall d'un producte</sub>
-    </td>
-  </tr>
-
-  <tr>
-    <td align="center">
-      <img src="./screenshots/Screenshot_20260516_140653.png" alt="Ressenyes en producte" width="220"><br>
-      <sub>Ressenyes en producte</sub>
-    </td>
-
-    <td align="center">
-      <img src="./screenshots/Screenshot_20260516_135338.png" alt="Edició localització producte" width="220"><br>
-      <sub>Edició de localització</sub>
-    </td>
-
-    <td align="center">
-      <img src="./screenshots/Screenshot_20260516_140748.png" alt="Perfil comunitat - productes" width="220"><br>
-      <sub>Perfil d'usuari</sub>
-    </td>
-  </tr>
-
-  <tr>
-    <td align="center">
-      <img src="./screenshots/Screenshot_20260516_140754.png" alt="Perfil comunitat - ressenyes" width="220"><br>
-      <sub>Perfil: ressenyes</sub>
-    </td>
-
-    <td align="center">
-      <img src="./screenshots/Screenshot_20260516_141455.png" alt="Chat" width="220"><br>
-      <sub>Comunicació entre usuaris</sub>
-    </td>
-
-    <td align="center">
-      <sub>Més captures a la carpeta <code>screenshots/</code></sub>
-    </td>
-  </tr>
-</table>
+| | | |
+|---|---|---|
+| <img src="./screenshots/Screenshot_20260516_144859.png" width="220"><br><sub>Pantalla principal</sub> | <img src="./screenshots/Screenshot_20260516_141651.png" width="220"><br><sub>Menú de navegació</sub> | <img src="./screenshots/Screenshot_20260516_140307.png" width="220"><br><sub>Detall d'un producte</sub> |
+| <img src="./screenshots/Screenshot_20260516_140653.png" width="220"><br><sub>Ressenyes en producte</sub> | <img src="./screenshots/Screenshot_20260516_135338.png" width="220"><br><sub>Edició de localització</sub> | <img src="./screenshots/Screenshot_20260516_140748.png" width="220"><br><sub>Perfil d'usuari</sub> |
+| <img src="./screenshots/Screenshot_20260516_140754.png" width="220"><br><sub>Perfil: ressenyes</sub> | <img src="./screenshots/Screenshot_20260516_141455.png" width="220"><br><sub>Comunicació entre usuaris</sub> | Més captures a `screenshots/` |
 
 
