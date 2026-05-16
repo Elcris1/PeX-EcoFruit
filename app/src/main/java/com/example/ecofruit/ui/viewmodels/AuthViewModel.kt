@@ -44,6 +44,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _resetPasswordState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
     val resetPasswordState = _resetPasswordState.asStateFlow()
 
+    private val _logoutState = MutableStateFlow<RequestUiState<Unit>>(RequestUiState.Idle())
+    val logoutState = _logoutState.asStateFlow()
+
     init {
         // Observamos el StateFlow del repositorio para mantener este ViewModel actualizado
         viewModelScope.launch {
@@ -184,20 +187,25 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun logout() {
+        _logoutState.value = RequestUiState.Loading()
+
         viewModelScope.launch {
             try {
                 val settings = settingsRepository.settingsFlow.first()
-                settings.fcmToken?.let {
-                    userRepo.updateFcmTokenStatus(it, false)
+                settings.fcmToken?.let { token ->
+                    userRepo.updateFcmTokenStatus(token, false)
+                        .onFailure { error ->
+                            Log.d("AuthViewModel", "Error al actualizar estado del token FCM: ${error.message}")
+                        }
                 }
-            } catch (exception: Exception ) {
-                Log.d("AuthViewModel", "Error al actualizar estado del token FCM: ${exception.message}")
-            } finally {
-                userRepo.logOut()
-                user = null
-                _uiState.value = RequestUiState.Idle()
+            } catch (exception: Exception) {
+                Log.d("AuthViewModel", "Error al leer settings para FCM: ${exception.message}")
             }
-        }
 
+            userRepo.logOut()
+            user = null
+            _uiState.value = RequestUiState.Idle()
+            _logoutState.value = RequestUiState.Success(Unit)
+        }
     }
 }
